@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" role="img" aria-label="NVME USB4">
+  <defs>
+    <linearGradient id="gNVMEUSB4" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f1f2b"/>
+      <stop offset="1" stop-color="#26586e"/>
+    </linearGradient>
+    <radialGradient id="vNVMEUSB4" cx="0.28" cy="0.24" r="0.9">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0.45"/>
+    </radialGradient>
+    <pattern id="pNVMEUSB4" width="46" height="46" patternUnits="userSpaceOnUse">
+      <path d="M46 0H0V46" fill="none" stroke="#ffffff" stroke-opacity="0.05" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="1600" height="900" fill="url(#gNVMEUSB4)"/>
+  <rect width="1600" height="900" fill="url(#pNVMEUSB4)"/>
+  
+    <g opacity="0.92">
+      <rect x="470" y="300" width="560" height="300" rx="38" fill="#8ee6d0" opacity="0.14"/>
+      <rect x="510" y="340" width="480" height="220" rx="28" fill="#8ee6d0" opacity="0.42"/>
+      <circle cx="590" cy="450" r="34" fill="#0b0b0d" opacity="0.55"/>
+      <rect x="660" y="424" width="270" height="16" rx="8" fill="#f2efe8" opacity="0.9"/>
+      <rect x="660" y="460" width="180" height="16" rx="8" fill="#f2efe8" opacity="0.5"/>
+    </g>
+  <rect width="1600" height="900" fill="url(#vNVMEUSB4)"/>
+  <text x="96" y="812" font-family="Georgia, serif" font-size="46" font-weight="700" fill="#ffffff" fill-opacity="0.9" letter-spacing="6">NVME USB4</text>
+  <rect x="96" y="742" width="86" height="6" fill="#8ee6d0"/>
+</svg>

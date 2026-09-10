@@ -1,0 +1,16 @@
+{
+  "name": "usb-kr",
+  "version": "1.0.0",
+  "private": true,
+  "description": "usb.kr renewal - magazine style USB gear review site on Cloudflare Workers",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "start": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail"
+  },
+  "devDependencies": {
+    "wrangler": "^4.131.0"
+  }
+}
