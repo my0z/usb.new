@@ -73,7 +73,7 @@ async function recentlyUsedProductKeys() {
 }
 
 async function chooseProducts(query) {
-  const found = MOCK ? mockProducts : await searchProducts(query, 12);
+  const found = MOCK ? mockProducts : await searchProducts(query, 10);
   if (!found.length) throw new Error(`쿠팡 검색 결과 없음: ${query}`);
   const used = await recentlyUsedProductKeys();
   const fresh = [];
