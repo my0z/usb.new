@@ -41,6 +41,7 @@ export async function searchProducts(keyword, limit = 10) {
   const q = encodeURIComponent(String(keyword).slice(0, 50));
   const data = await call('GET', `${BASE}/products/search?keyword=${q}&limit=${limit}`);
   const list = data?.data?.productData ?? [];
+  if (!list.length) throw new Error(`쿠팡 검색 결과 없음 (${keyword}) rCode=${data?.rCode ?? '?'} rMessage=${data?.rMessage ?? '?'} raw=${JSON.stringify(data).slice(0, 200)}`);
   return list
     .filter((p) => p.productName && p.productUrl && p.productImage)
     .map((p) => ({
