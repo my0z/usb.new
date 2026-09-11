@@ -71,6 +71,19 @@ npm run gen:dry    # 검색과 생성까지만
 npm run gen        # 실제 발행 1건
 ```
 
+## Claude Code 토큰 절약 설정
+
+저장소에 Claude Code 용 설정이 들어 있다. 이 저장소로 세션을 열면 자동 적용된다.
+
+| 도구 | 적용 위치 | 역할 |
+| --- | --- | --- |
+| [ponytail](https://github.com/DietrichGebert/ponytail) | `.claude/settings.json` 플러그인 | 최소 코드 · YAGNI · 표준 라이브러리 우선 |
+| [graphify](https://github.com/safishamsi/graphify) | `.claude/skills/graphify/` | `/graphify` 로 코드베이스 지식 그래프 |
+| [headroom](https://github.com/headroomlabs-ai/headroom) | 로컬 실행 시 `headroom wrap claude` | 컨텍스트 압축 프록시 |
+| [ollama](https://github.com/ollama/ollama) | 로컬 실행 시 `ollama launch claude` | 구독 없이 로컬 모델 |
+
+로컬 머신에는 `bash tools/claude-setup.sh` 로 한 번에 설치한다.
+
 ## 캐시 정책
 
 HTML 은 엣지에서 5분 캐시 후 하루 동안 stale-while-revalidate 로 서빙한다. 피드와 사이트맵은 30분이다. 검색과 404 는 캐시하지 않는다.
