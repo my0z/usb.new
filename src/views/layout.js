@@ -3,6 +3,8 @@ import { categories, sortedReviews } from '../data/reviews.js';
 
 const SITE_NAME = 'USB.KR';
 const SITE_TAGLINE = '측정하고 써 보고 기록한다';
+/** 스타일 변경 시 올려서 브라우저 캐시를 무효화한다. */
+const ASSET_VERSION = '20260911a';
 
 function issueLabel() {
   const now = new Date();
@@ -70,7 +72,7 @@ export function layout({ title, description, canonical, active, body, heroSlot =
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
     />
-    <link rel="stylesheet" href="/assets/styles.css" />
+    <link rel="stylesheet" href="/assets/styles.css?v=${ASSET_VERSION}" />
     ${jsonLd ? html`<script type="application/ld+json">${raw(JSON.stringify(jsonLd))}</script>` : ''}
   </head>
   <body>
