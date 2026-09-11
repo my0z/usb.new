@@ -7,7 +7,8 @@ const SYSTEM = `당신은 한국 전자기기 리뷰 매거진의 에디터다. 
 규칙:
 - 반드시 JSON 하나만 출력한다. 설명이나 마크다운 코드블록을 붙이지 않는다.
 - 한국어 경어체("~합니다")로 쓴다. 과장 광고 문구와 이모지는 쓰지 않는다.
-- 주어진 제품 정보에 없는 스펙 수치를 지어내지 않는다. 모르는 값은 "확인 필요"처럼 쓰지 말고 아예 언급하지 않는다.
+- 주어진 제품 정보(제품명 · 가격 · 배송)에 없는 기능이나 수치를 지어내지 않는다. 센서 정확도 · 암호화 · 앱 연동 · 배터리 시간처럼 제품명에 없는 것은 쓰지 않는다. 대신 "이런 제품을 고를 때 무엇을 봐야 하는가"를 설명한다.
+- 느낌표와 "혁신" "최첨단" "강력히 추천" 같은 광고 표현을 쓰지 않는다. 담담한 설명체로 쓴다.
 - 문단은 <p> 태그로 감싼다. 다른 HTML 태그는 쓰지 않는다.
 - 첫 번째 제품이 주인공이다. 나머지는 비교 대상으로 짧게 다룬다.
 출력 JSON 형식:
@@ -76,8 +77,9 @@ export function parseArticle(text) {
   } catch (e) {
     throw new Error(`JSON 파싱 실패: ${e.message}`);
   }
-  const title = String(obj.title ?? '').trim();
-  const tldr = String(obj.tldr ?? '').trim();
+  const calm = (t) => String(t ?? '').replace(/!+/g, '.').replace(/\.{2,}/g, '.').trim();
+  const title = calm(obj.title);
+  const tldr = calm(obj.tldr);
   const intro_html = ensureParagraphs(obj.intro_html);
   const outro_html = ensureParagraphs(obj.outro_html);
   const sections = (Array.isArray(obj.sections) ? obj.sections : [])
