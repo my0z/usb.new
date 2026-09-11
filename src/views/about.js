@@ -3,7 +3,7 @@ import { layout } from './layout.js';
 
 export function aboutPage({ canonical }) {
   const body = html`<div class="shell shell--narrow">
-    <header class="page-head">
+    <header class="page-head reveal">
       <p class="eyebrow">매체 소개</p>
       <h1 class="page-title">사서 쓰고 측정한 것만 쓴다</h1>
       <p class="page-desc">USB.KR 은 USB 주변기기를 직접 구매해 실사용 조건에서 측정하는 독립 리뷰 매체다.</p>

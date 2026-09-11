@@ -1,29 +1,62 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" role="img" aria-label="USB4 40Gbps">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" role="img" aria-label="USB4 40GBPS">
   <defs>
-    <linearGradient id="gUSB440Gbps" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#2c1414"/>
-      <stop offset="1" stop-color="#7a2a20"/>
+    <linearGradient id="bgUSB440GBPS" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1c0707"/>
+      <stop offset="0.55" stop-color="#6b1a14"/>
+      <stop offset="1" stop-color="#e0533a"/>
     </linearGradient>
-    <radialGradient id="vUSB440Gbps" cx="0.28" cy="0.24" r="0.9">
-      <stop offset="0" stop-color="#ffffff" stop-opacity="0.18"/>
-      <stop offset="1" stop-color="#000000" stop-opacity="0.45"/>
+    <radialGradient id="glowUSB440GBPS" cx="0.78" cy="0.22" r="0.55">
+      <stop offset="0" stop-color="#ffb4a2" stop-opacity="0.75"/>
+      <stop offset="1" stop-color="#ffb4a2" stop-opacity="0"/>
     </radialGradient>
-    <pattern id="pUSB440Gbps" width="46" height="46" patternUnits="userSpaceOnUse">
-      <path d="M46 0H0V46" fill="none" stroke="#ffffff" stroke-opacity="0.05" stroke-width="1"/>
+    <radialGradient id="glow2USB440GBPS" cx="0.15" cy="0.9" r="0.5">
+      <stop offset="0" stop-color="#e0533a" stop-opacity="0.6"/>
+      <stop offset="1" stop-color="#e0533a" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0.08"/>
+    </linearGradient>
+    <linearGradient id="cable" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffb4a2" stop-opacity="0.35"/>
+      <stop offset="0.5" stop-color="#ffb4a2"/>
+      <stop offset="1" stop-color="#ffe6df"/>
+    </linearGradient>
+    <linearGradient id="streakUSB440GBPS" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#fff" stop-opacity="0.14"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="gridUSB440GBPS" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#fff" stroke-opacity="0.06" stroke-width="1"/>
     </pattern>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+    <filter id="grainUSB440GBPS">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="table" tableValues="0 0.12"/></feComponentTransfer>
+    </filter>
   </defs>
-  <rect width="1600" height="900" fill="url(#gUSB440Gbps)"/>
-  <rect width="1600" height="900" fill="url(#pUSB440Gbps)"/>
+  <rect width="1600" height="900" fill="url(#bgUSB440GBPS)"/>
+  <rect width="1600" height="900" fill="url(#glowUSB440GBPS)"/>
+  <rect width="1600" height="900" fill="url(#glow2USB440GBPS)"/>
+  <rect width="1600" height="900" fill="url(#gridUSB440GBPS)"/>
+  <polygon points="900,0 1600,0 1600,420" fill="url(#streakUSB440GBPS)"/>
+  <text x="1560" y="250" text-anchor="end" font-family="Georgia, 'Times New Roman', serif" font-size="360" font-weight="700" fill="#fff" fill-opacity="0.06" letter-spacing="-20">04</text>
   
-    <g fill="none" stroke="#ffb4a2" stroke-linecap="round">
-      <path d="M180 620 C 460 620 420 300 700 300 S 940 560 1320 470" stroke-width="26" opacity="0.35"/>
-      <path d="M180 680 C 500 680 470 380 760 370 S 1000 620 1340 540" stroke-width="14" opacity="0.6"/>
+    <g fill="none" stroke-linecap="round">
+      <path d="M120 660 C 420 660 400 280 700 280 S 960 580 1420 470" stroke="#000" stroke-width="42" opacity="0.28" filter="url(#soft)"/>
+      <path d="M120 640 C 420 640 400 260 700 260 S 960 560 1420 450" stroke="url(#cable)" stroke-width="30"/>
+      <path d="M120 640 C 420 640 400 260 700 260 S 960 560 1420 450" stroke="#fff" stroke-width="6" opacity="0.35" transform="translate(0 -8)"/>
     </g>
-    <g>
-      <rect x="640" y="250" width="150" height="66" rx="14" fill="#e8e8ec" opacity="0.9"/>
-      <rect x="668" y="272" width="94" height="22" rx="11" fill="#ffb4a2"/>
-    </g>
-  <rect width="1600" height="900" fill="url(#vUSB440Gbps)"/>
-  <text x="96" y="812" font-family="Georgia, serif" font-size="46" font-weight="700" fill="#ffffff" fill-opacity="0.9" letter-spacing="6">USB4 40Gbps</text>
-  <rect x="96" y="742" width="86" height="6" fill="#ffb4a2"/>
+    <rect x="630" y="200" width="170" height="80" rx="16" fill="#dcdde3"/>
+    <rect x="630" y="200" width="170" height="40" rx="16" fill="#f4f5f8"/>
+    <rect x="662" y="228" width="106" height="26" rx="13" fill="#ffb4a2"/>
+    <circle cx="1400" cy="450" r="14" fill="#ffe6df"/>
+  <rect width="1600" height="900" filter="url(#grainUSB440GBPS)" opacity="0.7"/>
+  <rect x="96" y="730" width="72" height="6" fill="#ffb4a2"/>
+  <text x="96" y="806" font-family="Georgia, 'Times New Roman', serif" font-size="52" font-weight="700" fill="#fff" fill-opacity="0.94" letter-spacing="6">USB4 40GBPS</text>
+  <text x="1504" y="806" text-anchor="end" font-family="'Helvetica Neue', Arial, sans-serif" font-size="18" fill="#fff" fill-opacity="0.55" letter-spacing="6">USB.KR LAB</text>
 </svg>

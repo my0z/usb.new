@@ -1,28 +1,63 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" role="img" aria-label="NVME USB4">
   <defs>
-    <linearGradient id="gNVMEUSB4" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#0f1f2b"/>
-      <stop offset="1" stop-color="#26586e"/>
+    <linearGradient id="bgNVMEUSB4" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#03121b"/>
+      <stop offset="0.55" stop-color="#154a63"/>
+      <stop offset="1" stop-color="#36a2b8"/>
     </linearGradient>
-    <radialGradient id="vNVMEUSB4" cx="0.28" cy="0.24" r="0.9">
-      <stop offset="0" stop-color="#ffffff" stop-opacity="0.18"/>
-      <stop offset="1" stop-color="#000000" stop-opacity="0.45"/>
+    <radialGradient id="glowNVMEUSB4" cx="0.78" cy="0.22" r="0.55">
+      <stop offset="0" stop-color="#8ee6d0" stop-opacity="0.75"/>
+      <stop offset="1" stop-color="#8ee6d0" stop-opacity="0"/>
     </radialGradient>
-    <pattern id="pNVMEUSB4" width="46" height="46" patternUnits="userSpaceOnUse">
-      <path d="M46 0H0V46" fill="none" stroke="#ffffff" stroke-opacity="0.05" stroke-width="1"/>
+    <radialGradient id="glow2NVMEUSB4" cx="0.15" cy="0.9" r="0.5">
+      <stop offset="0" stop-color="#36a2b8" stop-opacity="0.6"/>
+      <stop offset="1" stop-color="#36a2b8" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0.08"/>
+    </linearGradient>
+    <linearGradient id="cable" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#8ee6d0" stop-opacity="0.35"/>
+      <stop offset="0.5" stop-color="#8ee6d0"/>
+      <stop offset="1" stop-color="#dcfff6"/>
+    </linearGradient>
+    <linearGradient id="streakNVMEUSB4" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#fff" stop-opacity="0.14"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="gridNVMEUSB4" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#fff" stroke-opacity="0.06" stroke-width="1"/>
     </pattern>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+    <filter id="grainNVMEUSB4">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="table" tableValues="0 0.12"/></feComponentTransfer>
+    </filter>
   </defs>
-  <rect width="1600" height="900" fill="url(#gNVMEUSB4)"/>
-  <rect width="1600" height="900" fill="url(#pNVMEUSB4)"/>
+  <rect width="1600" height="900" fill="url(#bgNVMEUSB4)"/>
+  <rect width="1600" height="900" fill="url(#glowNVMEUSB4)"/>
+  <rect width="1600" height="900" fill="url(#glow2NVMEUSB4)"/>
+  <rect width="1600" height="900" fill="url(#gridNVMEUSB4)"/>
+  <polygon points="900,0 1600,0 1600,420" fill="url(#streakNVMEUSB4)"/>
+  <text x="1560" y="250" text-anchor="end" font-family="Georgia, 'Times New Roman', serif" font-size="360" font-weight="700" fill="#fff" fill-opacity="0.06" letter-spacing="-20">08</text>
   
-    <g opacity="0.92">
-      <rect x="470" y="300" width="560" height="300" rx="38" fill="#8ee6d0" opacity="0.14"/>
-      <rect x="510" y="340" width="480" height="220" rx="28" fill="#8ee6d0" opacity="0.42"/>
-      <circle cx="590" cy="450" r="34" fill="#0b0b0d" opacity="0.55"/>
-      <rect x="660" y="424" width="270" height="16" rx="8" fill="#f2efe8" opacity="0.9"/>
-      <rect x="660" y="460" width="180" height="16" rx="8" fill="#f2efe8" opacity="0.5"/>
+    <g filter="url(#soft)">
+      <rect x="450" y="300" width="600" height="320" rx="46" fill="#000" opacity="0.32"/>
     </g>
-  <rect width="1600" height="900" fill="url(#vNVMEUSB4)"/>
-  <text x="96" y="812" font-family="Georgia, serif" font-size="46" font-weight="700" fill="#ffffff" fill-opacity="0.9" letter-spacing="6">NVME USB4</text>
-  <rect x="96" y="742" width="86" height="6" fill="#8ee6d0"/>
+    <rect x="450" y="284" width="600" height="320" rx="46" fill="url(#body)"/>
+    <rect x="474" y="304" width="552" height="10" rx="5" fill="#fff" opacity="0.24"/>
+    <circle cx="560" cy="444" r="46" fill="#000" opacity="0.5"/>
+    <circle cx="560" cy="444" r="26" fill="#8ee6d0" opacity="0.9"/>
+    <rect x="650" y="410" width="300" height="18" rx="9" fill="#dcfff6" opacity="0.95"/>
+    <rect x="650" y="452" width="200" height="18" rx="9" fill="#dcfff6" opacity="0.5"/>
+    <rect x="890" y="540" width="120" height="22" rx="6" fill="#000" opacity="0.4"/>
+  <rect width="1600" height="900" filter="url(#grainNVMEUSB4)" opacity="0.7"/>
+  <rect x="96" y="730" width="72" height="6" fill="#8ee6d0"/>
+  <text x="96" y="806" font-family="Georgia, 'Times New Roman', serif" font-size="52" font-weight="700" fill="#fff" fill-opacity="0.94" letter-spacing="6">NVME USB4</text>
+  <text x="1504" y="806" text-anchor="end" font-family="'Helvetica Neue', Arial, sans-serif" font-size="18" fill="#fff" fill-opacity="0.55" letter-spacing="6">USB.KR LAB</text>
 </svg>
