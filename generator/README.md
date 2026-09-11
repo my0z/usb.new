@@ -8,11 +8,18 @@
 
 ```bash
 curl -fsSL https://ollama.com/install.sh | sh
-ollama pull exaone3.5:7.8b      # 한국어에 강한 7.8B 모델 · 약 5GB
-ollama run exaone3.5:7.8b "안녕" # 동작 확인 후 /bye
+ollama pull exaone3.5:2.4b      # 한국어에 강한 2.4B 모델 · 약 1.6GB · 4GB 메모리 VM 기준
+ollama run exaone3.5:2.4b "안녕" # 동작 확인 후 /bye
 ```
 
-메모리가 8GB 미만이면 `exaone3.5:2.4b` 나 `qwen2.5:3b` 로 바꾸고 `.env` 의 `OLLAMA_MODEL` 도 맞춘다.
+메모리 4GB VM 에서는 스왑을 4GB 잡아 두면 안정적이다:
+
+```bash
+sudo fallocate -l 4G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+```
+
+메모리가 8GB 이상이면 `exaone3.5:7.8b` 로 올리고 `.env` 의 `OLLAMA_MODEL` 도 맞춘다. 글 품질이 눈에 띄게 좋아진다.
 
 ## 2. 키 설정
 

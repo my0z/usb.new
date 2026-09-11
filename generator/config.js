@@ -61,7 +61,7 @@ export const PRODUCT_USED_TTL_SECONDS = 5 * 24 * 60 * 60;
 
 export const LLM = {
   ollamaUrl: process.env.OLLAMA_URL || 'http://127.0.0.1:11434',
-  ollamaModel: process.env.OLLAMA_MODEL || 'exaone3.5:7.8b',
+  ollamaModel: process.env.OLLAMA_MODEL || 'exaone3.5:2.4b',
   // 토큰 절약: 컨텍스트와 출력 길이를 작게 고정한다.
   numCtx: 4096,
   numPredict: 1600,
