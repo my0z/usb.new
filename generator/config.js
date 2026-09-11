@@ -3,6 +3,10 @@
  * q 는 쿠팡 검색어이고 keyword 는 글의 분류 키워드다.
  * keyword 는 src/data/categories.js 의 키워드와 맞춰 두면 카테고리에 자동 분류된다.
  */
+import { loadEnv } from './lib/env.js';
+
+loadEnv(); // process.env 를 읽기 전에 .env 를 먼저 채운다
+
 export const DAILY_TARGET = 6;
 
 export const KEYWORD_POOL = [
