@@ -5,7 +5,7 @@ usb.kr 리뉴얼 사이트. USB 주변기기를 다루는 매거진 · 리뷰형
 ## 구성
 
 - **런타임** — Cloudflare Workers (모듈 워커)
-- **데이터** — 기존 usb.kr 이 쓰는 KV `usb-kr-posts` 와 D1 `usbkr-db` 를 그대로 읽는다 (쓰기 없음)
+- **데이터** — 전용 KV `new-usb-posts`. 글은 `generator/` 가 발행한다. 기존 usb.kr 워커와 독립이다
 - **렌더링** — 의존성 없는 태그드 템플릿 기반 SSR
 - **정적 자산** — Workers Assets 바인딩 (`public/`)
 - **빌드 단계 없음** — 소스를 그대로 배포한다
@@ -57,9 +57,8 @@ npm run deploy       # Cloudflare 계정에 배포
 | KV `POSTS` | `index` | 최신순 slug 배열 |
 | KV `POSTS` | `post:<slug>` | 글 본문 JSON |
 | KV `POSTS` | `posts:summary-list` | 목록용 요약 캐시 |
-| D1 `DB` | `visits` | 조회수 (인기 순위) |
 
-글은 기존 usb.kr 워커(`my0z/usbkr`)의 크론이 KV 에 계속 발행한다. 이 사이트는 읽기만 하므로 새 글이 자동으로 반영된다. 카테고리는 `src/data/categories.js` 의 키워드 매핑으로 자동 분류되며 기존 사이트와 동일하다.
+기존 usb.kr 의 글 610건을 한 번 가져오려면 `node generator/import-old.js` 를 실행한다 (KV 편집 권한 토큰 필요). 카테고리는 `src/data/categories.js` 의 키워드 매핑으로 자동 분류되며 기존 사이트와 동일하다.
 
 ## 신상품 자동 발행
 

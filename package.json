@@ -13,7 +13,8 @@
     "covers": "node scripts/gen-covers.mjs",
     "gen": "node generator/run.js",
     "gen:mock": "node generator/run.js --mock",
-    "gen:dry": "node generator/run.js --dry-run"
+    "gen:dry": "node generator/run.js --dry-run",
+    "gen:import": "node generator/import-old.js"
   },
   "devDependencies": {
     "wrangler": "^4.131.0"
