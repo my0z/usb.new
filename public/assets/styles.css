@@ -2308,3 +2308,26 @@ h3 {
     height: 84%;
   }
 }
+
+/* 본문 삽입 사진 (발행기가 넣는 .pfig) */
+.prose--post .pfig {
+  margin: 8px 0 30px;
+  text-align: center;
+}
+.prose--post .pfig img {
+  display: inline-block;
+  max-width: min(100%, 420px);
+  aspect-ratio: 1;
+  object-fit: contain;
+  background: radial-gradient(70% 80% at 50% 45%, #fbf8f1, #e2ddd2);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  mix-blend-mode: multiply;
+}
+.prose--post .pfig small {
+  display: block;
+  margin-top: 8px;
+  font-size: 12.5px;
+  color: var(--ink-3);
+}

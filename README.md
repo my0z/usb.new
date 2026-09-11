@@ -61,6 +61,16 @@ npm run deploy       # Cloudflare 계정에 배포
 
 글은 기존 usb.kr 워커(`my0z/usbkr`)의 크론이 KV 에 계속 발행한다. 이 사이트는 읽기만 하므로 새 글이 자동으로 반영된다. 카테고리는 `src/data/categories.js` 의 키워드 매핑으로 자동 분류되며 기존 사이트와 동일하다.
 
+## 신상품 자동 발행
+
+`generator/` 에 오라클 VM 에서 돌아가는 발행기가 있다. 하루 6건 신상품을 찾아 쿠팡 파트너스 링크와 사진을 넣은 리뷰를 쓰고 같은 KV 에 발행한다. 글쓰기는 VM 의 Ollama 로 처리해 월 구독 비용이 없다. 자세한 설치는 [generator/README.md](generator/README.md) 를 본다.
+
+```bash
+npm run gen:mock   # 네트워크 없이 점검
+npm run gen:dry    # 검색과 생성까지만
+npm run gen        # 실제 발행 1건
+```
+
 ## 캐시 정책
 
 HTML 은 엣지에서 5분 캐시 후 하루 동안 stale-while-revalidate 로 서빙한다. 피드와 사이트맵은 30분이다. 검색과 404 는 캐시하지 않는다.

@@ -10,7 +10,10 @@
     "start": "wrangler dev --env local",
     "deploy": "wrangler deploy --env=\"\"",
     "tail": "wrangler tail",
-    "covers": "node scripts/gen-covers.mjs"
+    "covers": "node scripts/gen-covers.mjs",
+    "gen": "node generator/run.js",
+    "gen:mock": "node generator/run.js --mock",
+    "gen:dry": "node generator/run.js --dry-run"
   },
   "devDependencies": {
     "wrangler": "^4.131.0"
