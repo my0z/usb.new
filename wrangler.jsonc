@@ -15,5 +15,21 @@
   "vars": {
     "SITE_NAME": "USB.KR",
     "SITE_URL": "https://usb.kr"
+  },
+  // 기존 usb.kr 이 쓰는 저장소를 그대로 읽는다. 쓰기는 하지 않는다.
+  "kv_namespaces": [
+    { "binding": "POSTS", "id": "27853f4363cf4de6a1e7c1c36f3d1640" }
+  ],
+  "d1_databases": [
+    { "binding": "DB", "database_name": "usbkr-db", "database_id": "356d1267-fbd7-4bb5-ba54-44e279035cfc" }
+  ],
+  "env": {
+    // 바인딩 없이 fixtures 로 도는 로컬 개발 환경
+    "local": {
+      "vars": {
+        "SITE_NAME": "USB.KR",
+        "SITE_URL": "http://127.0.0.1:8787"
+      }
+    }
   }
 }

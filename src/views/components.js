@@ -1,55 +1,72 @@
 import { html, raw, formatDate } from '../lib/html.js';
-import { categoryName } from '../data/reviews.js';
+import { categoryOfPost } from '../data/categories.js';
+import { excerpt } from '../data/store.js';
 
-function tone(score) {
-  return score >= 9 ? 'gold' : score >= 8 ? 'green' : 'neutral';
+export const ICON_ARROW = raw('<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>');
+export const ICON_ROCKET = raw('<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2c3.5 2 5.5 6 5.5 10l-2.5 2.5-1.5 4-2-2h-3l-2 2-1.5-4L4.5 12C4.5 8 6.5 4 12 2zm0 6a2 2 0 100 4 2 2 0 000-4z"/></svg>');
+
+/** 쿠팡 CDN 이미지를 워커 프록시 경로로 바꾼다. */
+export function imgProxy(url, { nobg = false } = {}) {
+  if (!url) return '';
+  if (url.startsWith('/')) return url;
+  const b64 = btoa(unescape(encodeURIComponent(url))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  return `/img/${b64}${nobg ? '?nobg=1' : ''}`;
 }
 
-export function scoreBadge(score, size = 'sm') {
-  if (!score) return '';
-  return html`<span class="score score--${size} score--${tone(score)}"
-    ><b>${score.toFixed(1)}</b><small>/10</small></span
+export function outUrl(product, slug) {
+  return `/out?u=${encodeURIComponent(product.affiliateUrl ?? '')}&s=${encodeURIComponent(slug)}`;
+}
+
+export function won(n) {
+  const v = Number(n);
+  return Number.isFinite(v) && v > 0 ? `${v.toLocaleString('ko-KR')}원` : '';
+}
+
+export function postUrl(p) {
+  return `/${encodeURIComponent(p.slug)}`;
+}
+
+export function typeLabel(type) {
+  return type === 'review' ? '단일 리뷰' : type === 'comparison' ? '비교' : '가이드';
+}
+
+export function priceBadge(product, size = 'sm') {
+  const price = won(product?.price);
+  if (!price) return '';
+  return html`<span class="price price--${size} ${product.isRocket ? 'price--rocket' : ''}"
+    ><b>${price}</b>${product.isRocket ? html`<i>${ICON_ROCKET}로켓</i>` : ''}</span
   >`;
 }
 
-/** 원형 게이지. 리뷰 본문과 히어로에서 쓴다. */
-export function scoreRing(score, size = 112) {
-  if (!score) return '';
-  const r = 44;
-  const c = 2 * Math.PI * r;
-  const dash = ((score / 10) * c).toFixed(2);
-  return html`<span class="ring ring--${tone(score)}" style="--size:${size}px" role="img" aria-label="평점 ${score.toFixed(1)}점 만점 10점">
-    <svg viewBox="0 0 100 100" aria-hidden="true">
-      <circle class="ring__track" cx="50" cy="50" r="${r}" />
-      <circle class="ring__bar" cx="50" cy="50" r="${r}" stroke-dasharray="${dash} ${c.toFixed(2)}" />
-    </svg>
-    <span class="ring__val"><b>${score.toFixed(1)}</b><small>/ 10</small></span>
-  </span>`;
-}
-
-export function metaLine(review, extra = null) {
+/** 카드처럼 이미 <a> 안에 있을 때는 link=false 로 중첩 앵커를 피한다. */
+export function metaLine(p, extra = null, { link = true } = {}) {
+  const cat = categoryOfPost(p);
+  const label = cat?.name ?? p.keyword;
   return html`<p class="meta">
-    <span class="meta__author">${review.author}</span>
-    <time datetime="${review.date}">${formatDate(review.date)}</time>
-    <span>${review.readingTime}분</span>
+    ${cat && link ? html`<a class="meta__cat" href="/category/${cat.slug}">${label}</a>` : html`<span class="meta__cat">${label}</span>`}
+    <time datetime="${p.createdAt}">${formatDate(String(p.createdAt).slice(0, 10))}</time>
+    <span>${typeLabel(p.type)}</span>
     ${extra}
   </p>`;
 }
 
-export function reviewCard(review, { variant = 'default', index = null } = {}) {
+export function postCard(p, { variant = 'default', index = null } = {}) {
+  const first = p.products?.[0];
+  const cover = first?.image ? imgProxy(first.image) : '/assets/hero-default.svg';
+  const summary = p.tldr || p.metaDescription || excerpt(p.intro);
   return html`<article class="card card--${variant} reveal" ${index !== null ? html`style="--i:${index}"` : ''}>
-    <a class="card__link" href="/review/${review.slug}">
-      <div class="card__media">
-        <img src="${review.cover}" alt="" loading="lazy" decoding="async" width="800" height="500" />
-        <span class="card__cat">${categoryName(review.category)}</span>
-        ${scoreBadge(review.score)}
+    <a class="card__link" href="${postUrl(p)}">
+      <div class="card__media card__media--product">
+        <img src="${cover}" alt="" loading="lazy" decoding="async" width="600" height="600" />
+        <span class="card__cat">${p.keyword}</span>
+        ${first ? priceBadge(first) : ''}
         ${index !== null ? html`<span class="card__num">${String(index + 1).padStart(2, '0')}</span>` : ''}
       </div>
       <div class="card__body">
-        <h3 class="card__title">${review.title}</h3>
-        <p class="card__sub">${review.subtitle}</p>
-        <p class="card__verdict">${review.verdict}</p>
-        ${metaLine(review)}
+        <h3 class="card__title">${p.title}</h3>
+        ${first ? html`<p class="card__sub">${first.name}</p>` : ''}
+        <p class="card__verdict">${summary}</p>
+        ${metaLine(p, p.views ? html`<span class="meta__views">조회 ${Number(p.views).toLocaleString('ko-KR')}</span>` : null, { link: false })}
       </div>
     </a>
   </article>`;
@@ -57,7 +74,7 @@ export function reviewCard(review, { variant = 'default', index = null } = {}) {
 
 export function cardGrid(list, { variant = 'default', numbered = false, bento = false } = {}) {
   return html`<div class="grid ${bento ? 'grid--bento' : ''}">
-    ${list.map((r, i) => reviewCard(r, { variant: bento && i === 0 ? 'lead' : variant, index: numbered ? i : null }))}
+    ${list.map((p, i) => postCard(p, { variant: bento && i === 0 ? 'lead' : variant, index: numbered ? i : null }))}
   </div>`;
 }
 
@@ -72,4 +89,25 @@ export function sectionHead(number, eyebrow, title, moreHref = null, moreLabel =
   </div>`;
 }
 
-export const ICON_ARROW = raw('<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>');
+/** 본문 안에 삽입되는 상품 블록 */
+export function productBlock(product, slug, { rank = null, top = false } = {}) {
+  const drop = product.previousPrice && Number(product.previousPrice) > Number(product.price);
+  return html`<div class="pbox ${top ? 'pbox--top' : ''}">
+    <a class="pbox__media" href="${outUrl(product, slug)}" target="_blank" rel="nofollow sponsored noopener">
+      <img src="${imgProxy(product.image)}" alt="${product.altText || product.name}" loading="lazy" decoding="async" width="440" height="440" />
+      ${top ? html`<span class="pbox__badge">추천 1위</span>` : rank !== null ? html`<span class="pbox__rank">${String(rank).padStart(2, '0')}</span>` : ''}
+    </a>
+    <div class="pbox__body">
+      <h3 class="pbox__name">${product.name}</h3>
+      <div class="pbox__price">
+        ${drop ? html`<s>${won(product.previousPrice)}</s>` : ''}
+        <b>${won(product.price)}</b>
+      </div>
+      <div class="pbox__ship">
+        ${product.isRocket ? html`<span class="ship ship--rocket">${ICON_ROCKET} 로켓배송</span>` : ''}
+        ${!product.isRocket && product.isFreeShipping ? html`<span class="ship">무료배송</span>` : ''}
+      </div>
+      <a class="btn btn--primary btn--sm" href="${outUrl(product, slug)}" target="_blank" rel="nofollow sponsored noopener">최저가 확인 ${ICON_ARROW}</a>
+    </div>
+  </div>`;
+}

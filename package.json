@@ -5,10 +5,12 @@
   "description": "usb.kr renewal - magazine style USB gear review site on Cloudflare Workers",
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev",
-    "start": "wrangler dev",
+    "dev": "wrangler dev --env local",
+    "dev:remote": "wrangler dev --remote",
+    "start": "wrangler dev --env local",
     "deploy": "wrangler deploy",
-    "tail": "wrangler tail"
+    "tail": "wrangler tail",
+    "covers": "node scripts/gen-covers.mjs"
   },
   "devDependencies": {
     "wrangler": "^4.131.0"

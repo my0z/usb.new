@@ -1,29 +1,31 @@
 import { html, raw } from '../lib/html.js';
-import { categories, sortedReviews } from '../data/reviews.js';
+import { categories } from '../data/categories.js';
+import { postUrl, won } from './components.js';
 
 const SITE_NAME = 'USB.KR';
-const SITE_TAGLINE = '측정하고 써 보고 기록한다';
+const SITE_TAGLINE = '전자기기 스펙과 가격을 비교한다';
 /** 스타일 변경 시 올려서 브라우저 캐시를 무효화한다. */
-const ASSET_VERSION = '20260911a';
+const ASSET_VERSION = '20260911b';
+const NAV_PRIMARY = ['audio', 'mobile', 'pc', 'display', 'wearable', 'smarthome', 'camera', 'car'];
 
 function issueLabel() {
   const now = new Date();
-  const week = Math.ceil((((now - new Date(now.getFullYear(), 0, 1)) / 86400000) + 1) / 7);
+  const week = Math.ceil(((now - new Date(now.getFullYear(), 0, 1)) / 86400000 + 1) / 7);
   return `Vol.${now.getFullYear() - 2025} · No.${String(week).padStart(2, '0')}`;
 }
 
 function navLinks(active) {
-  return categories.map(
-    (c) => html`<a class="nav__link ${c.slug === active ? 'is-active' : ''}" href="/category/${c.slug}">${c.name}</a>`,
-  );
+  return categories
+    .filter((c) => NAV_PRIMARY.includes(c.slug))
+    .map((c) => html`<a class="nav__link ${c.slug === active ? 'is-active' : ''}" href="/category/${c.slug}">${c.name}</a>`);
 }
 
-function ticker() {
-  const items = sortedReviews().slice(0, 6);
+function ticker(items) {
+  if (!items?.length) return '';
   const run = items.map(
-    (r) => html`<a class="ticker__item" href="/review/${r.slug}"><b>${r.score ? r.score.toFixed(1) : 'LAB'}</b>${r.title}</a>`,
+    (p) => html`<a class="ticker__item" href="${postUrl(p)}"><b>${won(p.products?.[0]?.price) || p.keyword}</b>${p.title}</a>`,
   );
-  return html`<div class="ticker" aria-label="최신 기사 흐름">
+  return html`<div class="ticker" aria-label="최신 글 흐름">
     <div class="ticker__track">${run}${run}</div>
   </div>`;
 }
@@ -43,7 +45,7 @@ const INLINE_SCRIPT = raw(`
 })();
 `);
 
-export function layout({ title, description, canonical, active, body, heroSlot = null, jsonLd = null, progress = false }) {
+export function layout({ title, description, canonical, active, body, heroSlot = null, jsonLd = null, progress = false, tickerItems = null, ogImage = null }) {
   const fullTitle = title ? `${title} · ${SITE_NAME}` : `${SITE_NAME} · ${SITE_TAGLINE}`;
   return html`<html lang="ko">
   <head>
@@ -58,9 +60,10 @@ export function layout({ title, description, canonical, active, body, heroSlot =
     <meta property="og:description" content="${description}" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="${canonical}" />
+    ${ogImage ? html`<meta property="og:image" content="${ogImage}" />` : ''}
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
-    <link rel="alternate" type="application/rss+xml" title="${SITE_NAME} 리뷰" href="/rss.xml" />
+    <link rel="alternate" type="application/rss+xml" title="${SITE_NAME}" href="/rss.xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
@@ -90,19 +93,19 @@ export function layout({ title, description, canonical, active, body, heroSlot =
           <span class="brand__mark">USB</span><span class="brand__dot">.</span><span class="brand__tld">KR</span>
         </a>
         <form class="search" role="search" action="/search" method="get">
-          <label class="sr-only" for="q">리뷰 검색</label>
+          <label class="sr-only" for="q">글 검색</label>
           <svg class="search__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-          <input id="q" name="q" type="search" placeholder="제품 또는 규격 검색" autocomplete="off" />
+          <input id="q" name="q" type="search" placeholder="제품 또는 키워드 검색" autocomplete="off" />
           <kbd aria-hidden="true">↵</kbd>
         </form>
       </div>
       <nav class="nav shell" aria-label="카테고리">
         <a class="nav__link ${active === 'home' ? 'is-active' : ''}" href="/">전체</a>
         ${navLinks(active)}
-        <a class="nav__link ${active === 'about' ? 'is-active' : ''}" href="/about">소개</a>
+        <a class="nav__link ${active === 'categories' ? 'is-active' : ''}" href="/categories">더 보기</a>
       </nav>
     </header>
-    ${active === 'home' ? ticker() : ''}
+    ${active === 'home' ? ticker(tickerItems) : ''}
     ${heroSlot ?? ''}
     <main id="main">${body}</main>
     <footer class="footer">
@@ -110,21 +113,22 @@ export function layout({ title, description, canonical, active, body, heroSlot =
         <div class="footer__intro">
           <p class="footer__brand">USB<span>.</span>KR</p>
           <p class="footer__note">
-            직접 구매하고 직접 측정한다. 제조사 협찬 제품은 본문 상단에 반드시 표기한다.
+            실시간 쿠팡 가격 데이터를 바탕으로 전자기기 스펙과 가격을 비교한다. 이 사이트는 쿠팡 파트너스 활동의 일환으로 수수료를 제공받을 수 있다.
           </p>
           <p class="footer__issue">${issueLabel()}</p>
         </div>
         <div>
           <h2 class="footer__title">카테고리</h2>
-          <ul class="footer__list">
+          <ul class="footer__list footer__list--cols">
             ${categories.map((c) => html`<li><a href="/category/${c.slug}">${c.name}</a></li>`)}
           </ul>
         </div>
         <div>
           <h2 class="footer__title">더 보기</h2>
           <ul class="footer__list">
-            <li><a href="/about">매체 소개</a></li>
-            <li><a href="/reviews">전체 기사</a></li>
+            <li><a href="/about">사이트 소개</a></li>
+            <li><a href="/posts">전체 글</a></li>
+            <li><a href="/privacy">개인정보처리방침</a></li>
             <li><a href="/rss.xml">RSS 구독</a></li>
             <li><a href="/sitemap.xml">사이트맵</a></li>
           </ul>
@@ -132,7 +136,7 @@ export function layout({ title, description, canonical, active, body, heroSlot =
       </div>
       <div class="footer__wordmark" aria-hidden="true"><span>USB.KR</span></div>
       <div class="shell footer__legal">
-        <p>© ${new Date().getFullYear()} USB.KR — 모든 측정값은 자체 테스트 환경 기준이다.</p>
+        <p>© ${new Date().getFullYear()} USB.KR — AI 가 작성한 참고용 콘텐츠이며 정확한 스펙은 판매 페이지에서 확인을 권한다.</p>
         <p>Cloudflare Workers 위에서 동작한다.</p>
       </div>
     </footer>

@@ -5,6 +5,7 @@ usb.kr 리뉴얼 사이트. USB 주변기기를 다루는 매거진 · 리뷰형
 ## 구성
 
 - **런타임** — Cloudflare Workers (모듈 워커)
+- **데이터** — 기존 usb.kr 이 쓰는 KV `usb-kr-posts` 와 D1 `usbkr-db` 를 그대로 읽는다 (쓰기 없음)
 - **렌더링** — 의존성 없는 태그드 템플릿 기반 SSR
 - **정적 자산** — Workers Assets 바인딩 (`public/`)
 - **빌드 단계 없음** — 소스를 그대로 배포한다
@@ -13,23 +14,27 @@ usb.kr 리뉴얼 사이트. USB 주변기기를 다루는 매거진 · 리뷰형
 
 | 경로 | 설명 |
 | --- | --- |
-| `/` | 히어로 커버 리뷰 1건 + 리뷰 카드 그리드 |
-| `/reviews` | 전체 기사 목록 |
-| `/category/:slug` | 카테고리별 목록 |
-| `/review/:slug` | 리뷰 본문 · 한 줄 평 · 장단점 · 측정 요약 |
-| `/search?q=` | 제목과 태그와 카테고리 대상 검색 |
-| `/about` | 매체 소개와 평점 기준 |
-| `/rss.xml` `/sitemap.xml` `/robots.txt` | 피드와 색인용 |
-| `/healthz` | 상태 확인 JSON |
+| `/` | 히어로 커버 글 1건 + 카드 그리드 + 인기 순위 |
+| `/posts?page=N` | 전체 글 목록 |
+| `/categories` `/category/:slug` | 카테고리 |
+| `/:slug` | 글 본문 (기존 usb.kr 과 같은 주소) · `/post/:slug` 는 리다이렉트 |
+| `/search?q=` | 제목 · 키워드 · 요약 검색 |
+| `/img/:token` | 쿠팡 이미지 프록시 (기존과 동일 규칙) |
+| `/out?u=&s=` | 쿠팡 아웃바운드 리다이렉트 (허용 호스트만) |
+| `/about` `/privacy` | 소개 · 개인정보처리방침 |
+| `/rss.xml` `/feed.xml` `/sitemap.xml` `/llms.txt` `/robots.txt` | 피드와 색인용 |
+| `/healthz` | 상태 확인 JSON (`source` 가 `kv` 면 실데이터) |
 
 ## 디렉터리
 
 ```
 src/
-  index.js            라우터 · 캐시 헤더 · 피드 · 사이트맵
-  data/reviews.js     리뷰 콘텐츠와 조회 헬퍼
+  index.js            라우터 · 이미지 프록시 · 아웃바운드 · 피드 · 사이트맵
+  data/store.js       KV/D1 저장소 어댑터 (바인딩 없으면 fixtures)
+  data/categories.js  카테고리 키워드 매핑
+  data/fixtures.js    로컬 개발용 샘플 글
   lib/html.js         이스케이프 · 태그드 템플릿 · 응답 헬퍼
-  views/              layout · home · review · list · about · notFound · components
+  views/              layout · home · post · list · about · notFound · components
 public/assets/        스타일시트와 커버 이미지
 scripts/gen-covers.mjs 커버 SVG 생성기
 ```
@@ -38,22 +43,23 @@ scripts/gen-covers.mjs 커버 SVG 생성기
 
 ```bash
 npm install
-npm run dev      # http://127.0.0.1:8787
-npm run deploy   # Cloudflare 계정에 배포
+npm run dev          # fixtures 로 동작 · http://127.0.0.1:8787
+npm run dev:remote   # 실제 KV/D1 을 읽으며 동작
+npm run deploy       # Cloudflare 계정에 배포
 ```
 
 커버 이미지를 다시 만들려면 `node scripts/gen-covers.mjs` 를 실행한다.
 
-## 콘텐츠 추가
+## 데이터 소스
 
-`src/data/reviews.js` 의 `reviews` 배열에 항목을 추가하면 목록과 카테고리와 피드와 사이트맵에 자동 반영된다. 필드는 다음과 같다.
+| 저장소 | 키 / 테이블 | 용도 |
+| --- | --- | --- |
+| KV `POSTS` | `index` | 최신순 slug 배열 |
+| KV `POSTS` | `post:<slug>` | 글 본문 JSON |
+| KV `POSTS` | `posts:summary-list` | 목록용 요약 캐시 |
+| D1 `DB` | `visits` | 조회수 (인기 순위) |
 
-- `slug` `title` `subtitle` `category` `author` `date` `readingTime` `cover`
-- `score` — 0 이면 평점 없는 가이드 기사로 처리된다
-- `featured` — `true` 인 항목이 홈 히어로에 노출된다
-- `verdict` `tags` `specs` `pros` `cons` `body`
-
-배열은 순수 데이터라서 이후 D1 이나 KV 로 옮길 때 조회 헬퍼만 교체하면 된다.
+글은 기존 usb.kr 워커(`my0z/usbkr`)의 크론이 KV 에 계속 발행한다. 이 사이트는 읽기만 하므로 새 글이 자동으로 반영된다. 카테고리는 `src/data/categories.js` 의 키워드 매핑으로 자동 분류되며 기존 사이트와 동일하다.
 
 ## 캐시 정책
 
