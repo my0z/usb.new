@@ -6,9 +6,9 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev --env local",
-    "dev:remote": "wrangler dev --remote",
+    "dev:remote": "wrangler dev --remote --env=\"\"",
     "start": "wrangler dev --env local",
-    "deploy": "wrangler deploy",
+    "deploy": "wrangler deploy --env=\"\"",
     "tail": "wrangler tail",
     "covers": "node scripts/gen-covers.mjs"
   },
