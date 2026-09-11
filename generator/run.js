@@ -17,7 +17,7 @@ import { searchProducts, deeplinks } from './lib/coupang.js';
 import { remoteKv, MemoryKv } from './lib/kv.js';
 import { generateJson, ollamaHealthy } from './lib/llm.js';
 import { buildPrompt, parseArticle } from './lib/article.js';
-import { buildPost, embedImages, summarize } from './lib/post.js';
+import { buildPost, embedImages, summarize, newSlug } from './lib/post.js';
 import { mockProducts, mockArticleJson } from './lib/mock.js';
 
 loadEnv();
@@ -137,7 +137,9 @@ async function runOnce(forcedKeyword, forcedQuery) {
   const products = await chooseProducts(item.q);
   log(`제품 ${products.length}개: ${products.map((p) => p.name.slice(0, 30)).join(' | ')}`);
   const { article, model } = await writeArticle(item.keyword, item.q, products);
-  const post = buildPost({ article: embedImages(article, products), keyword: item.keyword, products, modelUsed: model });
+  let slug = newSlug();
+  while (await kv.get(`post:${slug}`)) slug = newSlug();
+  const post = buildPost({ article: embedImages(article, products), keyword: item.keyword, products, modelUsed: model, slug });
   if (DRY || MOCK) {
     console.log(JSON.stringify(post, null, 2));
     log(`(dry-run) KV 에 쓰지 않음 — slug ${post.slug}`);

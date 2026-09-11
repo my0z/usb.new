@@ -2,6 +2,7 @@
  * 글 객체 조립과 사진 삽입.
  * KV 의 post:<slug> 형태를 그대로 따른다.
  */
+import { randomInt } from 'node:crypto';
 import { IMAGES_PER_POST } from '../config.js';
 import { makeExcerpt } from './article.js';
 
@@ -25,8 +26,13 @@ export function embedImages(article, products) {
   return { ...article, sections };
 }
 
-export function buildPost({ article, keyword, products, modelUsed }) {
-  const slug = String(Date.now());
+const CHARS = 'abcdefghijkmnpqrstuvwxyz23456789'; // 헷갈리는 l o 0 1 제외
+
+export function newSlug() {
+  return Array.from({ length: 5 }, () => CHARS[randomInt(CHARS.length)]).join('');
+}
+
+export function buildPost({ article, keyword, products, modelUsed, slug = newSlug() }) {
   const main = products[0];
   return {
     slug,
