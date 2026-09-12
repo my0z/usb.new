@@ -4,7 +4,7 @@ import { postUrl } from './components.js';
 import { categories, categoryOfPost } from '../data/categories.js';
 
 /** 운영자용 통계. robots 에서 막고 링크도 두지 않는다. */
-export function statsPage({ canonical, summaries }) {
+export function statsPage({ canonical, summaries, visits = null }) {
   const byCat = new Map();
   const byDay = new Map();
   let products = 0;
@@ -28,8 +28,24 @@ export function statsPage({ canonical, summaries }) {
     <header class="page-head reveal">
       <p class="eyebrow">운영 통계</p>
       <h1 class="page-title">발행 현황</h1>
-      <p class="page-desc">KV 에 있는 글 기준. 이 페이지는 색인되지 않는다.</p>
+      <p class="page-desc">방문은 봇을 뺀 HTML 응답 기준. 이 페이지는 색인되지 않는다.</p>
     </header>
+    ${visits
+      ? html`<section class="stats stats--page reveal">
+          <div class="stat"><span class="stat__value">${visits.today ?? 0}<small>회</small></span><span class="stat__label">오늘 방문</span></div>
+          <div class="stat"><span class="stat__value">${visits.week ?? 0}<small>회</small></span><span class="stat__label">7일 방문</span></div>
+          <div class="stat"><span class="stat__value">${visits.total ?? 0}<small>회</small></span><span class="stat__label">누적 방문</span></div>
+          <div class="stat"><span class="stat__value">${visits.top?.[0]?.n ?? 0}<small>회</small></span><span class="stat__label">7일 최다 페이지</span></div>
+        </section>
+        <div class="stats__grid">
+          <section class="specs reveal"><div class="specs__head"><h2 class="specs__title">일별 방문 (14일)</h2></div>
+            <table><tbody>${visits.days.map((r) => html`<tr><th scope="row">${r.day}</th><td>${r.n}회</td></tr>`)}</tbody></table>
+          </section>
+          <section class="specs reveal"><div class="specs__head"><h2 class="specs__title">7일 인기 페이지</h2></div>
+            <table><tbody>${visits.top.map((r) => html`<tr><th scope="row"><a href="${r.path}">${r.path}</a></th><td>${r.n}회</td></tr>`)}</tbody></table>
+          </section>
+        </div>`
+      : ''}
     <section class="stats stats--page reveal">
       ${tiles.map(([l, v, u]) => html`<div class="stat"><span class="stat__value">${v}<small>${u}</small></span><span class="stat__label">${l}</span></div>`)}
     </section>

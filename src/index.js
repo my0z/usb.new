@@ -160,7 +160,7 @@ ${lines.join('\n')}
 
 /* ── 라우터 ────────────────────────────────────────────────── */
 
-async function route(url, env) {
+async function route(url, env, request) {
   const store = getStore(env);
   const path = url.pathname.replace(/\/+$/, '') || '/';
   const canonical = `${url.origin}${path}`;
@@ -200,7 +200,15 @@ async function route(url, env) {
   }
 
   if (path === '/about') return page(aboutPage({ canonical }));
-  if (path === '/0') return page(statsPage({ canonical, summaries: await store.summaries() }), { cache: 'no-store' });
+  if (path === '/0') {
+    const key = env?.ADMIN_KEY;
+    const cookie = request.headers.get('cookie') ?? '';
+    if (key && url.searchParams.get('key') !== key && !cookie.includes(`adm=${key}`)) return notFound(store, canonical);
+    const [summaries, visits] = await Promise.all([store.summaries(), store.visitStats()]);
+    const res = page(statsPage({ canonical, summaries, visits }), { cache: 'no-store' });
+    if (key) res.headers.set('set-cookie', `adm=${key}; Path=/0; Max-Age=31536000; HttpOnly; Secure; SameSite=Lax`);
+    return res;
+  }
   if (path === '/privacy') return page(privacyPage({ canonical }));
 
   if (path === '/search') {
@@ -276,7 +284,7 @@ async function route(url, env) {
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
     if (request.method !== 'GET' && request.method !== 'HEAD') {
@@ -289,7 +297,12 @@ export default {
       return Response.redirect(target.toString(), 301);
     }
 
-    const response = await route(url, env);
+    const response = await route(url, env, request);
+    // 방문 집계: HTML 200 · 봇 제외 · 운영 페이지 제외
+    const ua = request.headers.get('user-agent') ?? '';
+    if (ctx && response.status === 200 && (response.headers.get('content-type') ?? '').includes('html') && !/bot|crawl|spider|slurp|preview|facebookexternalhit|curl|wget/i.test(ua) && url.pathname !== '/0') {
+      ctx.waitUntil(getStore(env).recordVisit(url.pathname.replace(/\/+$/, '') || '/'));
+    }
     if (request.method === 'HEAD') {
       return new Response(null, { status: response.status, headers: response.headers });
     }

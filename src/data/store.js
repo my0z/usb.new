@@ -69,37 +69,35 @@ class KvStore {
     return safeParse(await this.kv.get(`post:${slug}`), null);
   }
 
+  async recordVisit(path) {
+    if (!this.db) return;
+    const day = new Date().toISOString().slice(0, 10);
+    await this.db.prepare('INSERT INTO visits(day, path, n) VALUES(?, ?, 1) ON CONFLICT(day, path) DO UPDATE SET n = n + 1').bind(day, path).run().catch(() => {});
+  }
+
+  async visitStats() {
+    if (!this.db) return null;
+    const q = (sql, ...b) => this.db.prepare(sql).bind(...b).all().then((r) => r.results).catch(() => []);
+    const since = (d) => new Date(Date.now() - d * 864e5).toISOString().slice(0, 10);
+    const [days, top, totals] = await Promise.all([
+      q('SELECT day, SUM(n) AS n FROM visits WHERE day >= ? GROUP BY day ORDER BY day DESC', since(14)),
+      q('SELECT path, SUM(n) AS n FROM visits WHERE day >= ? GROUP BY path ORDER BY n DESC LIMIT 20', since(7)),
+      q('SELECT SUM(CASE WHEN day = ? THEN n ELSE 0 END) AS today, SUM(CASE WHEN day >= ? THEN n ELSE 0 END) AS week, SUM(n) AS total FROM visits', since(0), since(7)),
+    ]);
+    return { days, top, ...(totals[0] ?? {}) };
+  }
+
   async getMany(slugs) {
     const raws = await Promise.all(slugs.map((s) => this.kv.get(`post:${s}`).catch(() => null)));
     return raws.map((r) => safeParse(r, null)).filter(Boolean);
   }
 
-  async popular(limit = 6) {
-    if (!this.db) return [];
-    try {
-      const { results } = await this.db
-        .prepare('SELECT slug, count FROM visits ORDER BY count DESC LIMIT ?')
-        .bind(limit * 2)
-        .all();
-      const all = await this.summaries();
-      const bySlug = new Map(all.map((s) => [s.slug, s]));
-      return results
-        .map((r) => ({ ...bySlug.get(r.slug), views: r.count }))
-        .filter((s) => s.slug)
-        .slice(0, limit);
-    } catch {
-      return [];
-    }
+  async popular() {
+    return [];
   }
 
-  async viewCount(slug) {
-    if (!this.db) return 0;
-    try {
-      const row = await this.db.prepare('SELECT count FROM visits WHERE slug = ?').bind(slug).first();
-      return row?.count ?? 0;
-    } catch {
-      return 0;
-    }
+  async viewCount() {
+    return 0;
   }
 }
 
@@ -129,6 +127,10 @@ class FixtureStore {
   }
   async viewCount(slug) {
     return fixtureVisits[slug] ?? 0;
+  }
+  async recordVisit() {}
+  async visitStats() {
+    return null;
   }
 }
 
