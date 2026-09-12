@@ -101,7 +101,7 @@ async function searchLatest(query) {
   return all.sort((a, b) => newness(b) - newness(a) || a.rank - b.rank);
 }
 
-async function chooseProducts(query) {
+async function chooseProducts(query, min = 3000) {
   const found = (await searchLatest(query)).filter((p) => MOCK || relevant(p, query));
   if (!found.length) throw new Error(`검색어와 맞는 제품 없음: ${query}`);
   const used = await recentlyUsedProductKeys();
@@ -110,7 +110,7 @@ async function chooseProducts(query) {
   for (const p of found) {
     if (used.has(productKey(p))) continue;
     if (await kv.get(`product-post-map:${normalizeName(p.name)}`)) continue;
-    if (p.price < 3000) continue;
+    if (p.price < min) continue;
     const nameKey = normalizeName(p.name).slice(0, 18);
     if (seenNames.has(nameKey)) continue;
     seenNames.add(nameKey);
@@ -163,7 +163,7 @@ async function publish(post, products) {
 async function runOnce(forcedKeyword, forcedQuery) {
   const item = await pickKeyword(forcedKeyword ? { keyword: forcedKeyword, q: forcedQuery || forcedKeyword } : null);
   log(`키워드: ${item.keyword} · 검색어: ${item.q}`);
-  const products = await chooseProducts(item.q);
+  const products = await chooseProducts(item.q, item.min);
   log(`제품 ${products.length}개: ${products.map((p) => p.name.slice(0, 30)).join(' | ')}`);
   const [{ article, model }, video] = await Promise.all([
     writeArticle(item.keyword, item.q, products),
