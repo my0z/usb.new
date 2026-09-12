@@ -5,7 +5,7 @@ import { postUrl, won } from './components.js';
 const SITE_NAME = 'USB.KR';
 const SITE_TAGLINE = '전자기기 스펙과 가격을 비교한다';
 /** 스타일 변경 시 올려서 브라우저 캐시를 무효화한다. */
-const ASSET_VERSION = '20260912a';
+const ASSET_VERSION = '20260912b';
 const NAV_PRIMARY = ['audio', 'mobile', 'pc', 'display', 'wearable', 'smarthome', 'camera', 'car'];
 
 function issueLabel() {
@@ -35,6 +35,7 @@ const INLINE_SCRIPT = raw(`
   var d=document;
   var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
   d.documentElement.classList.add('js');
+  if(navigator.sendBeacon&&location.pathname!=='/0')navigator.sendBeacon('/hit',location.pathname);
   if(reduce||!('IntersectionObserver' in window)){d.documentElement.classList.add('no-reveal');return}
   var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{rootMargin:'0px 0px -8% 0px',threshold:0.08});
   d.querySelectorAll('.reveal').forEach(function(el){io.observe(el)});

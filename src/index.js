@@ -15,6 +15,7 @@ const IMAGE_HOST_SUFFIXES = ['.coupangcdn.com', '.coupang.com'];
 const IMAGE_HOSTS = ['coupangcdn.com', 'coupang.com'];
 const OUT_HOST_SUFFIXES = ['.coupang.com', 'coupa.ng'];
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+const BOT_UA = /bot|crawl|spider|slurp|preview|fetch|scrape|headless|phantom|selenium|puppeteer|playwright|curl|wget|python|java\/|go-http|okhttp|axios|node|gptbot|chatgpt|oai-search|claude|anthropic|perplexity|bytespider|ccbot|cohere|diffbot|amazonbot|applebot|petalbot|yandex|semrush|ahrefs|mj12|dotbot|facebookexternalhit|whatsapp|telegram|discord|slack|lighthouse|pagespeed|pingdom|uptime|monitor/i;
 
 function page(body, { status = 200, cache = HTML_CACHE } = {}) {
   return htmlResponse(body, { status, headers: { 'cache-control': cache } });
@@ -287,6 +288,16 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
+    // 방문 비콘. 자바스크립트를 실행한 브라우저만 보내므로 크롤러와 AI 봇은 제외된다.
+    if (request.method === 'POST' && url.pathname === '/hit') {
+      const ua = request.headers.get('user-agent') ?? '';
+      const bot = BOT_UA.test(ua) || request.cf?.botManagement?.verifiedBot === true;
+      const path = (await request.text()).slice(0, 200).replace(/[^\w\-\/%.]/g, '');
+      const returning = /(^|;\s*)uv=1(;|$)/.test(request.headers.get('cookie') ?? '');
+      if (!bot && path && path !== '/0' && ctx) ctx.waitUntil(getStore(env).recordVisit(path, returning));
+      return new Response(null, { status: 204, headers: returning ? {} : { 'set-cookie': 'uv=1; Max-Age=31536000; Path=/; Secure; SameSite=Lax' } });
+    }
+
     if (request.method !== 'GET' && request.method !== 'HEAD') {
       return new Response('Method Not Allowed', { status: 405, headers: { allow: 'GET, HEAD' } });
     }
@@ -298,11 +309,6 @@ export default {
     }
 
     const response = await route(url, env, request);
-    // 방문 집계: HTML 200 · 봇 제외 · 운영 페이지 제외
-    const ua = request.headers.get('user-agent') ?? '';
-    if (ctx && response.status === 200 && (response.headers.get('content-type') ?? '').includes('html') && !/bot|crawl|spider|slurp|preview|facebookexternalhit|curl|wget/i.test(ua) && url.pathname !== '/0') {
-      ctx.waitUntil(getStore(env).recordVisit(url.pathname.replace(/\/+$/, '') || '/'));
-    }
     if (request.method === 'HEAD') {
       return new Response(null, { status: response.status, headers: response.headers });
     }

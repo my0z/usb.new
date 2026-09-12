@@ -69,10 +69,12 @@ class KvStore {
     return safeParse(await this.kv.get(`post:${slug}`), null);
   }
 
-  async recordVisit(path) {
+  /** 브라우저 비콘으로만 호출된다. returning 은 재방문 쿠키가 있는 경우. */
+  async recordVisit(path, returning = false) {
     if (!this.db) return;
     const day = new Date().toISOString().slice(0, 10);
-    await this.db.prepare('INSERT INTO visits(day, path, n) VALUES(?, ?, 1) ON CONFLICT(day, path) DO UPDATE SET n = n + 1').bind(day, path).run().catch(() => {});
+    const r = returning ? 1 : 0;
+    await this.db.prepare('INSERT INTO visits(day, path, n, r) VALUES(?, ?, 1, ?) ON CONFLICT(day, path) DO UPDATE SET n = n + 1, r = r + ?').bind(day, path, r, r).run().catch(() => {});
   }
 
   async visitStats() {
@@ -80,9 +82,9 @@ class KvStore {
     const q = (sql, ...b) => this.db.prepare(sql).bind(...b).all().then((r) => r.results).catch(() => []);
     const since = (d) => new Date(Date.now() - d * 864e5).toISOString().slice(0, 10);
     const [days, top, totals] = await Promise.all([
-      q('SELECT day, SUM(n) AS n FROM visits WHERE day >= ? GROUP BY day ORDER BY day DESC', since(14)),
+      q('SELECT day, SUM(n) AS n, SUM(r) AS r FROM visits WHERE day >= ? GROUP BY day ORDER BY day DESC', since(14)),
       q('SELECT path, SUM(n) AS n FROM visits WHERE day >= ? GROUP BY path ORDER BY n DESC LIMIT 20', since(7)),
-      q('SELECT SUM(CASE WHEN day = ? THEN n ELSE 0 END) AS today, SUM(CASE WHEN day >= ? THEN n ELSE 0 END) AS week, SUM(n) AS total FROM visits', since(0), since(7)),
+      q('SELECT SUM(CASE WHEN day = ? THEN n ELSE 0 END) AS today, SUM(CASE WHEN day = ? THEN r ELSE 0 END) AS todayR, SUM(CASE WHEN day >= ? THEN n ELSE 0 END) AS week, SUM(CASE WHEN day >= ? THEN r ELSE 0 END) AS weekR, SUM(n) AS total, SUM(r) AS totalR FROM visits', since(0), since(0), since(7), since(7)),
     ]);
     return { days, top, ...(totals[0] ?? {}) };
   }
