@@ -50,7 +50,8 @@ async function groqChat(system, user, model = LLM.groqModel, o = {}) {
 
 /** Groq 키가 있으면 70B 를 먼저 쓴다 (소형 로컬 모델보다 지어내기가 훨씬 적다). Ollama 는 예비. */
 export async function generateJson(system, user) {
-  const order = LLM.groqKey ? [['groq', groqChat], ['ollama', ollamaChat]] : [['ollama', ollamaChat]];
+  // Groq 는 JSON 검증 실패(400)가 간헐적이라 한 번 더 시도한 뒤에 Ollama 로 내려간다.
+  const order = LLM.groqKey ? [['groq', groqChat], ['groq', groqChat], ['ollama', ollamaChat]] : [['ollama', ollamaChat]];
   const errors = [];
   for (const [name, fn] of order) {
     try {
