@@ -23,6 +23,7 @@ nano generator/.env
 
 - `COUPANG_ACCESS_KEY` `COUPANG_SECRET_KEY` — 쿠팡 파트너스 API 키
 - `CLOUDFLARE_API_TOKEN` — **Workers KV Storage: Edit** 권한이 포함된 토큰 (배포용 토큰과 별도로 만들어도 된다)
+- `YOUTUBE_API_KEY` (선택) — 있으면 주인공 제품의 최근 1년 영상을 찾아 글에 넣는다. Google Cloud 콘솔에서 YouTube Data API v3 를 켜고 API 키를 만든다. 하루 100회 검색까지 무료
 
 ## 3. 점검
 

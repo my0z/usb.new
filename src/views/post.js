@@ -117,6 +117,12 @@ export function postPage(p, { canonical, related, views }) {
 
       <div class="post__main">
         ${p.tldr ? html`<div class="tldr reveal"><span class="tldr__label">✦ 한줄요약</span><p>${p.tldr}</p></div>` : ''}
+        ${p.video?.id && /^[\w-]{11}$/.test(p.video.id)
+          ? html`<figure class="video reveal">
+              <iframe src="https://www.youtube-nocookie.com/embed/${p.video.id}" title="${p.video.title ?? '제품 영상'}" loading="lazy" allow="accelerometer; encrypted-media; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+              <figcaption><span>${p.video.title ?? ''}</span><span>${p.video.channel ?? ''}</span></figcaption>
+            </figure>`
+          : ''}
         ${compareTable(p)}
         <div class="prose prose--post">${flow(p)}</div>
         ${p.outro ? html`<div class="prose prose--outro">${raw(p.outro)}</div>` : ''}

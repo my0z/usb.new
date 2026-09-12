@@ -19,6 +19,7 @@ import { generateJson, ollamaHealthy } from './lib/llm.js';
 import { buildPrompt, parseArticle } from './lib/article.js';
 import { buildPost, embedImages, summarize, newSlug } from './lib/post.js';
 import { mockProducts, mockArticleJson } from './lib/mock.js';
+import { findVideo } from './lib/video.js';
 
 loadEnv();
 
@@ -164,10 +165,14 @@ async function runOnce(forcedKeyword, forcedQuery) {
   log(`키워드: ${item.keyword} · 검색어: ${item.q}`);
   const products = await chooseProducts(item.q);
   log(`제품 ${products.length}개: ${products.map((p) => p.name.slice(0, 30)).join(' | ')}`);
-  const { article, model } = await writeArticle(item.keyword, item.q, products);
+  const [{ article, model }, video] = await Promise.all([
+    writeArticle(item.keyword, item.q, products),
+    MOCK ? null : findVideo(products[0].name).catch(() => null),
+  ]);
+  if (video) log(`영상: ${video.title} (${video.channel})`);
   let slug = newSlug();
   while (await kv.get(`post:${slug}`)) slug = newSlug();
-  const post = buildPost({ article: embedImages(article, products), keyword: item.keyword, products, modelUsed: model, slug });
+  const post = buildPost({ article: embedImages(article, products), keyword: item.keyword, products, modelUsed: model, slug, video });
   if (DRY || MOCK) {
     console.log(JSON.stringify(post, null, 2));
     log(`(dry-run) KV 에 쓰지 않음 — slug ${post.slug}`);

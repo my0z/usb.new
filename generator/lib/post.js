@@ -32,7 +32,7 @@ export function newSlug() {
   return Array.from({ length: 5 }, () => CHARS[randomInt(CHARS.length)]).join('');
 }
 
-export function buildPost({ article, keyword, products, modelUsed, slug = newSlug() }) {
+export function buildPost({ article, keyword, products, modelUsed, slug = newSlug(), video = null }) {
   const main = products[0];
   return {
     slug,
@@ -54,6 +54,7 @@ export function buildPost({ article, keyword, products, modelUsed, slug = newSlu
       productId: p.productId ?? null,
     })),
     alternatives: [],
+    video,
     metaDescription: article.tldr || makeExcerpt(article.intro_html, 150) || `${main.name} 리뷰`,
     type: products.length > 1 ? 'comparison' : 'review',
     modelUsed,
