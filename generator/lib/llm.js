@@ -56,6 +56,7 @@ export async function generateJson(system, user) {
     try {
       return await fn(system, user);
     } catch (e) {
+      console.warn(`${name} 실패 → 다음 모델로: ${e.message.slice(0, 300)}`);
       errors.push(`${name}: ${e.message}`);
     }
   }
