@@ -3,6 +3,8 @@
  * 모델에는 제품 사실만 압축해서 넘긴다. 긴 설명이나 페이지 원문은 넣지 않는다.
  */
 
+import { parseJsonLoose } from './llm.js';
+
 const SYSTEM = `당신은 한국 전자기기 리뷰 매거진의 에디터다. 최근 출시된 전자기기와 스마트 가젯을 소개하는 리뷰를 쓴다. 무엇이 이전 세대나 흔한 제품과 다른지에 초점을 맞춘다.
 규칙:
 - 반드시 JSON 하나만 출력한다. 설명이나 마크다운 코드블록을 붙이지 않는다.
@@ -50,13 +52,6 @@ ${lines.join('\n')}
   return { system: SYSTEM, user, productLines: `주제 키워드: ${keyword} · 검색어(제품 사실 아님): ${query}\n${lines.join('\n')}` };
 }
 
-function stripCodeFence(text) {
-  return String(text)
-    .trim()
-    .replace(/^```(?:json)?\s*/i, '')
-    .replace(/\s*```$/, '');
-}
-
 function ensureParagraphs(html) {
   const s = String(html ?? '').trim();
   if (!s) return '';
@@ -75,7 +70,7 @@ const BANNED = /[一-鿿]|<script|<iframe|javascript:/i;
 export function parseArticle(text) {
   let obj;
   try {
-    obj = JSON.parse(stripCodeFence(text));
+    obj = parseJsonLoose(text);
   } catch (e) {
     throw new Error(`JSON 파싱 실패: ${e.message}`);
   }

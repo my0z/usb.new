@@ -4,7 +4,7 @@
  * 심사관이 오류를 내면 그 심사관은 건너뛴다 (심사 불능 때문에 발행이 멈추지 않게).
  */
 import { LLM } from '../config.js';
-import { chatWith } from './llm.js';
+import { chatWith, parseJsonLoose } from './llm.js';
 
 const SYSTEM = `당신은 한국 전자기기 리뷰 매거진의 팩트체커다. 주어진 제품 정보와 리뷰 글을 비교해 심사한다.
 불합격 사유 (확실한 것만):
@@ -31,7 +31,7 @@ export async function reviewArticle(article, productLines, writerModel) {
   for (const m of judges) {
     try {
       const { text } = await chatWith(m, SYSTEM, user, { temperature: 0, maxTokens: 600 });
-      const r = JSON.parse(String(text).trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, ''));
+      const r = parseJsonLoose(text);
       const list = (Array.isArray(r.issues) ? r.issues : []).map(String).filter(Boolean);
       console.log(`  심사 ${m}: ${r.pass && !list.length ? '합격' : `불합격 (${list.length})`}`);
       if (!r.pass || list.length) issues.push(...(list.length ? list : ['심사관이 불합격 판정']));

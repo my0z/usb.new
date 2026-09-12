@@ -35,7 +35,6 @@ async function groqChat(system, user, model = LLM.groqModel, o = {}) {
       model,
       temperature: o.temperature ?? LLM.temperature,
       max_tokens: o.maxTokens ?? LLM.numPredict,
-      response_format: { type: 'json_object' },
       messages: [
         { role: 'system', content: system },
         { role: 'user', content: user },
@@ -62,6 +61,15 @@ export async function generateJson(system, user) {
     }
   }
   throw new Error(`모델 호출 실패 — ${errors.join(' | ')}`);
+}
+
+/** 앞뒤 설명이나 코드펜스가 붙어도 첫 { 부터 마지막 } 까지만 잘라 JSON 으로 읽는다. */
+export function parseJsonLoose(text) {
+  const t = String(text ?? '');
+  const a = t.indexOf('{');
+  const b = t.lastIndexOf('}');
+  if (a < 0 || b <= a) throw new Error('JSON 없음');
+  return JSON.parse(t.slice(a, b + 1));
 }
 
 /** "groq:모델" 또는 "ollama:모델" 문자열로 특정 모델을 부른다 (심사용). */
