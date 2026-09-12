@@ -82,8 +82,26 @@ function relevant(p, query) {
   return toks.some((t) => hay.includes(t.replace(/\s+/g, '')));
 }
 
+const NEW_RE = /2026|2025|신상|신형|신제품|new|2세대|3세대|gen ?[2-9]|pro|max|ultra|plus/i;
+const newness = (p) => (NEW_RE.test(p.name) ? 1 : 0);
+
+/** "2026" 과 "신상" 을 붙인 검색을 먼저 하고 결과를 합쳐 최신 제품이 앞에 오게 정렬한다. */
+async function searchLatest(query) {
+  if (MOCK) return mockProducts;
+  const seen = new Set();
+  const all = [];
+  for (const q of [`${query} 2026`, `${query} 신상`, query]) {
+    for (const p of await searchProducts(q, 10).catch(() => [])) {
+      const k = p.productId ?? p.productUrl;
+      if (!seen.has(k)) seen.add(k) && all.push(p);
+    }
+    if (all.length >= 15) break;
+  }
+  return all.sort((a, b) => newness(b) - newness(a) || a.rank - b.rank);
+}
+
 async function chooseProducts(query) {
-  const found = (MOCK ? mockProducts : await searchProducts(query, 10)).filter((p) => relevant(p, query));
+  const found = (await searchLatest(query)).filter((p) => MOCK || relevant(p, query));
   if (!found.length) throw new Error(`검색어와 맞는 제품 없음: ${query}`);
   const used = await recentlyUsedProductKeys();
   const fresh = [];
