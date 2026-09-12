@@ -41,9 +41,9 @@ function productKey(p) {
   return p.productId ? `id:${p.productId}` : `url:${p.productUrl}`;
 }
 
-/** KV 키는 512바이트 한도라 한글 제품명은 100자 안으로 자른다. */
+/** KV REST GET 은 퍼센트 인코딩된 키 길이(한글 1자 = 9바이트)로 512 한도를 재므로 40자 안으로 자른다. */
 function normalizeName(name) {
-  return String(name).trim().toLowerCase().replace(/\s+/g, ' ').slice(0, 100);
+  return String(name).trim().toLowerCase().replace(/\s+/g, ' ').slice(0, 40);
 }
 
 function coreTokens(keyword) {
