@@ -13,6 +13,7 @@
     "not_found_handling": "none"
   },
   // 기존 usb.kr 워커의 와일드카드 경로보다 구체적이라 n.usb.kr 은 이 워커가 받는다.
+  "workers_dev": true,
   "routes": [{ "pattern": "n.usb.kr/*", "zone_name": "usb.kr" }],
   "vars": {
     "SITE_NAME": "USB.KR",
@@ -29,6 +30,7 @@
     // 바인딩 없이 fixtures 로 도는 로컬 개발 환경
     "local": {
       // 기존 usb.kr 워커의 와일드카드 경로보다 구체적이라 n.usb.kr 은 이 워커가 받는다.
+  "workers_dev": true,
   "routes": [{ "pattern": "n.usb.kr/*", "zone_name": "usb.kr" }],
   "vars": {
         "SITE_NAME": "USB.KR",
