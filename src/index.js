@@ -5,6 +5,7 @@ import { listPage, categoriesPage } from './views/list.js';
 import { aboutPage, privacyPage } from './views/about.js';
 import { notFoundPage } from './views/notFound.js';
 import { statsPage } from './views/stats.js';
+import { ASSET_VERSION } from './views/layout.js';
 import { categories, getCategory, categoryOfPost } from './data/categories.js';
 import { getStore, searchSummaries, excerpt } from './data/store.js';
 
@@ -310,12 +311,14 @@ export default {
 
     // 엣지 캐시: 공개 HTML 은 5분간 KV 를 건너뛴다 (응답의 s-maxage 를 따른다)
     const cacheable = request.method === 'GET' && !url.search && !['/0', '/search', '/healthz'].includes(url.pathname) && typeof caches !== 'undefined';
+    // 캐시 키에 버전을 넣어 새 배포가 이전 캐시를 자동으로 버리게 한다
+    const cacheKey = cacheable ? new Request(`${url.origin}${url.pathname}?v=${ASSET_VERSION}`) : null;
     if (cacheable) {
-      const hit = await caches.default.match(request);
+      const hit = await caches.default.match(cacheKey);
       if (hit) return hit;
     }
     const response = await route(url, env, request);
-    if (cacheable && response.status === 200 && ctx) ctx.waitUntil(caches.default.put(request, response.clone()));
+    if (cacheable && response.status === 200 && ctx) ctx.waitUntil(caches.default.put(cacheKey, response.clone()));
     if (request.method === 'HEAD') {
       return new Response(null, { status: response.status, headers: response.headers });
     }
