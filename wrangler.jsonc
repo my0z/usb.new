@@ -19,7 +19,7 @@
     "SITE_NAME": "USB.KR",
     "SITE_URL": "https://usb.kr",
     // GA4 측정 ID. 비우면 태그를 안 넣는다.
-    "GA_ID": ""
+    "GA_ID": "G-NT3KK3KBRZ"
   },
   // 새 사이트 전용 저장소. generator/ 만 쓴다.
   "kv_namespaces": [
