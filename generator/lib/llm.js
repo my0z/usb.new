@@ -48,18 +48,15 @@ async function groqChat(system, user) {
   return { text: data?.choices?.[0]?.message?.content ?? '', model: `groq:${LLM.groqModel}` };
 }
 
+/** Groq 키가 있으면 70B 를 먼저 쓴다 (소형 로컬 모델보다 지어내기가 훨씬 적다). Ollama 는 예비. */
 export async function generateJson(system, user) {
+  const order = LLM.groqKey ? [['groq', groqChat], ['ollama', ollamaChat]] : [['ollama', ollamaChat]];
   const errors = [];
-  try {
-    return await ollamaChat(system, user);
-  } catch (e) {
-    errors.push(`ollama: ${e.message}`);
-  }
-  if (LLM.groqKey) {
+  for (const [name, fn] of order) {
     try {
-      return await groqChat(system, user);
+      return await fn(system, user);
     } catch (e) {
-      errors.push(`groq: ${e.message}`);
+      errors.push(`${name}: ${e.message}`);
     }
   }
   throw new Error(`모델 호출 실패 — ${errors.join(' | ')}`);

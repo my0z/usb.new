@@ -77,7 +77,7 @@ export function parseArticle(text) {
   } catch (e) {
     throw new Error(`JSON 파싱 실패: ${e.message}`);
   }
-  const calm = (t) => String(t ?? '').replace(/!+/g, '.').replace(/\.{2,}/g, '.').trim();
+  const calm = (t) => String(t ?? '').replace(/!+/g, '.').replace(/\.{2,}/g, '.').replace(/강력히 /g, '').trim();
   const title = calm(obj.title);
   const tldr = calm(obj.tldr);
   const intro_html = ensureParagraphs(obj.intro_html);

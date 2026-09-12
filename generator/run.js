@@ -188,10 +188,8 @@ async function main() {
     requireEnv(['COUPANG_ACCESS_KEY', 'COUPANG_SECRET_KEY']);
     if (!DRY) requireEnv(['CLOUDFLARE_API_TOKEN', 'CLOUDFLARE_ACCOUNT_ID', 'KV_NAMESPACE_ID']);
     const health = await ollamaHealthy();
-    if (!health.ok) {
-      if (LLM.groqKey) log(`Ollama 사용 불가 (${health.reason}) → Groq 로 대체`);
-      else throw new Error(`Ollama 사용 불가: ${health.reason}. \`ollama pull ${LLM.ollamaModel}\` 을 먼저 실행하라.`);
-    }
+    if (LLM.groqKey) log(`모델: Groq ${LLM.groqModel} (예비: Ollama ${health.ok ? LLM.ollamaModel : '없음'})`);
+    else if (!health.ok) throw new Error(`Ollama 사용 불가: ${health.reason}. \`ollama pull ${LLM.ollamaModel}\` 을 먼저 실행하라.`);
   }
   let ok = 0;
   for (let i = 0; i < COUNT; i += 1) {
