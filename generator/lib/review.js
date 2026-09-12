@@ -6,6 +6,8 @@
 import { LLM } from '../config.js';
 import { chatWith, parseJsonLoose } from './llm.js';
 
+const strip = (h) => String(h ?? '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+
 const SYSTEM = `당신은 한국 전자기기 리뷰 매거진의 팩트체커다. 주어진 제품 정보와 리뷰 글을 비교해 심사한다.
 불합격 사유 (확실한 것만):
 - 제품 정보에 근거가 없는 구체적 수치나 기능을 사실처럼 단정함. 검색어는 제품 사실이 아니다 (검색어가 카드형이어도 제품명에 없으면 카드형이라고 쓰면 안 된다). 예: 배터리 시간 · 무게 · 용량 · 정확도 · 방수 등급 · 앱 연동 · 구성품 · 재질
@@ -19,7 +21,6 @@ const SYSTEM = `당신은 한국 전자기기 리뷰 매거진의 팩트체커�
 issues 는 확실한 문제만 최대 3개. 문제가 없으면 pass 는 true 이고 issues 는 빈 배열이다.`;
 
 function textOf(a) {
-  const strip = (h) => String(h ?? '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
   return [`제목: ${a.title}`, `요약: ${a.tldr}`, strip(a.intro_html), ...a.sections.map((s) => `[${s.heading}] ${strip(s.body_html)}`), strip(a.outro_html), ...a.faq.map((f) => `Q: ${f.q} A: ${f.a}`)].join('\n');
 }
 

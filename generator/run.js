@@ -132,7 +132,7 @@ async function writeArticle(keyword, query, products) {
   let issues = [];
   let prev = null;
   for (let attempt = 1; attempt <= 3; attempt += 1) {
-    const feedback = issues.length ? `\n\n아래는 이전 초안이다. 지적된 문제만 고치고 나머지는 유지해서 같은 JSON 형식으로 다시 출력하라.\n이전 초안: ${JSON.stringify(prev)}\n문제점:\n- ${issues.join('\n- ')}` : '';
+    const feedback = !issues.length ? '' : `\n\n아래는 이전 초안이다. 지적된 문제만 고치고 나머지는 유지해서 같은 JSON 형식으로 다시 출력하라.\n이전 초안: ${JSON.stringify(prev)}\n문제점:\n- ${issues.join('\n- ')}`;
     const { text, model } = await generateJson(system, user + feedback);
     let article;
     try {

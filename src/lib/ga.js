@@ -57,9 +57,8 @@ export async function gaReport(env) {
     run(env, 'runReport', { dateRanges: [{ startDate: '13daysAgo', endDate: 'today' }], dimensions: [{ name: 'date' }], metrics: [{ name: 'activeUsers' }, { name: 'screenPageViews' }], orderBys: [{ dimension: { dimensionName: 'date' }, desc: true }] }),
     run(env, 'runRealtimeReport', { metrics: [{ name: 'activeUsers' }] }),
   ]);
-  const byRange = {};
-  for (const r of rows(ranges)) byRange[r.d[0] ?? 'date_range_0'] = { users: r.m[0], views: r.m[1], sessions: r.m[2] };
   const zero = { users: 0, views: 0, sessions: 0 };
+  const byRange = Object.fromEntries(rows(ranges).map((r) => [r.d[0] ?? 'date_range_0', { users: r.m[0], views: r.m[1], sessions: r.m[2] }]));
   report = {
     at: Date.now(),
     data: {
