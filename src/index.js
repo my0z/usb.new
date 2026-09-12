@@ -5,7 +5,8 @@ import { listPage, categoriesPage } from './views/list.js';
 import { aboutPage, privacyPage } from './views/about.js';
 import { notFoundPage } from './views/notFound.js';
 import { statsPage } from './views/stats.js';
-import { ASSET_VERSION, setGaId } from './views/layout.js';
+import { ASSET_VERSION, setTracking } from './views/layout.js';
+import { gaReport } from './lib/ga.js';
 import { categories, getCategory, categoryOfPost } from './data/categories.js';
 import { getStore, searchSummaries, excerpt } from './data/store.js';
 
@@ -206,8 +207,8 @@ async function route(url, env, request) {
     const key = env?.ADMIN_KEY;
     const cookie = request.headers.get('cookie') ?? '';
     if (key && url.searchParams.get('key') !== key && !cookie.includes(`adm=${key}`)) return notFound(store, canonical);
-    const [summaries, visits] = await Promise.all([store.summaries(), store.visitStats()]);
-    const res = page(statsPage({ canonical, summaries, visits }), { cache: 'no-store' });
+    const [summaries, visits, ga] = await Promise.all([store.summaries(), store.visitStats(), gaReport(env).catch((e) => ({ error: e.message }))]);
+    const res = page(statsPage({ canonical, summaries, visits, ga }), { cache: 'no-store' });
     if (key) res.headers.set('set-cookie', `adm=${key}; Path=/0; Max-Age=31536000; HttpOnly; Secure; SameSite=Lax`);
     return res;
   }
@@ -288,7 +289,7 @@ async function route(url, env, request) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    setGaId(env.GA_ID);
+    setTracking(env);
 
     // 방문 비콘. 자바스크립트를 실행한 브라우저만 보내므로 크롤러와 AI 봇은 제외된다.
     if (request.method === 'POST' && url.pathname === '/hit') {

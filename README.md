@@ -26,7 +26,37 @@ usb.kr 리뉴얼 사이트. USB 주변기기를 다루는 매거진 · 리뷰형
 | `/healthz` | 상태 확인 JSON (`source` 가 `kv` 면 실데이터) |
 | `/0` | 관리자 통계. 방문(사람만 · 재방문 구분) · 발행 현황 · 구글 애널리틱스 링크 |
 
-구글 애널리틱스는 `wrangler.jsonc` 의 `GA_ID` 에 GA4 측정 ID(`G-XXXXXXXX`)를 넣고 배포하면 모든 페이지에 태그가 들어간다. 비워 두면 안 넣는다.
+### 구글 애널리틱스
+
+태그: `wrangler.jsonc` 의 `GA_ID` 에 GA4 측정 ID(`G-XXXXXXXX`)를 넣고 배포하면 모든 페이지에 들어간다.
+
+`/0` 에 GA 집계(실시간 · 오늘/7일/28일 사용자 · 인기 페이지 · 유입 경로 · 일별)를 띄우려면 서비스 계정이 필요하다.
+
+1. console.cloud.google.com → 프로젝트 → "API 및 서비스" → **Google Analytics Data API** 사용 설정
+2. "IAM 및 관리자" → 서비스 계정 만들기 → 키 추가 (JSON) 다운로드
+3. GA4 관리 → 속성 액세스 관리 → 서비스 계정 이메일을 **뷰어**로 추가
+4. GA4 관리 → 속성 설정 → 속성 ID(숫자) 를 `wrangler.jsonc` 의 `GA_PROPERTY_ID` 에 넣는다
+5. VM 에서 시크릿 등록 후 배포
+
+```sh
+cd ~/usb.new
+jq -r .client_email ~/ga-key.json | npx wrangler secret put GA_SA_EMAIL
+jq -r .private_key  ~/ga-key.json | npx wrangler secret put GA_SA_KEY
+npm run deploy
+```
+
+결과는 워커 안에서 10분 캐시한다. Data API 무료 한도(하루 25만 토큰)에 한참 못 미친다.
+
+### Cloudflare 부가 기능
+
+| 기능 | 상태 | 어떻게 |
+| --- | --- | --- |
+| Workers Logs (observability) | 켜짐 | 대시보드 → Workers → new → Logs 에서 요청 로그와 오류를 본다 |
+| Smart Placement | 켜짐 | KV · D1 · 구글 API 에 가까운 곳에서 워커가 돈다 |
+| Image Transformations | 코드 준비됨 | 대시보드 → usb.kr 존 → Images → Transformations 켜기 |
+| Web Analytics (무료 · 쿠키 없음) | 선택 | 대시보드 → Analytics → Web Analytics → n.usb.kr 추가. 프록시 존이라 자동 삽입을 고르면 코드 없이 된다. 수동이면 토큰을 `CF_BEACON_TOKEN` 에 |
+| Workers AI | 발행기 심사관으로 사용 | 토큰에 "Workers AI: Read" 추가하면 llama-3.3-70b 가 세 번째 심사관이 된다 (유료 플랜 하루 1만 뉴런 포함) |
+| Cache Reserve · Speed Brain · Early Hints | 선택 | 존 설정 → Caching / Speed 에서 토글. 코드 변경 없음 |
 
 ## 디렉터리
 

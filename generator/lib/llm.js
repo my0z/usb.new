@@ -63,6 +63,27 @@ export async function generateJson(system, user) {
   throw new Error(`모델 호출 실패 — ${errors.join(' | ')}`);
 }
 
+/** Cloudflare Workers AI (유료 플랜에 하루 1만 뉴런 포함). 토큰에 "Workers AI: Read" 권한이 있어야 한다. */
+async function cfChat(system, user, model, o = {}) {
+  if (!LLM.cfToken || !LLM.cfAccount) throw new Error('CLOUDFLARE_API_TOKEN 또는 CLOUDFLARE_ACCOUNT_ID 없음');
+  const res = await fetch(`https://api.cloudflare.com/client/v4/accounts/${LLM.cfAccount}/ai/run/${model}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${LLM.cfToken}` },
+    body: JSON.stringify({
+      temperature: o.temperature ?? LLM.temperature,
+      max_tokens: o.maxTokens ?? LLM.numPredict,
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user', content: user },
+      ],
+    }),
+    signal: AbortSignal.timeout(90 * 1000),
+  });
+  if (!res.ok) throw new Error(`Workers AI ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  const data = await res.json();
+  return { text: data?.result?.response ?? '', model: `cf:${model}` };
+}
+
 /** 앞뒤 설명이나 코드펜스가 붙어도 첫 { 부터 마지막 } 까지만 잘라 JSON 으로 읽는다. */
 export function parseJsonLoose(text) {
   const t = String(text ?? '');
@@ -84,12 +105,13 @@ export function parseJsonLoose(text) {
   }
 }
 
-/** "groq:모델" 또는 "ollama:모델" 문자열로 특정 모델을 부른다 (심사용). */
+/** "groq:모델" · "ollama:모델" · "cf:@cf/모델" 문자열로 특정 모델을 부른다 (심사용). */
 export function chatWith(spec, system, user, o) {
   const [kind, ...rest] = spec.split(':');
   const model = rest.join(':');
   if (kind === 'groq') return groqChat(system, user, model, o);
   if (kind === 'ollama') return ollamaChat(system, user, model, o);
+  if (kind === 'cf') return cfChat(system, user, model, o);
   throw new Error(`알 수 없는 모델 지정: ${spec}`);
 }
 

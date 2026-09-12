@@ -25,7 +25,7 @@ function textOf(a) {
 
 /** 합격이면 [] · 불합격이면 문제 목록. 심사관 전원이 오류면 통과시킨다 (생성 자체는 이미 형식 검증을 거쳤다). */
 export async function reviewArticle(article, productLines, writerModel) {
-  const judges = LLM.reviewModels.filter((m) => m !== writerModel && (LLM.groqKey || !m.startsWith('groq:')));
+  const judges = LLM.reviewModels.filter((m) => m !== writerModel && (LLM.groqKey || !m.startsWith('groq:')) && (LLM.cfToken || !m.startsWith('cf:')));
   const user = `제품 정보 (1번이 주인공):\n${productLines}\n\n리뷰 글:\n${textOf(article)}\n\nJSON 으로만 답하라.`;
   const issues = [];
   for (const m of judges) {

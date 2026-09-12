@@ -5,11 +5,15 @@ import { postUrl, won } from './components.js';
 const SITE_NAME = 'USB.KR';
 const SITE_TAGLINE = '전자기기 스펙과 가격을 비교한다';
 /** 스타일 변경 시 올려서 브라우저 캐시를 무효화한다. */
-export const ASSET_VERSION = '20260912f';
+export const ASSET_VERSION = '20260912g';
 
-/** GA4 측정 ID (G-XXXX). 요청마다 index.js 가 env 에서 넣는다. 비어 있으면 태그를 안 넣는다. */
+/** GA4 측정 ID (G-XXXX) 와 Cloudflare Web Analytics 토큰. 요청마다 index.js 가 env 에서 넣는다. 비어 있으면 태그를 안 넣는다. */
 export let GA_ID = '';
-export const setGaId = (id) => { GA_ID = String(id ?? '').trim(); };
+let CF_BEACON = '';
+export const setTracking = (env) => {
+  GA_ID = String(env?.GA_ID ?? '').trim();
+  CF_BEACON = String(env?.CF_BEACON_TOKEN ?? '').trim();
+};
 const NAV_PRIMARY = ['audio', 'mobile', 'pc', 'display', 'wearable', 'smarthome', 'camera', 'car'];
 
 function issueLabel() {
@@ -153,6 +157,7 @@ export function layout({ title, description, canonical, active, body, heroSlot =
     </footer>
     <script>${INLINE_SCRIPT}</script>
     ${GA_ID ? html`<script async src="https://www.googletagmanager.com/gtag/js?id=${GA_ID}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${GA_ID}')</script>` : ''}
+    ${CF_BEACON ? html`<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "${CF_BEACON}"}'></script>` : ''}
   </body>
 </html>`;
 }
