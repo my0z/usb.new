@@ -69,7 +69,19 @@ export function parseJsonLoose(text) {
   const a = t.indexOf('{');
   const b = t.lastIndexOf('}');
   if (a < 0 || b <= a) throw new Error('JSON 없음');
-  return JSON.parse(t.slice(a, b + 1));
+  const body = t.slice(a, b + 1);
+  try {
+    return JSON.parse(body);
+  } catch (e) {
+    // 모델이 자주 내는 실수만 고친다: 끝에 남은 쉼표 · 객체 사이 빠진 쉼표 · 문자열 안의 줄바꿈
+    const fixed = body.replace(/,\s*([}\]])/g, '$1').replace(/}\s*{/g, '},{').replace(/"\s*\n\s*"/g, '","').replace(/[\u0000-\u001f]+/g, ' ');
+    try {
+      return JSON.parse(fixed);
+    } catch {
+      const pos = Number((/position (\d+)/.exec(e.message) || [])[1]);
+      throw new Error(`${e.message} — 주변: ${body.slice(Math.max(0, pos - 60), pos + 40).replace(/\s+/g, ' ')}`);
+    }
+  }
 }
 
 /** "groq:모델" 또는 "ollama:모델" 문자열로 특정 모델을 부른다 (심사용). */

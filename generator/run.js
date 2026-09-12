@@ -79,7 +79,8 @@ const GENERIC = new Set(['스마트', '신상', '휴대용', '무선', '미니',
 
 /** 검색어의 핵심 단어가 제품명이나 쿠팡 분류에 하나도 없으면 엉뚱한 상품으로 본다. */
 function relevant(p, query) {
-  const toks = coreTokens(query).filter((t) => !GENERIC.has(t) && !/^[a-z0-9]{1,2}$/.test(t));
+  // coreTokens 는 3자 이상만 남겨서 "스마트 물병" 이 "스마트" 하나로 줄고 그게 GENERIC 에 걸려 필터가 꺼졌다. 2자 토큰까지 본다.
+  const toks = String(query).toLowerCase().split(/[\s,/()\-]+/).filter((t) => t.length >= 2 && !GENERIC.has(t) && !/^[a-z0-9]{1,2}$/.test(t));
   if (!toks.length) return true;
   const hay = `${p.name} ${p.category}`.toLowerCase().replace(/\s+/g, '');
   return toks.some((t) => hay.includes(t.replace(/\s+/g, '')));
