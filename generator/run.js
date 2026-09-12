@@ -72,9 +72,19 @@ async function recentlyUsedProductKeys() {
   return new Set(list.filter((e) => e.at >= cutoff).map((e) => e.id));
 }
 
+const GENERIC = new Set(['스마트', '신상', '휴대용', '무선', '미니', '고속', '초소형', '가정용', '차량용', '스마트폰', '연동', '기능']);
+
+/** 검색어의 핵심 단어가 제품명이나 쿠팡 분류에 하나도 없으면 엉뚱한 상품으로 본다. */
+function relevant(p, query) {
+  const toks = coreTokens(query).filter((t) => !GENERIC.has(t) && !/^[a-z0-9]{1,2}$/.test(t));
+  if (!toks.length) return true;
+  const hay = `${p.name} ${p.category}`.toLowerCase().replace(/\s+/g, '');
+  return toks.some((t) => hay.includes(t.replace(/\s+/g, '')));
+}
+
 async function chooseProducts(query) {
-  const found = MOCK ? mockProducts : await searchProducts(query, 10);
-  if (!found.length) throw new Error(`쿠팡 검색 결과 없음: ${query}`);
+  const found = (MOCK ? mockProducts : await searchProducts(query, 10)).filter((p) => relevant(p, query));
+  if (!found.length) throw new Error(`검색어와 맞는 제품 없음: ${query}`);
   const used = await recentlyUsedProductKeys();
   const fresh = [];
   const seenNames = new Set();
