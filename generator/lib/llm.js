@@ -5,16 +5,16 @@
  */
 import { LLM } from '../config.js';
 
-async function ollamaChat(system, user) {
+async function ollamaChat(system, user, model = LLM.ollamaModel, o = {}) {
   const res = await fetch(`${LLM.ollamaUrl}/api/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: LLM.ollamaModel,
+      model,
       stream: false,
       format: 'json',
       keep_alive: '10m',
-      options: { temperature: LLM.temperature, num_ctx: LLM.numCtx, num_predict: LLM.numPredict },
+      options: { temperature: o.temperature ?? LLM.temperature, num_ctx: LLM.numCtx, num_predict: o.maxTokens ?? LLM.numPredict },
       messages: [
         { role: 'system', content: system },
         { role: 'user', content: user },
@@ -24,17 +24,17 @@ async function ollamaChat(system, user) {
   });
   if (!res.ok) throw new Error(`Ollama ${res.status}: ${(await res.text()).slice(0, 200)}`);
   const data = await res.json();
-  return { text: data?.message?.content ?? '', model: `ollama:${LLM.ollamaModel}` };
+  return { text: data?.message?.content ?? '', model: `ollama:${model}` };
 }
 
-async function groqChat(system, user) {
+async function groqChat(system, user, model = LLM.groqModel, o = {}) {
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${LLM.groqKey}` },
     body: JSON.stringify({
-      model: LLM.groqModel,
-      temperature: LLM.temperature,
-      max_tokens: LLM.numPredict,
+      model,
+      temperature: o.temperature ?? LLM.temperature,
+      max_tokens: o.maxTokens ?? LLM.numPredict,
       response_format: { type: 'json_object' },
       messages: [
         { role: 'system', content: system },
@@ -45,7 +45,7 @@ async function groqChat(system, user) {
   });
   if (!res.ok) throw new Error(`Groq ${res.status}: ${(await res.text()).slice(0, 200)}`);
   const data = await res.json();
-  return { text: data?.choices?.[0]?.message?.content ?? '', model: `groq:${LLM.groqModel}` };
+  return { text: data?.choices?.[0]?.message?.content ?? '', model: `groq:${model}` };
 }
 
 /** Groq 키가 있으면 70B 를 먼저 쓴다 (소형 로컬 모델보다 지어내기가 훨씬 적다). Ollama 는 예비. */
@@ -61,6 +61,15 @@ export async function generateJson(system, user) {
     }
   }
   throw new Error(`모델 호출 실패 — ${errors.join(' | ')}`);
+}
+
+/** "groq:모델" 또는 "ollama:모델" 문자열로 특정 모델을 부른다 (심사용). */
+export function chatWith(spec, system, user, o) {
+  const [kind, ...rest] = spec.split(':');
+  const model = rest.join(':');
+  if (kind === 'groq') return groqChat(system, user, model, o);
+  if (kind === 'ollama') return ollamaChat(system, user, model, o);
+  throw new Error(`알 수 없는 모델 지정: ${spec}`);
 }
 
 export async function ollamaHealthy() {

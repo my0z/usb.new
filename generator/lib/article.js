@@ -45,7 +45,7 @@ ${lines.join('\n')}
 
 섹션 구성 제안: 1) 무엇이 새로운가 2) 실제로 쓸 때 어떤 점이 편한가 3) 비교 대상과의 차이와 고를 때 기준
 위 형식의 JSON 으로만 답하라.`;
-  return { system: SYSTEM, user };
+  return { system: SYSTEM, user, productLines: lines.join('\n') };
 }
 
 function stripCodeFence(text) {

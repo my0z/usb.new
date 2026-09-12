@@ -17,6 +17,7 @@ import { searchProducts, deeplinks } from './lib/coupang.js';
 import { remoteKv, MemoryKv } from './lib/kv.js';
 import { generateJson, ollamaHealthy } from './lib/llm.js';
 import { buildPrompt, parseArticle } from './lib/article.js';
+import { reviewArticle } from './lib/review.js';
 import { buildPost, embedImages, summarize, newSlug } from './lib/post.js';
 import { mockProducts, mockArticleJson } from './lib/mock.js';
 import { findVideo } from './lib/video.js';
@@ -125,16 +126,24 @@ async function chooseProducts(query, min = 3000) {
 
 async function writeArticle(keyword, query, products) {
   if (MOCK) return { article: parseArticle(mockArticleJson), model: 'mock' };
-  const { system, user } = buildPrompt({ keyword, query, products });
+  const { system, user, productLines } = buildPrompt({ keyword, query, products });
   let lastErr;
-  for (let attempt = 1; attempt <= 2; attempt += 1) {
-    const { text, model } = await generateJson(system, user);
+  let issues = [];
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    const feedback = issues.length ? `\n\n이전 초안의 문제점이다. 모두 고쳐서 다시 써라:\n- ${issues.join('\n- ')}` : '';
+    const { text, model } = await generateJson(system, user + feedback);
+    let article;
     try {
-      return { article: parseArticle(text), model };
+      article = parseArticle(text);
     } catch (e) {
       lastErr = e;
-      log(`생성 결과 검증 실패 (${attempt}/2): ${e.message} — 원문: ${String(text).replace(/\s+/g, ' ').slice(0, 240)}`);
+      log(`생성 결과 검증 실패 (${attempt}/3): ${e.message} — 원문: ${String(text).replace(/\s+/g, ' ').slice(0, 240)}`);
+      continue;
     }
+    issues = await reviewArticle(article, productLines, model);
+    if (!issues.length) return { article, model };
+    lastErr = new Error(`심사 불합격: ${issues.join(' / ')}`);
+    log(`심사 불합격 (${attempt}/3) → 다시 씀: ${issues.slice(0, 3).join(' / ')}`);
   }
   throw lastErr;
 }

@@ -73,4 +73,6 @@ export const LLM = {
   temperature: 0.7,
   groqKey: process.env.GROQ_API_KEY || '',
   groqModel: process.env.GROQ_MODEL || 'openai/gpt-oss-120b',
+  // 심사관 목록 ("groq:모델" · "ollama:모델" 을 쉼표로). 글쓴 모델은 자동 제외된다.
+  reviewModels: (process.env.REVIEW_MODELS ?? 'groq:qwen/qwen3.8-27b,groq:openai/gpt-oss-20b').split(',').map((s) => s.trim()).filter(Boolean),
 };
