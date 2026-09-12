@@ -132,7 +132,7 @@ async function writeArticle(keyword, query, products) {
       return { article: parseArticle(text), model };
     } catch (e) {
       lastErr = e;
-      log(`생성 결과 검증 실패 (${attempt}/2): ${e.message}`);
+      log(`생성 결과 검증 실패 (${attempt}/2): ${e.message} — 원문: ${String(text).replace(/\s+/g, ' ').slice(0, 240)}`);
     }
   }
   throw lastErr;

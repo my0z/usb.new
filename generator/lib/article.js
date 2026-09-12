@@ -80,14 +80,18 @@ export function parseArticle(text) {
   const calm = (t) => String(t ?? '').replace(/!+/g, '.').replace(/\.{2,}/g, '.').replace(/강력히 /g, '').trim();
   const title = calm(obj.title);
   const tldr = calm(obj.tldr);
-  const intro_html = ensureParagraphs(obj.intro_html);
-  const outro_html = ensureParagraphs(obj.outro_html);
-  const sections = (Array.isArray(obj.sections) ? obj.sections : [])
-    .map((s) => ({ heading: String(s?.heading ?? '').trim(), body_html: ensureParagraphs(s?.body_html) }))
+  const intro_html = ensureParagraphs(obj.intro_html ?? obj.intro);
+  const outro_html = ensureParagraphs(obj.outro_html ?? obj.outro ?? obj.conclusion);
+  const rawSections = Array.isArray(obj.sections) ? obj.sections : Array.isArray(obj.body) ? obj.body : [];
+  const sections = rawSections
+    .map((s) => ({
+      heading: String(s?.heading ?? s?.title ?? s?.h2 ?? '').trim(),
+      body_html: ensureParagraphs(s?.body_html ?? s?.body ?? s?.content ?? s?.html ?? s?.text ?? (Array.isArray(s?.paragraphs) ? s.paragraphs.join('\n\n') : '')),
+    }))
     .filter((s) => s.heading && s.body_html)
     .slice(0, 5);
   const faq = (Array.isArray(obj.faq) ? obj.faq : [])
-    .map((f) => ({ q: String(f?.q ?? '').trim(), a: String(f?.a ?? '').trim() }))
+    .map((f) => ({ q: String(f?.q ?? f?.question ?? '').trim(), a: String(f?.a ?? f?.answer ?? '').trim() }))
     .filter((f) => f.q && f.a)
     .slice(0, 5);
 
