@@ -129,8 +129,9 @@ async function writeArticle(keyword, query, products) {
   const { system, user, productLines } = buildPrompt({ keyword, query, products });
   let lastErr;
   let issues = [];
+  let prev = null;
   for (let attempt = 1; attempt <= 3; attempt += 1) {
-    const feedback = issues.length ? `\n\n이전 초안의 문제점이다. 모두 고쳐서 다시 써라:\n- ${issues.join('\n- ')}` : '';
+    const feedback = issues.length ? `\n\n아래는 이전 초안이다. 지적된 문제만 고치고 나머지는 유지해서 같은 JSON 형식으로 다시 출력하라.\n이전 초안: ${JSON.stringify(prev)}\n문제점:\n- ${issues.join('\n- ')}` : '';
     const { text, model } = await generateJson(system, user + feedback);
     let article;
     try {
@@ -140,10 +141,11 @@ async function writeArticle(keyword, query, products) {
       log(`생성 결과 검증 실패 (${attempt}/3): ${e.message} — 원문: ${String(text).replace(/\s+/g, ' ').slice(0, 240)}`);
       continue;
     }
+    prev = article;
     issues = await reviewArticle(article, productLines, model);
     if (!issues.length) return { article, model };
     lastErr = new Error(`심사 불합격: ${issues.join(' / ')}`);
-    log(`심사 불합격 (${attempt}/3) → 다시 씀: ${issues.slice(0, 3).join(' / ')}`);
+    log(`심사 불합격 (${attempt}/3) → 고쳐 씀: ${issues.slice(0, 3).join(' / ')}`);
   }
   throw lastErr;
 }
