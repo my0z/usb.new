@@ -4,6 +4,11 @@ import { postUrl } from './components.js';
 import { categories, categoryOfPost } from '../data/categories.js';
 
 /** 운영자용 통계. robots 에서 막고 링크도 두지 않는다. */
+const kst = (iso) => new Date(iso).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
+function ago(iso) {
+  const m = Math.max(0, Math.round((Date.now() - new Date(iso)) / 60000));
+  return m < 60 ? `${m}분 전` : m < 1440 ? `${Math.round(m / 60)}시간 전` : `${Math.round(m / 1440)}일 전`;
+}
 export function statsPage({ canonical, summaries, visits = null }) {
   const byCat = new Map();
   const byDay = new Map();
@@ -58,7 +63,7 @@ export function statsPage({ canonical, summaries, visits = null }) {
       </section>
     </div>
     <section class="specs reveal"><div class="specs__head"><h2 class="specs__title">최근 발행 20건</h2></div>
-      <table><tbody>${summaries.slice(0, 20).map((s) => html`<tr><th scope="row"><a href="${postUrl(s)}">${s.title}</a></th><td>${String(s.createdAt).slice(0, 16).replace('T', ' ')}</td></tr>`)}</tbody></table>
+      <table><tbody>${summaries.slice(0, 20).map((s) => html`<tr><th scope="row"><a href="${postUrl(s)}">${s.title}</a><br /><small>${s.keyword} · ${/^[a-z0-9]{5}$/.test(s.slug) ? '발행기' : '기존'}</small></th><td><time datetime="${s.createdAt}">${kst(s.createdAt)}</time><br /><small>${ago(s.createdAt)}</small></td></tr>`)}</tbody></table>
     </section>
   </div>`;
   return layout({ title: '발행 현황', description: '운영 통계', canonical, active: '', body });
