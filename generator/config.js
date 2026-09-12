@@ -68,7 +68,7 @@ export const LLM = {
   ollamaModel: process.env.OLLAMA_MODEL || 'exaone3.5:7.8b',
   // 토큰 절약: 컨텍스트와 출력 길이를 작게 고정한다.
   numCtx: 4096,
-  numPredict: 1600,
+  numPredict: 3500, // 한글은 글자당 토큰이 많아 1600 이면 800자 글이 중간에 잘린다
   temperature: 0.7,
   groqKey: process.env.GROQ_API_KEY || '',
   groqModel: process.env.GROQ_MODEL || 'openai/gpt-oss-120b',
