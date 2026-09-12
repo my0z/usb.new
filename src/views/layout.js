@@ -5,7 +5,7 @@ import { postUrl, won } from './components.js';
 const SITE_NAME = 'USB.KR';
 const SITE_TAGLINE = '전자기기 스펙과 가격을 비교한다';
 /** 스타일 변경 시 올려서 브라우저 캐시를 무효화한다. */
-const ASSET_VERSION = '20260911b';
+const ASSET_VERSION = '20260912a';
 const NAV_PRIMARY = ['audio', 'mobile', 'pc', 'display', 'wearable', 'smarthome', 'camera', 'car'];
 
 function issueLabel() {
@@ -41,7 +41,8 @@ const INLINE_SCRIPT = raw(`
   var bar=d.querySelector('.progress');
   if(bar){var t;addEventListener('scroll',function(){if(t)return;t=requestAnimationFrame(function(){t=0;var h=d.documentElement;var p=h.scrollTop/(h.scrollHeight-h.clientHeight);bar.style.transform='scaleX('+Math.min(1,Math.max(0,p))+')'})},{passive:true})}
   var mh=d.querySelector('.masthead');
-  addEventListener('scroll',function(){mh.classList.toggle('is-compact',scrollY>80)},{passive:true});
+  var brand=d.querySelector('.brand');
+  addEventListener('scroll',function(){var p=Math.min(1,scrollY/160);mh.classList.toggle('is-compact',scrollY>80);brand.style.setProperty('--brand-s',1-0.7*p)},{passive:true});
 })();
 `);
 

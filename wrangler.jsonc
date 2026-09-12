@@ -12,6 +12,7 @@
     "binding": "ASSETS",
     "not_found_handling": "none"
   },
+  "routes": [{ "pattern": "n.usb.kr", "custom_domain": true }],
   "vars": {
     "SITE_NAME": "USB.KR",
     "SITE_URL": "https://usb.kr"
@@ -23,7 +24,8 @@
   "env": {
     // 바인딩 없이 fixtures 로 도는 로컬 개발 환경
     "local": {
-      "vars": {
+      "routes": [{ "pattern": "n.usb.kr", "custom_domain": true }],
+  "vars": {
         "SITE_NAME": "USB.KR",
         "SITE_URL": "http://127.0.0.1:8787"
       }

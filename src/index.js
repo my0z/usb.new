@@ -4,6 +4,7 @@ import { postPage } from './views/post.js';
 import { listPage, categoriesPage } from './views/list.js';
 import { aboutPage, privacyPage } from './views/about.js';
 import { notFoundPage } from './views/notFound.js';
+import { statsPage } from './views/stats.js';
 import { categories, getCategory, categoryOfPost } from './data/categories.js';
 import { getStore, searchSummaries, excerpt } from './data/store.js';
 
@@ -199,6 +200,7 @@ async function route(url, env) {
   }
 
   if (path === '/about') return page(aboutPage({ canonical }));
+  if (path === '/0') return page(statsPage({ canonical, summaries: await store.summaries() }), { cache: 'no-store' });
   if (path === '/privacy') return page(privacyPage({ canonical }));
 
   if (path === '/search') {
@@ -238,7 +240,7 @@ async function route(url, env) {
   if (path === '/rss.xml' || path === '/feed.xml') return rssFeed(url.origin, await store.summaries());
   if (path === '/sitemap.xml') return sitemap(url.origin, await store.summaries());
   if (path === '/llms.txt') return llmsTxt(url.origin, await store.summaries());
-  if (path === '/robots.txt') return text(`User-agent: *\nAllow: /\nDisallow: /out\nDisallow: /search\nSitemap: ${url.origin}/sitemap.xml\n`);
+  if (path === '/robots.txt') return text(`User-agent: *\nAllow: /\nDisallow: /out\nDisallow: /search\nDisallow: /0\nSitemap: ${url.origin}/sitemap.xml\n`);
 
   if (path === '/healthz') {
     const all = await store.summaries();

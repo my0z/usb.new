@@ -44,26 +44,6 @@ function hero(p) {
   </section>`;
 }
 
-function stats(all, popular) {
-  const productCount = all.reduce((n, s) => n + (s.productCount ?? s.products?.length ?? 0), 0);
-  const cats = new Set(all.map((s) => categoryOfPost(s)?.slug).filter(Boolean)).size;
-  const latest = all[0]?.createdAt ? Math.max(0, Math.round((Date.now() - new Date(all[0].createdAt)) / 3600000)) : null;
-  const items = [
-    ['발행한 글', String(all.length), '건'],
-    ['다룬 제품', String(productCount || all.length), '개'],
-    ['활성 카테고리', String(cats || categories.length), '개'],
-    ['최근 발행', latest === null ? '—' : latest < 1 ? '방금' : latest < 24 ? String(latest) : String(Math.round(latest / 24)), latest === null ? '' : latest < 1 ? '' : latest < 24 ? '시간 전' : '일 전'],
-  ];
-  return html`<section class="stats reveal" aria-label="발행 현황">
-    ${items.map(
-      ([label, value, unit]) => html`<div class="stat">
-        <span class="stat__value">${value}<small>${unit}</small></span>
-        <span class="stat__label">${label}</span>
-      </div>`,
-    )}
-  </section>`;
-}
-
 function popularRail(list) {
   if (!list.length) return '';
   return html`<section class="popular reveal" aria-labelledby="popular-title">
@@ -102,8 +82,6 @@ export function homePage({ canonical, summaries, popular }) {
   const activeCats = categories.filter((c) => counts.get(c.slug)).sort((a, b) => counts.get(b.slug) - counts.get(a.slug));
 
   const body = html`<div class="shell">
-    ${stats(summaries, popular)}
-
     ${sectionHead('01', '최신 글', '새로 발행한 비교와 리뷰', '/posts')}
     ${cardGrid(latest, { bento: true, numbered: true })}
 
