@@ -5,7 +5,7 @@ import { listPage, categoriesPage } from './views/list.js';
 import { aboutPage, privacyPage } from './views/about.js';
 import { notFoundPage } from './views/notFound.js';
 import { statsPage } from './views/stats.js';
-import { ASSET_VERSION } from './views/layout.js';
+import { ASSET_VERSION, setGaId } from './views/layout.js';
 import { categories, getCategory, categoryOfPost } from './data/categories.js';
 import { getStore, searchSummaries, excerpt } from './data/store.js';
 
@@ -288,6 +288,7 @@ async function route(url, env, request) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    setGaId(env.GA_ID);
 
     // 방문 비콘. 자바스크립트를 실행한 브라우저만 보내므로 크롤러와 AI 봇은 제외된다.
     if (request.method === 'POST' && url.pathname === '/hit') {

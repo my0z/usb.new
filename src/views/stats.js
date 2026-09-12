@@ -1,5 +1,5 @@
 import { html } from '../lib/html.js';
-import { layout } from './layout.js';
+import { GA_ID, layout } from './layout.js';
 import { postUrl } from './components.js';
 import { categories, categoryOfPost } from '../data/categories.js';
 
@@ -28,6 +28,7 @@ export function statsPage({ canonical, summaries, visits = null }) {
     ['발행기 글', gen, '건'],
     ['다룬 제품', products, '개'],
     ['활성 카테고리', cats.filter(([n]) => n !== '미분류').length, '개'],
+    ['구글 애널리틱스', GA_ID ? html`<a href="https://analytics.google.com/">보기</a>` : '미설정', GA_ID || 'GA_ID 없음'],
   ];
   const body = html`<div class="shell">
     <header class="page-head reveal">

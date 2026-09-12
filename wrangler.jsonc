@@ -17,7 +17,9 @@
   "routes": [{ "pattern": "n.usb.kr/*", "zone_name": "usb.kr" }],
   "vars": {
     "SITE_NAME": "USB.KR",
-    "SITE_URL": "https://usb.kr"
+    "SITE_URL": "https://usb.kr",
+    // GA4 측정 ID. 비우면 태그를 안 넣는다.
+    "GA_ID": ""
   },
   // 새 사이트 전용 저장소. generator/ 만 쓴다.
   "kv_namespaces": [

@@ -24,6 +24,9 @@ usb.kr 리뉴얼 사이트. USB 주변기기를 다루는 매거진 · 리뷰형
 | `/about` `/privacy` | 소개 · 개인정보처리방침 |
 | `/rss.xml` `/feed.xml` `/sitemap.xml` `/llms.txt` `/robots.txt` | 피드와 색인용 |
 | `/healthz` | 상태 확인 JSON (`source` 가 `kv` 면 실데이터) |
+| `/0` | 관리자 통계. 방문(사람만 · 재방문 구분) · 발행 현황 · 구글 애널리틱스 링크 |
+
+구글 애널리틱스는 `wrangler.jsonc` 의 `GA_ID` 에 GA4 측정 ID(`G-XXXXXXXX`)를 넣고 배포하면 모든 페이지에 태그가 들어간다. 비워 두면 안 넣는다.
 
 ## 디렉터리
 
