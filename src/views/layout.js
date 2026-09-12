@@ -5,7 +5,7 @@ import { postUrl, won } from './components.js';
 const SITE_NAME = 'USB.KR';
 const SITE_TAGLINE = '전자기기 스펙과 가격을 비교한다';
 /** 스타일 변경 시 올려서 브라우저 캐시를 무효화한다. */
-const ASSET_VERSION = '20260912b';
+const ASSET_VERSION = '20260912c';
 const NAV_PRIMARY = ['audio', 'mobile', 'pc', 'display', 'wearable', 'smarthome', 'camera', 'car'];
 
 function issueLabel() {
@@ -69,13 +69,18 @@ export function layout({ title, description, canonical, active, body, heroSlot =
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <link rel="preload" as="style" href="/assets/styles.css?v=${ASSET_VERSION}" />
     <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700;900&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;0,9..144,900;1,9..144,500&display=swap"
+      media="print"
+      onload="this.media='all'"
     />
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
+      media="print"
+      onload="this.media='all'"
     />
     <link rel="stylesheet" href="/assets/styles.css?v=${ASSET_VERSION}" />
     ${jsonLd ? html`<script type="application/ld+json">${raw(JSON.stringify(jsonLd))}</script>` : ''}

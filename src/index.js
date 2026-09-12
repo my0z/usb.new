@@ -308,7 +308,14 @@ export default {
       return Response.redirect(target.toString(), 301);
     }
 
+    // 엣지 캐시: 공개 HTML 은 5분간 KV 를 건너뛴다 (응답의 s-maxage 를 따른다)
+    const cacheable = request.method === 'GET' && !url.search && !['/0', '/search', '/healthz'].includes(url.pathname) && typeof caches !== 'undefined';
+    if (cacheable) {
+      const hit = await caches.default.match(request);
+      if (hit) return hit;
+    }
     const response = await route(url, env, request);
+    if (cacheable && response.status === 200 && ctx) ctx.waitUntil(caches.default.put(request, response.clone()));
     if (request.method === 'HEAD') {
       return new Response(null, { status: response.status, headers: response.headers });
     }
