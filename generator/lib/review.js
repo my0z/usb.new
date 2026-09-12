@@ -30,7 +30,7 @@ export async function reviewArticle(article, productLines, writerModel) {
   const issues = [];
   for (const m of judges) {
     try {
-      const { text } = await chatWith(m, SYSTEM, user, { temperature: 0, maxTokens: 600 });
+      const { text } = await chatWith(m, SYSTEM, user, { temperature: 0, maxTokens: 2000 }); // gpt-oss 는 추론 토큰이 한도를 먹으면 본문이 비어 'JSON 없음' 이 난다
       const r = parseJsonLoose(text);
       const list = (Array.isArray(r.issues) ? r.issues : []).map(String).filter(Boolean);
       console.log(`  심사 ${m}: ${r.pass && !list.length ? '합격' : `불합격 (${list.length})`}`);
