@@ -14,9 +14,10 @@
     "not_found_handling": "none"
   },
   // 본 도메인을 이 워커가 받는다. n.usb.kr 과 www 는 usb.kr 로 301 한다 (index.js).
+  // usb.kr 은 Custom Domain 이라 배포 때 wrangler 가 DNS 레코드를 만든다. route 는 DNS 를 안 만들어서 옛 워커 삭제 뒤 apex 가 비었었다.
   "workers_dev": true,
   "routes": [
-    { "pattern": "usb.kr/*", "zone_name": "usb.kr" },
+    { "pattern": "usb.kr", "custom_domain": true },
     { "pattern": "www.usb.kr/*", "zone_name": "usb.kr" },
     { "pattern": "n.usb.kr/*", "zone_name": "usb.kr" }
   ],
