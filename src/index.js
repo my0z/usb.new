@@ -247,6 +247,11 @@ async function route(url, env, request) {
     if (key) res.headers.set('set-cookie', `adm=${key}; Path=/0; Max-Age=31536000; HttpOnly; Secure; SameSite=Lax`);
     return res;
   }
+  if (path === '/generator') {
+    const secret = env?.CRON_SECRET;
+    if (secret && request.headers.get('x-cron-secret') !== secret) return new Response('Unauthorized', { status: 403 });
+    return text(`Scheduled generator triggered at ${new Date().toISOString()}`);
+  }
   if (path === '/privacy') return page(privacyPage({ canonical }));
 
   if (path === '/search') {
@@ -352,7 +357,7 @@ export default {
     }
 
     // 엣지 캐시: 공개 HTML 은 5분간 KV 를 건너뛴다 (응답의 s-maxage 를 따른다)
-    const cacheable = request.method === 'GET' && !url.search && !['/0', '/search', '/healthz'].includes(url.pathname) && typeof caches !== 'undefined';
+    const cacheable = request.method === 'GET' && !url.search && !['/0', '/search', '/healthz', '/generator'].includes(url.pathname) && typeof caches !== 'undefined';
     // 캐시 키에 버전을 넣어 새 배포가 이전 캐시를 자동으로 버리게 한다
     const cacheKey = cacheable ? new Request(`${url.origin}${url.pathname}?v=${ASSET_VERSION}`) : null;
     if (cacheable) {
@@ -365,5 +370,16 @@ export default {
       return new Response(null, { status: response.status, headers: response.headers });
     }
     return response;
+  },
+
+  async scheduled(event, env, ctx) {
+    try {
+      const resp = await fetch('https://n.usb.kr/generator', {
+        headers: { 'x-cron-secret': env.CRON_SECRET || 'local' }
+      });
+      if (!resp.ok) console.error('Generator failed:', resp.status, await resp.text());
+    } catch (e) {
+      console.error('Generator error:', e.message);
+    }
   },
 };

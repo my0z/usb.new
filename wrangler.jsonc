@@ -24,7 +24,8 @@
     // GA4 속성 ID (숫자). 관리자 페이지에 GA 집계를 띄울 때 GA_SA_EMAIL · GA_SA_KEY 시크릿과 함께 쓴다.
     "GA_PROPERTY_ID": "314252211",
     // Cloudflare Web Analytics 토큰. 대시보드에서 자동 삽입을 켰으면 비워 둔다.
-    "CF_BEACON_TOKEN": ""
+    "CF_BEACON_TOKEN": "",
+    "CRON_SECRET": "usb-kr-cron-2026"
   },
   // KV · D1 · 구글 API 를 부르는 워커라 요청이 가까운 곳이 아니라 데이터에 가까운 곳에서 돌게 한다.
   "placement": { "mode": "smart" },
@@ -45,3 +46,7 @@
     }
   }
 }
+,
+  "triggers": {
+    "crons": ["0 0/4 * * *"]
+  }
