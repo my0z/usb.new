@@ -13,9 +13,13 @@
     "binding": "ASSETS",
     "not_found_handling": "none"
   },
-  // 기존 usb.kr 워커의 와일드카드 경로보다 구체적이라 n.usb.kr 은 이 워커가 받는다.
+  // 본 도메인을 이 워커가 받는다. n.usb.kr 과 www 는 usb.kr 로 301 한다 (index.js).
   "workers_dev": true,
-  "routes": [{ "pattern": "n.usb.kr/*", "zone_name": "usb.kr" }],
+  "routes": [
+    { "pattern": "usb.kr/*", "zone_name": "usb.kr" },
+    { "pattern": "www.usb.kr/*", "zone_name": "usb.kr" },
+    { "pattern": "n.usb.kr/*", "zone_name": "usb.kr" }
+  ],
   "vars": {
     "SITE_NAME": "USB.KR",
     "SITE_URL": "https://usb.kr",

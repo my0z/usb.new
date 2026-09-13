@@ -332,6 +332,11 @@ export default {
     const url = new URL(request.url);
     setTracking(env);
 
+    // 정식 주소는 usb.kr 하나. 옛 n.usb.kr 링크와 www 는 같은 경로로 301 해 검색 신뢰를 한곳에 모은다
+    if ((url.hostname === 'n.usb.kr' || url.hostname === 'www.usb.kr') && request.method !== 'POST') {
+      return redirect(`https://usb.kr${url.pathname}${url.search}`, 301);
+    }
+
     // 방문 비콘. 자바스크립트를 실행한 브라우저만 보내므로 크롤러와 AI 봇은 제외된다.
     if (request.method === 'POST' && url.pathname === '/hit') {
       const ua = request.headers.get('user-agent') ?? '';
