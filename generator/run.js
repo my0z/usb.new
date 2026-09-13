@@ -180,7 +180,7 @@ async function runOnce(forcedKeyword, forcedQuery) {
   log(`제품 ${products.length}개: ${products.map((p) => p.name.slice(0, 30)).join(' | ')}`);
   const [{ article, model }, video] = await Promise.all([
     writeArticle(item.keyword, item.q, products),
-    MOCK ? null : findVideo(products[0].name).catch(() => null),
+    MOCK ? null : findVideo(products[0].name, item.keyword).catch(() => null),
   ]);
   if (video) log(`영상: ${video.title} (${video.channel})`);
   let slug = newSlug();
