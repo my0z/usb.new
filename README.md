@@ -24,7 +24,7 @@ usb.kr 리뉴얼 사이트. USB 주변기기를 다루는 매거진 · 리뷰형
 | `/about` `/privacy` | 소개 · 개인정보처리방침 |
 | `/rss.xml` `/feed.xml` `/sitemap.xml` `/llms.txt` `/robots.txt` | 피드와 색인용 |
 | `/healthz` | 상태 확인 JSON (`source` 가 `kv` 면 실데이터) |
-| `/0` | 관리자 통계. 방문(사람만 · 재방문 구분) · 발행 현황 · 구글 애널리틱스 링크 |
+| `/0` | 관리자 통계. 방문(사람만 · 재방문 구분) · 발행 현황 · 발행기 성공률과 소요 시간 · 구글 애널리틱스 · 서치콘솔 검색 유입 · PageSpeed 점수 |
 
 ### 구글 애널리틱스
 
@@ -46,6 +46,21 @@ npm run deploy
 ```
 
 결과는 워커 안에서 10분 캐시한다. Data API 무료 한도(하루 25만 토큰)에 한참 못 미친다.
+
+### 구글 서치콘솔
+
+검색 클릭 · 노출 · 순위 · 검색어가 `/0` 에 뜬다. 위 서비스 계정을 그대로 쓴다.
+
+1. search.google.com/search-console → 속성 추가 → **도메인** `usb.kr` → 안내하는 TXT 레코드를 Cloudflare DNS 에 넣고 확인
+2. console.cloud.google.com → "API 및 서비스" → **Google Search Console API** 사용 설정
+3. 서치콘솔 → 설정 → 사용자 및 권한 → 서비스 계정 이메일을 **전체** 권한으로 추가
+4. `wrangler.jsonc` 의 `GSC_SITE` 가 속성과 같은지 본다 (도메인 속성 `sc-domain:usb.kr` · URL 접두어 속성이면 `https://usb.kr/`)
+
+검색 데이터는 이틀쯤 늦게 들어온다. URL 접두어 속성으로 만들었으면 메타태그 확인용 `GOOGLE_SITE_VERIFICATION` 도 채운다.
+
+### 발행기 기록 · 페이지 속도
+
+`generator/run.js` 는 실행마다 KV `gen:runs` 에 성공 여부 · 시도 횟수 · 소요 시간 · 오류를 남기고 `/0` 가 30일 성공률로 보여 준다. 페이지 속도는 `/0` 를 연 브라우저가 PageSpeed Insights API 를 직접 불러 모바일 점수와 LCP · CLS · TBT 를 그린다 (1시간 localStorage 캐시).
 
 ### Cloudflare 부가 기능
 

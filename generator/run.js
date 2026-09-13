@@ -144,7 +144,7 @@ async function writeArticle(keyword, query, intent, products) {
     }
     prev = article;
     issues = await reviewArticle(article, productLines, model);
-    if (!issues.length) return { article, model };
+    if (!issues.length) return { article, model, attempts: attempt };
     lastErr = new Error(`심사 불합격: ${issues.join(' / ')}`);
     log(`심사 불합격 (${attempt}/2) → 고쳐 씀: ${issues.slice(0, 3).join(' / ')}`);
   }
@@ -173,27 +173,47 @@ async function publish(post, products) {
   await kv.put(`product-post-map:${normalizeName(products[0].name)}`, post.slug, { ttl: 180 * 24 * 60 * 60 });
 }
 
+/** 실행 결과를 KV `gen:runs` 에 남긴다 (최신이 앞 · 200건). 관리자 페이지 /0 가 성공률과 소요 시간을 그린다. */
+async function recordRun(run) {
+  const list = await kv.getJson('gen:runs', []);
+  await kv.put('gen:runs', [run, ...list].slice(0, 200));
+}
+
 async function runOnce(forcedKeyword, forcedQuery) {
-  const item = await pickKeyword(forcedKeyword ? { keyword: forcedKeyword, q: forcedQuery || forcedKeyword } : null);
-  log(`키워드: ${item.keyword} · 검색어: ${item.q}`);
-  const products = await chooseProducts(item.q, item.min);
-  log(`제품 ${products.length}개: ${products.map((p) => p.name.slice(0, 30)).join(' | ')}`);
-  const [{ article, model }, video] = await Promise.all([
-    writeArticle(item.keyword, item.q, item.t, products),
-    MOCK ? null : findVideo(products[0].name, item.keyword).catch(() => null),
-  ]);
-  if (video) log(`영상: ${video.title} (${video.channel})`);
-  let slug = newSlug();
-  while (await kv.get(`post:${slug}`)) slug = newSlug();
-  const post = buildPost({ article: embedImages(article, products), keyword: item.keyword, products, modelUsed: model, slug, video });
-  if (DRY || MOCK) {
-    console.log(JSON.stringify(post, null, 2));
-    log(`(dry-run) KV 에 쓰지 않음 — slug ${post.slug}`);
+  const t0 = Date.now();
+  const run = { at: new Date().toISOString(), keyword: forcedKeyword ?? '', ok: 0, attempts: 0, ms: 0 };
+  try {
+    const item = await pickKeyword(forcedKeyword ? { keyword: forcedKeyword, q: forcedQuery || forcedKeyword } : null);
+    run.keyword = item.keyword;
+    log(`키워드: ${item.keyword} · 검색어: ${item.q}`);
+    const products = await chooseProducts(item.q, item.min);
+    log(`제품 ${products.length}개: ${products.map((p) => p.name.slice(0, 30)).join(' | ')}`);
+    const [{ article, model, attempts }, video] = await Promise.all([
+      writeArticle(item.keyword, item.q, item.t, products),
+      MOCK ? null : findVideo(products[0].name, item.keyword).catch(() => null),
+    ]);
+    Object.assign(run, { model, attempts: attempts ?? 1 });
+    if (video) log(`영상: ${video.title} (${video.channel})`);
+    let slug = newSlug();
+    while (await kv.get(`post:${slug}`)) slug = newSlug();
+    const post = buildPost({ article: embedImages(article, products), keyword: item.keyword, products, modelUsed: model, slug, video });
+    run.slug = post.slug;
+    if (DRY || MOCK) {
+      console.log(JSON.stringify(post, null, 2));
+      log(`(dry-run) KV 에 쓰지 않음 — slug ${post.slug}`);
+    } else {
+      await publish(post, products);
+      log(`발행 완료: https://usb.kr/${post.slug} — ${post.title}`);
+    }
+    run.ok = 1;
     return post;
+  } catch (e) {
+    run.err = String(e.message).slice(0, 160);
+    throw e;
+  } finally {
+    run.ms = Date.now() - t0;
+    await recordRun(run).catch((e) => log(`실행 기록 실패: ${e.message}`));
   }
-  await publish(post, products);
-  log(`발행 완료: https://usb.kr/${post.slug} — ${post.title}`);
-  return post;
 }
 
 async function main() {

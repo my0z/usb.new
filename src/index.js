@@ -6,7 +6,7 @@ import { aboutPage, privacyPage } from './views/about.js';
 import { statsPage } from './views/stats.js';
 import { bestGroups, bestIndexPage, bestPage, bestUrl } from './views/best.js';
 import { ASSET_VERSION, setTracking } from './views/layout.js';
-import { gaReport } from './lib/ga.js';
+import { gaReport, gscReport } from './lib/ga.js';
 import { categories, getCategory, categoryOfPost } from './data/categories.js';
 import { getStore, searchSummaries, excerpt } from './data/store.js';
 import { imgProxy } from './views/components.js';
@@ -262,8 +262,14 @@ async function route(url, env, request) {
     const key = env?.ADMIN_KEY;
     const cookie = request.headers.get('cookie') ?? '';
     if (key && url.searchParams.get('key') !== key && !cookie.includes(`adm=${key}`)) return notFound(url);
-    const [summaries, visits, ga] = await Promise.all([store.summaries(), store.visitStats(), gaReport(env).catch((e) => ({ error: e.message }))]);
-    const res = page(statsPage({ canonical, summaries, visits, ga }), { cache: 'no-store', noindex: true });
+    const [summaries, visits, ga, gsc, runs] = await Promise.all([
+      store.summaries(),
+      store.visitStats(),
+      gaReport(env).catch((e) => ({ error: e.message })),
+      gscReport(env).catch((e) => ({ error: e.message })),
+      store.genRuns(),
+    ]);
+    const res = page(statsPage({ canonical, summaries, visits, ga, gsc, runs, siteUrl: env?.SITE_URL || url.origin }), { cache: 'no-store', noindex: true });
     if (key) res.headers.set('set-cookie', `adm=${key}; Path=/0; Max-Age=31536000; HttpOnly; Secure; SameSite=Lax`);
     return res;
   }

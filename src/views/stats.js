@@ -52,7 +52,37 @@ const STYLE = raw(`
 .posts small{display:block;color:var(--ink-3);font-size:12px;margin-top:2px}
 .tag{display:inline-block;font-size:10px;letter-spacing:.08em;padding:2px 6px;border-radius:4px;background:var(--paper-3);color:var(--ink-2);vertical-align:middle;margin-right:4px}
 .tag--gen{background:var(--green-soft);color:var(--green)}
+.row__n.is-bad{color:var(--accent)}
+.psi{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;margin-bottom:10px}
+.psi b{display:block;font-family:var(--display);font-size:26px;line-height:1.1;letter-spacing:-.02em}
+.psi span{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.psi .g{color:var(--green)}.psi .a{color:var(--gold)}.psi .p{color:var(--accent)}
 @media (max-width:720px){.row{grid-template-columns:minmax(0,1fr) 28% auto}.kpi__v{font-size:26px}.adm__links a{padding:6px 10px}}
+`);
+
+/* PageSpeed Insights 는 브라우저가 직접 부른다. 워커에서 부르면 30초를 넘겨 끊기고 API 한도도 워커 IP 로 잡힌다. 결과는 localStorage 에 1시간 둔다. */
+const PSI_SCRIPT = raw(`
+(function(){
+  var el=document.getElementById('psi');if(!el)return;
+  var u=el.getAttribute('data-url'),k='psi:'+u,ttl=36e5;
+  function cls(v,g,a){return v<=g?'g':v<=a?'a':'p'}
+  function cell(l,v,c,unit){return '<div><b class="'+c+'">'+v+(unit?'<small>'+unit+'</small>':'')+'</b><span>'+l+'</span></div>'}
+  function draw(d){
+    var a=d.lighthouseResult.audits,s=Math.round(d.lighthouseResult.categories.performance.score*100);
+    var lcp=a['largest-contentful-paint'].numericValue/1000,cl=a['cumulative-layout-shift'].numericValue,tbt=a['total-blocking-time'].numericValue,fcp=a['first-contentful-paint'].numericValue/1000;
+    var f=(d.loadingExperience||{}).metrics||{};
+    var h='<div class="psi">'+cell('점수',s,cls(100-s,10,50))+cell('LCP',lcp.toFixed(1),cls(lcp,2.5,4),'s')+cell('CLS',cl.toFixed(2),cls(cl,0.1,0.25))+cell('TBT',Math.round(tbt),cls(tbt,200,600),'ms')+cell('FCP',fcp.toFixed(1),cls(fcp,1.8,3),'s')+'</div>';
+    if(f.LARGEST_CONTENTFUL_PAINT_MS)h+='<p class="panel__note">실사용자(CrUX) 28일: LCP '+(f.LARGEST_CONTENTFUL_PAINT_MS.percentile/1000).toFixed(1)+'s · CLS '+(f.CUMULATIVE_LAYOUT_SHIFT_SCORE.percentile/100).toFixed(2)+(f.INTERACTION_TO_NEXT_PAINT?' · INP '+f.INTERACTION_TO_NEXT_PAINT.percentile+'ms':'')+' · 종합 '+((d.loadingExperience.overall_category||'')).toLowerCase()+'</p>';
+    else h+='<p class="panel__note">실사용자(CrUX) 데이터는 방문이 더 쌓여야 나온다. 위는 모바일 실험실 측정이다.</p>';
+    h+='<p class="panel__note">'+new Date(d.analysisUTCTimestamp).toLocaleString('ko-KR',{timeZone:'Asia/Seoul',hour12:false})+' 측정 · <a href="https://pagespeed.web.dev/report?url='+encodeURIComponent(u)+'" target="_blank" rel="noopener">PageSpeed 에서 자세히</a></p>';
+    el.innerHTML=h
+  }
+  try{var c=JSON.parse(localStorage.getItem(k)||'null');if(c&&Date.now()-c.at<ttl){draw(c.d);return}}catch(e){}
+  fetch('https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url='+encodeURIComponent(u)+'&strategy=mobile&category=performance')
+    .then(function(r){if(!r.ok)throw new Error(r.status===429?'API 한도. 잠시 뒤 새로고침':'HTTP '+r.status);return r.json()})
+    .then(function(d){try{localStorage.setItem(k,JSON.stringify({at:Date.now(),d:d}))}catch(e){}draw(d)})
+    .catch(function(e){el.innerHTML='<p class="panel__note">측정 실패: '+e.message+'</p>'})
+})();
 `);
 
 const kpi = (label, value, sub = '', live = false) => html`<div class="kpi ${live ? 'kpi--live' : ''}"><span class="kpi__v">${value}${sub ? html`<small>${sub}</small>` : ''}</span><span class="kpi__l">${label}</span></div>`;
@@ -73,7 +103,7 @@ function bars(rows, { alt = false, unit = '' } = {}) {
 const panel = (title, body, { note = '', wide = false, sub = '' } = {}) =>
   html`<section class="panel ${wide ? 'panel--wide' : ''}"><h2 class="panel__h">${title}${sub ? html`<small>${sub}</small>` : ''}</h2>${note ? html`<p class="panel__note">${note}</p>` : ''}${body}</section>`;
 
-export function statsPage({ canonical, summaries, visits = null, ga = null }) {
+export function statsPage({ canonical, summaries, visits = null, ga = null, gsc = null, runs = [], siteUrl = '' }) {
   const byCat = new Map();
   const byDay = new Map();
   let products = 0;
@@ -89,6 +119,12 @@ export function statsPage({ canonical, summaries, visits = null, ga = null }) {
   const gen = summaries.filter(isGen).length;
   const last = summaries[0];
   const gaOk = ga && !ga.error;
+  const gscOk = gsc && !gsc.error;
+  const monthRuns = runs.filter((r) => Date.now() - new Date(r.at) < 30 * 864e5);
+  const okRuns = monthRuns.filter((r) => r.ok);
+  const avg = (list, f) => (list.length ? list.reduce((a, r) => a + f(r), 0) / list.length : 0);
+  const genRate = monthRuns.length ? Math.round((okRuns.length / monthRuns.length) * 100) : null;
+  const sec = (ms) => `${Math.round(ms / 1000)}초`;
 
   const body = html`<style>${STYLE}</style>
   <div class="shell adm">
@@ -110,6 +146,9 @@ export function statsPage({ canonical, summaries, visits = null, ga = null }) {
       ${visits ? kpi('7일 방문', num(visits.week), `재 ${num(visits.weekR)}`) : ''}
       ${visits ? kpi('누적 방문', num(visits.total), `재 ${num(visits.totalR)}`) : ''}
       ${gaOk ? kpi('GA 7일 사용자', num(ga.week.users), `조회 ${num(ga.week.views)}`) : ''}
+      ${gscOk ? kpi('검색 클릭 (28일)', num(gsc.clicks), `노출 ${num(gsc.impressions)}`) : ''}
+      ${gscOk ? kpi('검색 순위', gsc.position ? gsc.position.toFixed(1) : '-', `CTR ${(gsc.ctr * 100).toFixed(1)}%`) : ''}
+      ${genRate !== null ? kpi('발행 성공률 (30일)', `${genRate}%`, `${okRuns.length}/${monthRuns.length} · 평균 ${sec(avg(okRuns, (r) => r.ms))}`) : ''}
       ${kpi('발행한 글', num(summaries.length), `발행기 ${num(gen)}`)}
       ${kpi('다룬 제품', num(products), '개')}
       ${last ? kpi('마지막 발행', ago(last.createdAt), kst(last.createdAt)) : ''}
@@ -124,6 +163,24 @@ export function statsPage({ canonical, summaries, visits = null, ga = null }) {
       ${gaOk ? panel('GA 인기 페이지', bars(ga.pages.map((r) => [r.path, r.views, '', r.path]), { alt: true, unit: '회' }), { sub: '7일' }) : ''}
       ${gaOk ? panel('GA 유입 경로', bars(ga.sources.map((r) => [r.source, r.sessions]), { alt: true, unit: ' 세션' }), { sub: '7일' }) : ''}
       ${ga?.error ? panel('구글 애널리틱스', html`<p class="panel__note">불러오기 실패: ${ga.error}</p>`) : ''}
+      ${gscOk ? panel('검색 유입', bars(gsc.days.map((r) => [r.date, r.clicks, `노출 ${num(r.impressions)}`]), { alt: true, unit: '클릭' }), { sub: '14일 · 서치콘솔', note: '구글 검색 결과에서 클릭한 수. 이틀쯤 늦게 집계된다.' }) : ''}
+      ${gscOk ? panel('검색어', bars(gsc.queries.map((r) => [r.q, r.clicks, `${num(r.impressions)}회 노출 · ${r.position.toFixed(0)}위`]), { alt: true, unit: '클릭' }), { sub: '28일' }) : ''}
+      ${gscOk ? panel('검색 유입 페이지', bars(gsc.pages.map((r) => [r.path, r.clicks, `노출 ${num(r.impressions)}`, r.path]), { alt: true, unit: '클릭' }), { sub: '28일' }) : ''}
+      ${gsc?.error ? panel('서치콘솔', html`<p class="panel__note">불러오기 실패: ${gsc.error}<br />서치콘솔 → 설정 → 사용자 및 권한에 서비스 계정 이메일(GA_SA_EMAIL)을 추가해야 한다. 속성은 GSC_SITE 변수와 같아야 한다.</p>`) : ''}
+      ${panel(
+        '발행기 실행',
+        html`${monthRuns.length ? html`<p class="panel__note">30일 ${monthRuns.length}회 실행 · 성공 ${okRuns.length}회 · 성공 평균 ${sec(avg(okRuns, (r) => r.ms))} · 평균 ${avg(okRuns, (r) => r.attempts || 1).toFixed(1)}번 만에 심사 통과</p>` : ''}${runs.length
+          ? runs.slice(0, 12).map(
+              (r) => html`<div class="row">
+                <span class="row__l">${r.ok && r.slug ? html`<a href="/${r.slug}">${r.keyword}</a>` : r.keyword || '(키워드 선택 전)'}${r.ok ? '' : html` <small>${r.err ?? '실패'}</small>`}</span>
+                <span class="row__b"><i class="${r.ok ? '' : 'is-2'}" style="--w:${Math.min(100, Math.round((r.ms / Math.max(1, ...runs.slice(0, 12).map((x) => x.ms))) * 100))}%"></i></span>
+                <span class="row__n ${r.ok ? '' : 'is-bad'}">${sec(r.ms)}<small>${r.ok ? `${r.attempts || 1}회 시도 · ${ago(r.at)}` : `실패 · ${ago(r.at)}`}</small></span>
+              </div>`,
+            )
+          : html`<p class="panel__note">아직 기록이 없다. 발행기가 다음 실행부터 남긴다.</p>`}`,
+        { sub: '최근 12회', note: '' },
+      )}
+      ${panel('페이지 속도', html`<div id="psi" data-url="${siteUrl || canonical.replace(/\/0$/, '/')}"><p class="panel__note">PageSpeed Insights 모바일 측정 중… 20초쯤 걸린다.</p></div>`, { sub: 'PageSpeed · 1시간 캐시' })}
       ${!ga ? panel('구글 애널리틱스', html`<p class="panel__note">GA_PROPERTY_ID 변수와 GA_SA_EMAIL · GA_SA_KEY 시크릿을 넣으면 실시간 접속 · 사용자 · 유입 경로가 여기에 뜬다. README 의 "구글 애널리틱스" 참고.</p>`) : ''}
       ${panel('발행 추이', bars(days.map(([d, n]) => [d, n]), { unit: '건' }), { sub: '14일' })}
       ${panel('카테고리별', bars(cats.map(([c, n]) => [c, n]), { unit: '건' }), { sub: `${cats.length}개` })}
@@ -139,6 +196,7 @@ export function statsPage({ canonical, summaries, visits = null, ga = null }) {
         { wide: true, sub: '20건' },
       )}
     </div>
-  </div>`;
+  </div>
+  <script>${PSI_SCRIPT}</script>`;
   return layout({ title: '발행 현황', description: '운영 통계', canonical, active: '', body });
 }

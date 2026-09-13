@@ -50,14 +50,14 @@ export function metaLine(p, extra = null, { link = true } = {}) {
   </p>`;
 }
 
-export function postCard(p, { variant = 'default', index = null } = {}) {
+export function postCard(p, { variant = 'default', index = null, eager = false } = {}) {
   const first = p.products?.[0];
   const cover = first?.image ? imgProxy(first.image) : '/assets/hero-default.svg';
   const summary = p.tldr || p.metaDescription || excerpt(p.intro);
   return html`<article class="card card--${variant} reveal" ${index !== null ? html`style="--i:${index}"` : ''}>
     <a class="card__link" href="${postUrl(p)}">
       <div class="card__media card__media--product">
-        <img src="${cover}" alt="" loading="lazy" decoding="async" width="600" height="600" />
+        <img src="${cover}" alt="" ${eager ? html`fetchpriority="high"` : html`loading="lazy"`} decoding="async" width="600" height="600" />
         <span class="card__cat">${p.keyword}</span>
         ${first ? priceBadge(first) : ''}
         ${index !== null ? html`<span class="card__num">${String(index + 1).padStart(2, '0')}</span>` : ''}
@@ -72,9 +72,9 @@ export function postCard(p, { variant = 'default', index = null } = {}) {
   </article>`;
 }
 
-export function cardGrid(list, { variant = 'default', numbered = false, bento = false } = {}) {
+export function cardGrid(list, { variant = 'default', numbered = false, bento = false, eagerFirst = true } = {}) {
   return html`<div class="grid ${bento ? 'grid--bento' : ''}">
-    ${list.map((p, i) => postCard(p, { variant: bento && i === 0 ? 'lead' : variant, index: numbered ? i : null }))}
+    ${list.map((p, i) => postCard(p, { variant: bento && i === 0 ? 'lead' : variant, index: numbered ? i : null, eager: eagerFirst && i === 0 }))}
   </div>`;
 }
 

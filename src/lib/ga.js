@@ -1,12 +1,13 @@
 /**
- * GA4 Data API. 서비스 계정 키로 JWT 를 만들어 액세스 토큰을 받고 runReport 를 부른다.
- * 필요한 설정: GA_PROPERTY_ID(변수) · GA_SA_EMAIL · GA_SA_KEY(시크릿 · PEM).
+ * GA4 Data API 와 Search Console API. 같은 서비스 계정 키로 JWT 를 만들어 액세스 토큰 하나를 받아 둘 다 부른다.
+ * 필요한 설정: GA_PROPERTY_ID · GSC_SITE(변수) · GA_SA_EMAIL · GA_SA_KEY(시크릿 · PEM).
  * 결과는 아이솔레이트 안에서 10분 캐시한다 (관리자 페이지 하나가 쓰므로 충분하다).
  */
-const SCOPE = 'https://www.googleapis.com/auth/analytics.readonly';
+const SCOPE = 'https://www.googleapis.com/auth/analytics.readonly https://www.googleapis.com/auth/webmasters.readonly';
 const TTL = 10 * 60 * 1000;
 let token = { value: '', exp: 0 };
 let report = { at: 0, data: null };
+let gsc = { at: 0, data: null };
 
 const b64url = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 const enc = (obj) => b64url(new TextEncoder().encode(JSON.stringify(obj)));
@@ -72,4 +73,44 @@ export async function gaReport(env) {
     },
   };
   return report.data;
+}
+
+const ymd = (daysAgo) => new Date(Date.now() - daysAgo * 864e5).toISOString().slice(0, 10);
+
+async function query(env, body) {
+  const res = await fetch(`https://searchconsole.googleapis.com/webmasters/v3/sites/${encodeURIComponent(env.GSC_SITE)}/searchAnalytics/query`, {
+    method: 'POST',
+    headers: { authorization: `Bearer ${await accessToken(env)}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ startDate: ymd(28), endDate: ymd(0), ...body }),
+  });
+  if (!res.ok) throw new Error(`Search Console ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  return (await res.json()).rows ?? [];
+}
+
+export const gscConfigured = (env) => Boolean(env?.GSC_SITE && env?.GA_SA_EMAIL && env?.GA_SA_KEY);
+
+/** 서치콘솔 28일 요약. 검색 데이터는 이틀쯤 늦게 들어온다. 설정이 없으면 null. */
+export async function gscReport(env) {
+  if (!gscConfigured(env)) return null;
+  if (Date.now() - gsc.at < TTL) return gsc.data;
+  const [total, days, queries, pages] = await Promise.all([
+    query(env, {}),
+    query(env, { dimensions: ['date'] }),
+    query(env, { dimensions: ['query'], rowLimit: 10 }),
+    query(env, { dimensions: ['page'], rowLimit: 10 }),
+  ]);
+  const t = total[0] ?? { clicks: 0, impressions: 0, ctr: 0, position: 0 };
+  gsc = {
+    at: Date.now(),
+    data: {
+      clicks: t.clicks,
+      impressions: t.impressions,
+      ctr: t.ctr,
+      position: t.position,
+      days: days.map((r) => ({ date: r.keys[0], clicks: r.clicks, impressions: r.impressions })).reverse().slice(0, 14),
+      queries: queries.map((r) => ({ q: r.keys[0], clicks: r.clicks, impressions: r.impressions, position: r.position })),
+      pages: pages.map((r) => ({ path: r.keys[0].replace(/^https?:\/\/[^/]+/, '') || '/', clicks: r.clicks, impressions: r.impressions })),
+    },
+  };
+  return gsc.data;
 }

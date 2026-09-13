@@ -5,7 +5,7 @@ import { postUrl, won } from './components.js';
 const SITE_NAME = 'USB.KR';
 const SITE_TAGLINE = '전자기기 스펙과 가격을 비교한다';
 /** 스타일 변경 시 올려서 브라우저 캐시를 무효화한다. */
-export const ASSET_VERSION = '20260913d';
+export const ASSET_VERSION = '20260913e';
 
 /** GA4 측정 ID (G-XXXX) 와 Cloudflare Web Analytics 토큰. 요청마다 index.js 가 env 에서 넣는다. 비어 있으면 태그를 안 넣는다. */
 export let GA_ID = '';
@@ -45,6 +45,9 @@ const INLINE_SCRIPT = raw(`
   var d=document;
   var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
   d.documentElement.classList.add('js');
+  function ld(e){if(e.target.tagName==='IMG')e.target.classList.add('ld')}
+  d.addEventListener('load',ld,true);d.addEventListener('error',ld,true);
+  d.querySelectorAll('img[loading=lazy]').forEach(function(i){if(i.complete)i.classList.add('ld')});
   if(navigator.sendBeacon&&location.pathname!=='/0')navigator.sendBeacon('/hit',location.pathname);
   if(reduce||!('IntersectionObserver' in window)){d.documentElement.classList.add('no-reveal');return}
   var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{rootMargin:'0px 0px -8% 0px',threshold:0.08});

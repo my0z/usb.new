@@ -83,7 +83,7 @@ export function homePage({ canonical, summaries, popular }) {
 
   const body = html`<div class="shell">
     ${sectionHead('01', '최신 글', '새로 발행한 비교와 리뷰', '/posts')}
-    ${cardGrid(latest, { bento: true, numbered: true })}
+    ${cardGrid(latest, { bento: true, numbered: true, eagerFirst: false })}
 
     ${popularRail(popular)}
 
@@ -100,7 +100,7 @@ export function homePage({ canonical, summaries, popular }) {
       </div>
     </section>
 
-    ${more.length ? html`${sectionHead('02', '이어서 보기', '지난 글', '/posts')} ${cardGrid(more, { variant: 'compact' })}` : ''}
+    ${more.length ? html`${sectionHead('02', '이어서 보기', '지난 글', '/posts')} ${cardGrid(more, { variant: 'compact', eagerFirst: false })}` : ''}
   </div>`;
 
   return layout({

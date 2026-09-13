@@ -28,6 +28,8 @@
     "GA_ID": "G-NT3KK3KBRZ",
     // GA4 속성 ID (숫자). 관리자 페이지에 GA 집계를 띄울 때 GA_SA_EMAIL · GA_SA_KEY 시크릿과 함께 쓴다.
     "GA_PROPERTY_ID": "314252211",
+    // 서치콘솔 속성. 도메인 속성이면 sc-domain:usb.kr · URL 접두어 속성이면 https://usb.kr/ 로 쓴다. 같은 서비스 계정을 서치콘솔 사용자로 추가해야 한다.
+    "GSC_SITE": "sc-domain:usb.kr",
     // Cloudflare Web Analytics 토큰. 대시보드에서 자동 삽입을 켰으면 비워 둔다.
     "CF_BEACON_TOKEN": "",
     // 네이버 서치어드바이저 · 구글 서치콘솔 소유 확인 값 (메타태그 content). 비우면 안 찍는다.

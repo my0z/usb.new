@@ -84,6 +84,22 @@ img {
   display: block;
 }
 
+/* 느린 이미지 자리에 반짝이는 자리표시. 로드되면 스크립트가 ld 를 붙여 걷는다 */
+.js img[loading='lazy']:not(.ld) {
+  background: linear-gradient(100deg, var(--paper-3) 40%, var(--paper-2) 50%, var(--paper-3) 60%) 0 0 / 300% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+@keyframes shimmer {
+  to {
+    background-position: -300% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .js img[loading='lazy']:not(.ld) {
+    animation: none;
+  }
+}
+
 a {
   color: inherit;
   text-decoration: none;

@@ -99,6 +99,11 @@ class KvStore {
     return raws.map((r) => safeParse(r, null)).filter(Boolean);
   }
 
+  /** 발행기 실행 기록. generator/run.js 가 남긴다. 최신이 앞. */
+  async genRuns() {
+    return safeParse(await this.kv.get('gen:runs', { cacheTtl: 60 }), []);
+  }
+
   /** path → 최근 30일 방문 수 */
   async viewsByPath() {
     if (!this.db) return new Map();
@@ -131,6 +136,9 @@ class FixtureStore {
   }
   async getMany(slugs) {
     return slugs.map((s) => this.posts.find((p) => p.slug === s)).filter(Boolean);
+  }
+  async genRuns() {
+    return [];
   }
   async popular(limit = 6) {
     const all = await this.summaries();
