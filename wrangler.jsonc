@@ -22,7 +22,7 @@
     // GA4 측정 ID. 비우면 태그를 안 넣는다.
     "GA_ID": "G-NT3KK3KBRZ",
     // GA4 속성 ID (숫자). 관리자 페이지에 GA 집계를 띄울 때 GA_SA_EMAIL · GA_SA_KEY 시크릿과 함께 쓴다.
-    "GA_PROPERTY_ID": "",
+    "GA_PROPERTY_ID": "314252211",
     // Cloudflare Web Analytics 토큰. 대시보드에서 자동 삽입을 켰으면 비워 둔다.
     "CF_BEACON_TOKEN": ""
   },
