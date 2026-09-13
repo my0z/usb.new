@@ -1960,14 +1960,39 @@ h3 {
 .btn--ghost:hover {
   border-color: var(--ink);
 }
+.sharebar {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--rule);
+}
+.sharebar__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.sharebar__row a,
+.sharebar__row .share {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 12px;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: var(--paper-2);
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+.sharebar__row a:hover,
+.sharebar__row .share:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+}
 .share {
   display: none;
-  cursor: pointer;
-  font: inherit;
-  font-weight: 700;
 }
 .js .share {
-  display: inline-flex;
+  display: inline-block;
 }
 .chips--best {
   display: flex;

@@ -66,6 +66,27 @@ function compareTable(p) {
   </section>`;
 }
 
+/** SDK 없이 되는 공유 링크만. 카카오톡은 앱 키가 있어야 해서 뺐고 모바일은 기기 공유창(share 버튼)으로 대신한다. */
+function shareBar(title, url) {
+  const u = encodeURIComponent(url);
+  const t = encodeURIComponent(title);
+  const links = [
+    ['X', `https://twitter.com/intent/tweet?text=${t}&url=${u}`],
+    ['Threads', `https://www.threads.net/intent/post?text=${t}%20${u}`],
+    ['페이스북', `https://www.facebook.com/sharer/sharer.php?u=${u}`],
+    ['네이버', `https://share.naver.com/web/shareView?url=${u}&title=${t}`],
+    ['라인', `https://social-plugins.line.me/lineit/share?url=${u}&text=${t}`],
+    ['텔레그램', `https://t.me/share/url?url=${u}&text=${t}`],
+  ];
+  return html`<div class="sharebar" aria-label="공유">
+    <p class="verdict__label">공유</p>
+    <div class="sharebar__row">
+      ${links.map(([name, href]) => html`<a href="${href}" target="_blank" rel="noopener nofollow">${name}</a>`)}
+      <button type="button" class="share" data-title="${title}">링크 복사</button>
+    </div>
+  </div>`;
+}
+
 export function postPage(p, { canonical, related, views, best = null }) {
   const first = p.products?.[0];
   const cat = categoryOfPost(p);
@@ -118,7 +139,7 @@ export function postPage(p, { canonical, related, views, best = null }) {
             ${p.products?.length ? html`<div><dt>제품</dt><dd>${p.products.length}개</dd></div>` : ''}
           </dl>
           ${best ? html`<a class="btn btn--ghost btn--block" href="${bestUrl(best.keyword)}">${best.keyword} 추천 TOP ${best.items.length} 보기 ${ICON_ARROW}</a>` : ''}
-          <button type="button" class="btn btn--ghost btn--block share" data-title="${p.title}">이 글 공유하기</button>
+          ${shareBar(p.title, canonical)}
         </div>
       </aside>
 
