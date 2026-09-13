@@ -16,7 +16,8 @@ export function bestGroups(summaries, views = new Map()) {
   for (const s of summaries) {
     const p = s.products?.[0];
     const keyword = String(s.keyword ?? '').trim();
-    if (!keyword || !p?.name || !(Number(p.price) > 0)) continue;
+    // 옛 글엔 쿠팡 대분류(가전디지털 · 스포츠레저)가 keyword 로 들어간 게 있어 카테고리에 매핑되는 키워드만 쓴다
+    if (!keyword || !p?.name || !(Number(p.price) > 0) || !categoryOfPost(s)) continue;
     if (!by.has(keyword)) by.set(keyword, []);
     by.get(keyword).push({ ...s, views: views.get(postUrl(s)) ?? 0 });
   }
