@@ -38,7 +38,7 @@ node generator/run.js              # 실제 발행 1건
 ## 4. 자동 실행
 
 ```bash
-bash generator/install-cron.sh     # 0시 4시 8시 12시 16시 20시 (UTC) 에 1건씩
+bash generator/install-cron.sh     # 0시 4시 8시 12시 16시 20시 (서울) 에 2건씩
 tail -f ~/usb-generator.log
 ```
 

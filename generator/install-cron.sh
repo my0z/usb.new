@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 하루 6번 (4시간 간격) 글 2건씩 발행하는 crontab 을 등록한다. 하루 12건.
+# 하루 6번 (4시간 간격) 글 2건씩 발행하는 crontab 을 등록한다. 하루 12건. 시각은 VM 시간대(서울) 기준.
 # 사용법: bash generator/install-cron.sh
 set -euo pipefail
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
