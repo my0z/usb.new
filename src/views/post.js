@@ -3,6 +3,7 @@ import { layout } from './layout.js';
 import { cardGrid, imgProxy, metaLine, outUrl, productBlock, sectionHead, typeLabel, won, ICON_ROCKET, ICON_ARROW } from './components.js';
 import { categoryOfPost } from '../data/categories.js';
 import { paragraphs, excerpt } from '../data/store.js';
+import { bestUrl } from './best.js';
 
 /** 본문 문단 사이에 상품 블록을 고르게 끼워 넣는다. 기존 사이트의 배치 규칙을 따른다. */
 function flow(p) {
@@ -65,7 +66,7 @@ function compareTable(p) {
   </section>`;
 }
 
-export function postPage(p, { canonical, related, views }) {
+export function postPage(p, { canonical, related, views, best = null }) {
   const first = p.products?.[0];
   const cat = categoryOfPost(p);
   const cover = first?.image ? imgProxy(first.image) : null;
@@ -116,6 +117,8 @@ export function postPage(p, { canonical, related, views }) {
             <div><dt>게재</dt><dd><time datetime="${p.createdAt}">${formatDate(String(p.createdAt).slice(0, 10))}</time></dd></div>
             ${p.products?.length ? html`<div><dt>제품</dt><dd>${p.products.length}개</dd></div>` : ''}
           </dl>
+          ${best ? html`<a class="btn btn--ghost btn--block" href="${bestUrl(best.keyword)}">${best.keyword} 추천 TOP ${best.items.length} 보기 ${ICON_ARROW}</a>` : ''}
+          <button type="button" class="btn btn--ghost btn--block share" data-title="${p.title}">이 글 공유하기</button>
         </div>
       </aside>
 
@@ -156,6 +159,9 @@ export function postPage(p, { canonical, related, views }) {
             </section>`
           : ''}
 
+        ${best
+          ? html`<p class="bestlink reveal"><a href="${bestUrl(best.keyword)}"><b>${best.keyword} 추천 TOP ${best.items.length}</b><span>리뷰한 ${best.keyword} ${best.items.length}개를 많이 본 순서로 모았다 →</span></a></p>`
+          : ''}
         <p class="disclosure">
           이 글은 쿠팡 파트너스 활동의 일환으로 일정액의 수수료를 제공받을 수 있다. 가격과 재고는 게재 시점 기준이며 실제 구매 페이지에서 다시 확인하기를 권한다.
         </p>

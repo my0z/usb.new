@@ -2,8 +2,9 @@ import { html } from '../lib/html.js';
 import { layout } from './layout.js';
 import { cardGrid, postUrl } from './components.js';
 import { categories } from '../data/categories.js';
+import { bestUrl } from './best.js';
 
-export function listPage({ eyebrow, title, description, items, canonical, active, empty = '아직 등록된 글이 없다.', total = null }) {
+export function listPage({ eyebrow, title, description, items, canonical, active, empty = '아직 등록된 글이 없다.', total = null, best = [] }) {
   const count = total ?? items.length;
   const body = html`<div class="shell">
     <header class="page-head reveal">
@@ -12,6 +13,7 @@ export function listPage({ eyebrow, title, description, items, canonical, active
       <p class="page-desc">${description}</p>
       <span class="page-count">${count}<small>건</small></span>
     </header>
+    ${best.length ? html`<nav class="chips chips--best reveal" aria-label="추천 TOP">${best.map((g) => html`<a class="chip" href="${bestUrl(g.keyword)}">${g.keyword} 추천 TOP<small>${g.items.length}</small></a>`)}</nav>` : ''}
     ${items.length ? cardGrid(items, { numbered: true }) : html`<p class="empty">${empty}</p>`}
   </div>`;
 

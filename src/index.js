@@ -296,15 +296,17 @@ async function route(url, env, request) {
   if (categoryMatch) {
     const category = getCategory(categoryMatch[1]);
     if (!category) return notFound(url);
-    const items = (await store.summaries()).filter((s) => categoryOfPost(s)?.slug === category.slug).slice(0, 60);
+    const all = await store.summaries();
+    const items = all.filter((s) => categoryOfPost(s)?.slug === category.slug).slice(0, 60);
     return page(
       listPage({
         eyebrow: '카테고리',
         title: category.name,
-        description: `${category.name} 분류의 비교와 리뷰.`,
+        description: category.desc,
         items,
         canonical,
         active: category.slug,
+        best: bestGroups(all).filter((g) => g.category?.slug === category.slug),
       }),
     );
   }
@@ -346,7 +348,8 @@ async function route(url, env, request) {
     const same = all.filter((s) => s.slug !== slug && cat && categoryOfPost(s)?.slug === cat.slug);
     const rest = all.filter((s) => s.slug !== slug && !same.includes(s));
     const related = [...same, ...rest].slice(0, 3);
-    return page(postPage(post, { canonical: postHref(url.origin, slug), related, views }));
+    const best = bestGroups(all).find((g) => g.keyword === post.keyword) ?? null;
+    return page(postPage(post, { canonical: postHref(url.origin, slug), related, views, best }));
   }
 
   return notFound(url);

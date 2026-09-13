@@ -6,7 +6,7 @@
   --paper-3: #ede7db;
   --ink: #141311;
   --ink-2: #4b4740;
-  --ink-3: #85806f;
+  --ink-3: #6a6555;
   --rule: #ddd5c6;
   --rule-strong: #141311;
   --accent: #d5321f;
@@ -210,7 +210,7 @@ h3 {
   gap: 16px;
   padding-block: 8px;
   font-family: var(--display);
-  font-size: 12px;
+  font-size: 13px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--ink-3);
@@ -294,7 +294,7 @@ h3 {
 }
 .search kbd {
   font-family: var(--display);
-  font-size: 11px;
+  font-size: 12px;
   color: var(--ink-3);
   border: 1px solid var(--rule);
   border-radius: 6px;
@@ -364,7 +364,7 @@ h3 {
 }
 .ticker__item b {
   font-family: var(--display);
-  font-size: 12px;
+  font-size: 13px;
   color: var(--accent-2);
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 999px;
@@ -423,7 +423,7 @@ h3 {
   gap: 10px;
   margin: 0 0 22px;
   font-family: var(--display);
-  font-size: 12px;
+  font-size: 13px;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: #ffb9a8;
@@ -532,7 +532,7 @@ h3 {
 }
 .hero__tags i {
   font-style: normal;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.08em;
   color: #fff;
   background: rgba(0, 0, 0, 0.45);
@@ -655,7 +655,7 @@ h3 {
   letter-spacing: 0;
 }
 .stat__label {
-  font-size: 12px;
+  font-size: 13px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--ink-3);
@@ -687,7 +687,7 @@ h3 {
 .eyebrow {
   margin: 0 0 8px;
   font-family: var(--display);
-  font-size: 12px;
+  font-size: 13px;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--accent);
@@ -777,7 +777,7 @@ h3 {
   z-index: 2;
   background: rgba(246, 242, 234, 0.92);
   color: var(--ink);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
   padding: 6px 11px;
@@ -879,7 +879,7 @@ h3 {
   font-weight: 700;
 }
 .score small {
-  font-size: 10px;
+  font-size: 11px;
   opacity: 0.65;
 }
 .score--gold {
@@ -993,7 +993,7 @@ h3 {
 }
 .chip small {
   font-family: var(--display);
-  font-size: 12px;
+  font-size: 13px;
   background: var(--paper-3);
   color: var(--ink-3);
   border-radius: 999px;
@@ -1067,7 +1067,7 @@ h3 {
   max-width: 900px;
 }
 .crumbs {
-  font-size: 12px;
+  font-size: 13px;
   letter-spacing: 0.04em;
   color: var(--ink-3);
   margin-bottom: 10px;
@@ -1082,7 +1082,7 @@ h3 {
 }
 .post__cat a {
   font-family: var(--display);
-  font-size: 12px;
+  font-size: 13px;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--accent);
@@ -1119,7 +1119,7 @@ h3 {
   display: flex;
   gap: 18px;
   font-family: var(--display);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--ink-3);
@@ -1164,7 +1164,7 @@ h3 {
 .verdict__label {
   margin: 0 0 8px;
   font-family: var(--display);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--ink-3);
@@ -1210,7 +1210,7 @@ h3 {
   margin: 16px 0 0;
 }
 .tags li {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--ink-2);
   background: var(--paper-3);
@@ -1328,7 +1328,7 @@ h3 {
 }
 .specs__note {
   font-family: var(--display);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.22em;
   color: var(--ink-3);
 }
@@ -1392,13 +1392,13 @@ h3 {
 .footer__issue {
   margin: 16px 0 0;
   font-family: var(--display);
-  font-size: 12px;
+  font-size: 13px;
   letter-spacing: 0.18em;
   color: var(--ink-3);
 }
 .footer__title {
   font-family: var(--display);
-  font-size: 12px;
+  font-size: 13px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--ink-3);
@@ -1449,7 +1449,7 @@ h3 {
   gap: 8px;
   padding-block: 20px 26px;
   border-top: 1px solid var(--rule);
-  font-size: 12px;
+  font-size: 13px;
   color: var(--ink-3);
 }
 .footer__legal p {
@@ -1656,7 +1656,7 @@ h3 {
   align-items: center;
   gap: 3px;
   font-family: var(--sans);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   color: #9ec7ff;
   border-left: 1px solid rgba(255, 255, 255, 0.2);
@@ -1681,7 +1681,7 @@ h3 {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   border-radius: 999px;
   padding: 3px 9px;
@@ -1724,7 +1724,7 @@ h3 {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.08em;
   color: #9ec7ff;
 }
@@ -1816,7 +1816,7 @@ h3 {
   -webkit-box-orient: vertical;
 }
 .popular__text small {
-  font-size: 12px;
+  font-size: 13px;
   color: rgba(246, 242, 234, 0.55);
 }
 .popular .price {
@@ -1854,7 +1854,7 @@ h3 {
 }
 .catcard__num {
   font-family: var(--display);
-  font-size: 12px;
+  font-size: 13px;
   letter-spacing: 0.2em;
   color: var(--ink-3);
 }
@@ -1876,7 +1876,7 @@ h3 {
   font-size: 22px;
 }
 .catcard__count small {
-  font-size: 11px;
+  font-size: 12px;
   margin-left: 2px;
   color: var(--ink-3);
 }
@@ -1952,6 +1952,50 @@ h3 {
   justify-content: center;
   margin-top: 8px;
 }
+.btn--ghost {
+  background: transparent;
+  border-color: var(--rule-strong);
+  color: var(--ink);
+}
+.btn--ghost:hover {
+  border-color: var(--ink);
+}
+.share {
+  display: none;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+.js .share {
+  display: inline-flex;
+}
+.chips--best {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: -8px 0 28px;
+}
+.bestlink {
+  margin: 36px 0 0;
+}
+.bestlink a {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 18px 22px;
+  border: 1px solid var(--rule-strong);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius-lg);
+  background: var(--paper-2);
+}
+.bestlink b {
+  font-family: var(--display);
+  font-size: 18px;
+}
+.bestlink span {
+  color: var(--ink-2);
+  font-size: 14px;
+}
 .btn--sm {
   padding: 10px 16px;
   font-size: 13px;
@@ -1983,7 +2027,7 @@ h3 {
 }
 .tldr__label {
   font-family: var(--display);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.22em;
   color: var(--gold);
   font-weight: 700;
@@ -2011,7 +2055,7 @@ h3 {
 .compare th {
   text-align: left;
   font-family: var(--display);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--ink-3);
@@ -2034,7 +2078,7 @@ h3 {
 }
 .compare__crown {
   display: inline-block;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
   background: var(--gold);
@@ -2151,7 +2195,7 @@ h3 {
   position: absolute;
   left: 12px;
   top: 12px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
   background: var(--gold);
