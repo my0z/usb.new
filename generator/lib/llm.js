@@ -27,7 +27,9 @@ async function ollamaChat(system, user, model = LLM.ollamaModel, o = {}) {
   return { text: data?.message?.content ?? '', model: `ollama:${model}` };
 }
 
-async function groqChat(system, user, model = LLM.groqModel, o = {}) {
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function groqChat(system, user, model = LLM.groqModel, o = {}, retried = false) {
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${LLM.groqKey}` },
@@ -42,6 +44,15 @@ async function groqChat(system, user, model = LLM.groqModel, o = {}) {
     }),
     signal: AbortSignal.timeout(90 * 1000),
   });
+  if (res.status === 429 && !retried) {
+    // 분당 토큰 한도. 응답 본문의 "try again in 12.3s" 만큼 쉬고 한 번만 더 부른다
+    const body = await res.text();
+    const m = body.match(/try again in ([\d.]+)(m?s)/);
+    const ms = m ? Math.ceil(parseFloat(m[1]) * (m[2] === 'ms' ? 1 : 1000)) + 500 : 20000;
+    console.warn(`Groq 429 → ${Math.round(ms / 1000)}초 대기 후 재시도`);
+    await sleep(Math.min(ms, 60000));
+    return groqChat(system, user, model, o, true);
+  }
   if (!res.ok) throw new Error(`Groq ${res.status}: ${(await res.text()).slice(0, 200)}`);
   const data = await res.json();
   return { text: data?.choices?.[0]?.message?.content ?? '', model: `groq:${model}` };
@@ -81,7 +92,9 @@ async function cfChat(system, user, model, o = {}) {
   });
   if (!res.ok) throw new Error(`Workers AI ${res.status}: ${(await res.text()).slice(0, 200)}`);
   const data = await res.json();
-  return { text: data?.result?.response ?? '', model: `cf:${model}` };
+  const r = data?.result;
+  const out = r?.response ?? r?.choices?.[0]?.message?.content ?? r?.output_text ?? '';
+  return { text: typeof out === 'string' ? out : JSON.stringify(out), model: `cf:${model}` };
 }
 
 /** 앞뒤 설명이나 코드펜스가 붙어도 첫 { 부터 마지막 } 까지만 잘라 JSON 으로 읽는다. */
@@ -89,7 +102,7 @@ export function parseJsonLoose(text) {
   const t = String(text ?? '');
   const a = t.indexOf('{');
   const b = t.lastIndexOf('}');
-  if (a < 0 || b <= a) throw new Error('JSON 없음');
+  if (a < 0 || b <= a) throw new Error(`JSON 없음: ${t.replace(/\s+/g, ' ').slice(0, 120) || '(빈 응답)'}`);
   const body = t.slice(a, b + 1);
   try {
     return JSON.parse(body);

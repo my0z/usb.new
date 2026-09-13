@@ -29,16 +29,28 @@ export async function reviewArticle(article, productLines, writerModel) {
   const judges = LLM.reviewModels.filter((m) => m !== writerModel && (LLM.groqKey || !m.startsWith('groq:')) && (LLM.cfToken || !m.startsWith('cf:')));
   const user = `제품 정보 (1번이 주인공):\n${productLines}\n\n리뷰 글:\n${textOf(article)}\n\nJSON 으로만 답하라.`;
   const issues = [];
+  let voted = 0;
+  let failed = 0;
   for (const m of judges) {
     try {
       const { text } = await chatWith(m, SYSTEM, user, { temperature: 0, maxTokens: 2000 }); // gpt-oss 는 추론 토큰이 한도를 먹으면 본문이 비어 'JSON 없음' 이 난다
       const r = parseJsonLoose(text);
       const list = (Array.isArray(r.issues) ? r.issues : []).map(String).filter(Boolean);
-      console.log(`  심사 ${m}: ${r.pass && !list.length ? '합격' : `불합격 (${list.length})`}`);
-      if (!r.pass || list.length) issues.push(...(list.length ? list : ['심사관이 불합격 판정']));
+      const fail = !r.pass || list.length > 0;
+      console.log(`  심사 ${m}: ${fail ? `불합격 (${list.length})` : '합격'}`);
+      voted += 1;
+      if (fail) {
+        failed += 1;
+        issues.push(...(list.length ? list : ['심사관이 불합격 판정']));
+      }
     } catch (e) {
       console.warn(`  심사 ${m} 불능 → 건너뜀: ${e.message.slice(0, 160)}`);
     }
+  }
+  // 과반이 불합격일 때만 고쳐 쓴다. 심사관 하나가 상식적 서술까지 트집 잡아 발행이 막히던 것을 막는다
+  if (failed * 2 <= voted) {
+    if (failed) console.log(`  심사 ${failed}/${voted} 불합격 → 과반 합격으로 통과`);
+    return [];
   }
   return [...new Set(issues)].slice(0, 6);
 }
