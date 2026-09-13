@@ -192,7 +192,7 @@ async function runOnce(forcedKeyword, forcedQuery) {
     return post;
   }
   await publish(post, products);
-  log(`발행 완료: https://usb.kr/${post.slug} — ${post.title}`);
+  log(`발행 완료: https://n.usb.kr/${post.slug} — ${post.title}`);
   return post;
 }
 
