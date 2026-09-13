@@ -1543,6 +1543,17 @@ h3 {
   }
 }
 
+/* 모바일은 전면 블렌드 레이어와 넓은 블러가 스크롤을 끊어서 뺀다 */
+@media (max-width: 720px) {
+  .grain {
+    display: none;
+  }
+  .masthead {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

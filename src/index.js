@@ -18,8 +18,16 @@ const OUT_HOST_SUFFIXES = ['.coupang.com', 'coupa.ng'];
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 const BOT_UA = /bot|crawl|spider|slurp|preview|fetch|scrape|headless|phantom|selenium|puppeteer|playwright|curl|wget|python|java\/|go-http|okhttp|axios|node|gptbot|chatgpt|oai-search|claude|anthropic|perplexity|bytespider|ccbot|cohere|diffbot|amazonbot|applebot|petalbot|yandex|semrush|ahrefs|mj12|dotbot|facebookexternalhit|whatsapp|telegram|discord|slack|lighthouse|pagespeed|pingdom|uptime|monitor/i;
 
+// Link 헤더는 Cloudflare Early Hints(103) 로 나가 HTML 이 도착하기 전에 CSS 와 폰트 연결을 시작한다
+const EARLY_HINTS = [
+  `</assets/styles.css?v=${ASSET_VERSION}>; rel=preload; as=style`,
+  '<https://fonts.googleapis.com>; rel=preconnect',
+  '<https://fonts.gstatic.com>; rel=preconnect; crossorigin',
+  '<https://cdn.jsdelivr.net>; rel=preconnect; crossorigin',
+].join(', ');
+
 function page(body, { status = 200, cache = HTML_CACHE } = {}) {
-  return htmlResponse(body, { status, headers: { 'cache-control': cache } });
+  return htmlResponse(body, { status, headers: { 'cache-control': cache, link: EARLY_HINTS } });
 }
 
 function xml(body, cache = FEED_CACHE) {
@@ -270,14 +278,12 @@ async function route(url, env, request) {
     } catch {
       return notFound(path);
     }
-    const post = await store.get(slug);
+    const [post, all, views] = await Promise.all([store.get(slug), store.summaries(), store.viewCount(slug)]);
     if (!post) return notFound(path);
     const cat = categoryOfPost(post);
-    const all = await store.summaries();
     const same = all.filter((s) => s.slug !== slug && cat && categoryOfPost(s)?.slug === cat.slug);
     const rest = all.filter((s) => s.slug !== slug && !same.includes(s));
     const related = [...same, ...rest].slice(0, 3);
-    const views = await store.viewCount(slug);
     return page(postPage(post, { canonical: postHref(url.origin, slug), related, views }));
   }
 

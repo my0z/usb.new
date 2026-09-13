@@ -7,6 +7,9 @@ import { buildFixturePosts, fixtureVisits } from './fixtures.js';
 
 const INDEX_KEY = 'index';
 const SUMMARY_KEY = 'posts:summary-list';
+// 목록은 아이솔레이트 안에서 60초 공유한다 (엣지 캐시를 안 타는 /search · /0 · 캐시 만료 직후 요청이 KV 를 안 두드리게)
+const MEMO_TTL = 60 * 1000;
+let memo = { at: 0, list: null };
 
 function safeParse(raw, fallback) {
   if (!raw) return fallback;
@@ -55,18 +58,20 @@ class KvStore {
 
   async summaries() {
     if (this._summaries) return this._summaries;
-    let list = safeParse(await this.kv.get(SUMMARY_KEY), null);
+    if (Date.now() - memo.at < MEMO_TTL && memo.list) return (this._summaries = memo.list);
+    let list = safeParse(await this.kv.get(SUMMARY_KEY, { cacheTtl: 300 }), null);
     if (!Array.isArray(list) || !list.length) {
       const idx = await this.index();
       const raws = await Promise.all(idx.slice(0, 200).map((s) => this.kv.get(`post:${s}`).catch(() => null)));
       list = raws.map((r) => safeParse(r, null)).filter(Boolean).map(summarize);
     }
     this._summaries = orderPinned(list.filter((s) => s && s.slug && s.title));
+    memo = { at: Date.now(), list: this._summaries };
     return this._summaries;
   }
 
   async get(slug) {
-    return safeParse(await this.kv.get(`post:${slug}`), null);
+    return safeParse(await this.kv.get(`post:${slug}`, { cacheTtl: 600 }), null);
   }
 
   /** 브라우저 비콘으로만 호출된다. returning 은 재방문 쿠키가 있는 경우. */
