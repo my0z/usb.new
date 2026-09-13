@@ -62,7 +62,8 @@ async function keywordUsedRecently(keyword) {
 
 async function pickKeyword(forced) {
   if (forced) return forced;
-  const pool = [...KEYWORD_POOL].sort(() => Math.random() - 0.5);
+  // 검색량(d)으로 가중한 무작위 순서. 지수 100 이 지수 4 보다 다섯 배쯤 앞에 온다 (제곱근 가중)
+  const pool = KEYWORD_POOL.map((k) => [Math.random() ** (1 / Math.sqrt(Math.max(1, k.d ?? 1))), k]).sort((a, b) => b[0] - a[0]).map(([, k]) => k);
   for (const item of pool) {
     if (!(await keywordUsedRecently(item.keyword))) return item;
   }

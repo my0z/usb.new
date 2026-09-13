@@ -103,7 +103,7 @@ function bars(rows, { alt = false, unit = '' } = {}) {
 const panel = (title, body, { note = '', wide = false, sub = '' } = {}) =>
   html`<section class="panel ${wide ? 'panel--wide' : ''}"><h2 class="panel__h">${title}${sub ? html`<small>${sub}</small>` : ''}</h2>${note ? html`<p class="panel__note">${note}</p>` : ''}${body}</section>`;
 
-export function statsPage({ canonical, summaries, visits = null, ga = null, gsc = null, runs = [], siteUrl = '' }) {
+export function statsPage({ canonical, summaries, visits = null, ga = null, gsc = null, runs = [], clicks = null, siteUrl = '' }) {
   const byCat = new Map();
   const byDay = new Map();
   let products = 0;
@@ -125,6 +125,8 @@ export function statsPage({ canonical, summaries, visits = null, ga = null, gsc 
   const avg = (list, f) => (list.length ? list.reduce((a, r) => a + f(r), 0) / list.length : 0);
   const genRate = monthRuns.length ? Math.round((okRuns.length / monthRuns.length) * 100) : null;
   const sec = (ms) => `${Math.round(ms / 1000)}초`;
+  const pct = (a, b) => (b ? `${((a / b) * 100).toFixed(1)}%` : '-');
+  const titleOf = new Map(summaries.map((s) => [s.slug, s.title]));
 
   const body = html`<style>${STYLE}</style>
   <div class="shell adm">
@@ -148,6 +150,7 @@ export function statsPage({ canonical, summaries, visits = null, ga = null, gsc 
       ${gaOk ? kpi('GA 7일 사용자', num(ga.week.users), `조회 ${num(ga.week.views)}`) : ''}
       ${gscOk ? kpi('검색 클릭 (28일)', num(gsc.clicks), `노출 ${num(gsc.impressions)}`) : ''}
       ${gscOk ? kpi('검색 순위', gsc.position ? gsc.position.toFixed(1) : '-', `CTR ${(gsc.ctr * 100).toFixed(1)}%`) : ''}
+      ${clicks ? kpi('쿠팡 클릭 (7일)', num(clicks.total), `클릭률 ${pct(clicks.total, clicks.totalViews)}`) : ''}
       ${genRate !== null ? kpi('발행 성공률 (30일)', `${genRate}%`, `${okRuns.length}/${monthRuns.length} · 평균 ${sec(avg(okRuns, (r) => r.ms))}`) : ''}
       ${kpi('발행한 글', num(summaries.length), `발행기 ${num(gen)}`)}
       ${kpi('다룬 제품', num(products), '개')}
@@ -161,6 +164,9 @@ export function statsPage({ canonical, summaries, visits = null, ga = null, gsc 
       ${gaOk ? panel('GA 일별 사용자', bars(ga.days.map((r) => [r.date, r.users, `조회 ${num(r.views)}`]), { alt: true, unit: '명' }), { sub: '14일' }) : ''}
       ${visits ? panel('인기 페이지', bars(visits.top.map((r) => [r.path, r.n, '', r.path]), { unit: '회' }), { sub: '7일 · 비콘' }) : ''}
       ${gaOk ? panel('GA 인기 페이지', bars(ga.pages.map((r) => [r.path, r.views, '', r.path]), { alt: true, unit: '회' }), { sub: '7일' }) : ''}
+      ${clicks
+        ? panel('글별 쿠팡 클릭률', bars(clicks.rows.slice(0, 15).map((r) => [titleOf.get(r.slug) ?? r.slug, r.clicks, `방문 ${num(r.views)} · ${pct(r.clicks, r.views)}`, `/${r.slug}`]), { unit: '클릭' }), { sub: '7일', note: '쿠팡 버튼을 눌러 /out 을 지난 수. 방문 대비 비율이 글의 힘이다. 크롤러는 뺀다.' })
+        : ''}
       ${gaOk ? panel('GA 유입 경로', bars(ga.sources.map((r) => [r.source, r.sessions]), { alt: true, unit: ' 세션' }), { sub: '7일' }) : ''}
       ${ga?.error ? panel('구글 애널리틱스', html`<p class="panel__note">불러오기 실패: ${ga.error}</p>`) : ''}
       ${gscOk ? panel('검색 유입', bars(gsc.days.map((r) => [r.date, r.clicks, `노출 ${num(r.impressions)}`]), { alt: true, unit: '클릭' }), { sub: '14일 · 서치콘솔', note: '구글 검색 결과에서 클릭한 수. 이틀쯤 늦게 집계된다.' }) : ''}

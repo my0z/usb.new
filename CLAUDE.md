@@ -7,7 +7,7 @@ usb.kr 사이트. Cloudflare Workers SSR 이며 KV `new-usb-posts`(글)와 D1 `n
 - 코드 생성 전에 `TZ=Asia/Seoul date` 로 시간을 먼저 맞춘다. 사용자 시간대는 한국 서울이다.
 - 한국어 문장에 쉼표를 쓰지 않는다.
 - 배포는 사용자의 오라클 VM 에서 `git pull && npm run deploy` 로 한다. 이 세션에서는 배포하지 않는다.
-- KV `new-usb-posts` 는 워커에서 읽기만 한다. 쓰기는 `generator/` 만 한다. D1 은 방문 비콘만 쓴다.
+- KV `new-usb-posts` 는 워커에서 읽기만 한다. 쓰기는 `generator/` 만 한다. D1 은 방문 비콘(`visits`)과 쿠팡 클릭(`clicks`)만 쓴다.
 
 ## 토큰 절약 도구
 

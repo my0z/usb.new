@@ -97,7 +97,7 @@ async function proxyImage(token, nobg) {
   }
 }
 
-function outbound(url) {
+function outbound(url, request, env, ctx) {
   const dest = url.searchParams.get('u');
   if (!dest) return new Response('Missing url', { status: 400 });
   let parsed;
@@ -108,6 +108,9 @@ function outbound(url) {
   }
   const ok = parsed.protocol === 'https:' && OUT_HOST_SUFFIXES.some((s) => parsed.hostname === s.replace(/^\./, '') || parsed.hostname.endsWith(s));
   if (!ok) return new Response('Invalid destination', { status: 400 });
+  const slug = url.searchParams.get('s') ?? '';
+  const bot = BOT_UA.test(request.headers.get('user-agent') ?? '') || request.cf?.botManagement?.verifiedBot === true;
+  if (slug && !bot && ctx) ctx.waitUntil(getStore(env).recordClick(slug.slice(0, 80)));
   return new Response(null, { status: 302, headers: { location: dest, 'cache-control': 'no-store', 'referrer-policy': 'no-referrer' } });
 }
 
@@ -203,7 +206,7 @@ ${products ? `\n### 다룬 제품 (쿠팡 · 게재 시점 가격)\n${products}\
 
 /* ── 라우터 ────────────────────────────────────────────────── */
 
-async function route(url, env, request) {
+async function route(url, env, request, ctx) {
   const store = getStore(env);
   const path = url.pathname.replace(/\/+$/, '') || '/';
   const canonical = `${url.origin}${path}`;
@@ -262,14 +265,15 @@ async function route(url, env, request) {
     const key = env?.ADMIN_KEY;
     const cookie = request.headers.get('cookie') ?? '';
     if (key && url.searchParams.get('key') !== key && !cookie.includes(`adm=${key}`)) return notFound(url);
-    const [summaries, visits, ga, gsc, runs] = await Promise.all([
+    const [summaries, visits, ga, gsc, runs, clicks] = await Promise.all([
       store.summaries(),
       store.visitStats(),
       gaReport(env).catch((e) => ({ error: e.message })),
       gscReport(env).catch((e) => ({ error: e.message })),
       store.genRuns(),
+      store.clickStats(),
     ]);
-    const res = page(statsPage({ canonical, summaries, visits, ga, gsc, runs, siteUrl: env?.SITE_URL || url.origin }), { cache: 'no-store', noindex: true });
+    const res = page(statsPage({ canonical, summaries, visits, ga, gsc, runs, clicks, siteUrl: env?.SITE_URL || url.origin }), { cache: 'no-store', noindex: true });
     if (key) res.headers.set('set-cookie', `adm=${key}; Path=/0; Max-Age=31536000; HttpOnly; Secure; SameSite=Lax`);
     return res;
   }
@@ -329,7 +333,7 @@ async function route(url, env, request) {
   }
 
   if (path.startsWith('/img/')) return proxyImage(path.slice(5), url.searchParams.get('nobg') === '1');
-  if (path === '/out') return outbound(url);
+  if (path === '/out') return outbound(url, request, env, ctx);
 
   if (path.startsWith('/post/')) return redirect(`/${path.slice(6)}`);
 
@@ -393,7 +397,7 @@ export default {
       const hit = await caches.default.match(cacheKey);
       if (hit) return hit;
     }
-    const response = await route(url, env, request);
+    const response = await route(url, env, request, ctx);
     if (cacheable && response.status === 200 && ctx) ctx.waitUntil(caches.default.put(cacheKey, response.clone()));
     if (request.method === 'HEAD') {
       return new Response(null, { status: response.status, headers: response.headers });

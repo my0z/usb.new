@@ -82,6 +82,30 @@ class KvStore {
     await this.db.prepare('INSERT INTO visits(day, path, n, r) VALUES(?, ?, 1, ?) ON CONFLICT(day, path) DO UPDATE SET n = n + 1, r = r + ?').bind(day, path, r, r).run().catch(() => {});
   }
 
+  /** 쿠팡 버튼 클릭. /out 을 지날 때 글 slug 별로 센다. 표가 없으면 처음 한 번 만든다. */
+  async recordClick(slug) {
+    if (!this.db) return;
+    const day = new Date().toISOString().slice(0, 10);
+    const ins = () => this.db.prepare('INSERT INTO clicks(day, slug, n) VALUES(?, ?, 1) ON CONFLICT(day, slug) DO UPDATE SET n = n + 1').bind(day, slug).run();
+    await ins().catch(() => this.db.prepare('CREATE TABLE IF NOT EXISTS clicks(day TEXT, slug TEXT, n INTEGER, PRIMARY KEY(day, slug))').run().then(ins)).catch(() => {});
+  }
+
+  /** 글별 7일 클릭과 방문. 방문 path 는 "/slug" 라 앞 슬래시를 떼서 맞춘다. */
+  async clickStats() {
+    if (!this.db) return null;
+    const since = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
+    const q = (sql) => this.db.prepare(sql).bind(since).all().then((r) => r.results).catch(() => []);
+    const [clicks, visits] = await Promise.all([
+      q('SELECT slug, SUM(n) AS n FROM clicks WHERE day >= ? GROUP BY slug'),
+      q("SELECT substr(path, 2) AS slug, SUM(n) AS n FROM visits WHERE day >= ? AND path LIKE '/%' GROUP BY path"),
+    ]);
+    const views = new Map(visits.map((r) => [decodeURIComponent(r.slug), Number(r.n)]));
+    const rows = clicks.map((r) => ({ slug: r.slug, clicks: Number(r.n), views: views.get(r.slug) ?? 0 })).sort((a, b) => b.clicks - a.clicks);
+    const total = rows.reduce((a, r) => a + r.clicks, 0);
+    const totalViews = [...views.values()].reduce((a, n) => a + n, 0);
+    return { rows, total, totalViews };
+  }
+
   async visitStats() {
     if (!this.db) return null;
     const q = (sql, ...b) => this.db.prepare(sql).bind(...b).all().then((r) => r.results).catch(() => []);
@@ -101,7 +125,8 @@ class KvStore {
 
   /** 발행기 실행 기록. generator/run.js 가 남긴다. 최신이 앞. */
   async genRuns() {
-    return safeParse(await this.kv.get('gen:runs', { cacheTtl: 60 }), []);
+    const v = safeParse(await this.kv.get('gen:runs', { cacheTtl: 60 }), []);
+    return Array.isArray(v) ? v : [];
   }
 
   /** path → 최근 30일 방문 수 */
@@ -155,6 +180,10 @@ class FixtureStore {
     return new Map(Object.entries(fixtureVisits).map(([s, n]) => [`/${s}`, n]));
   }
   async recordVisit() {}
+  async recordClick() {}
+  async clickStats() {
+    return null;
+  }
   async visitStats() {
     return null;
   }
