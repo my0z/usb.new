@@ -124,7 +124,10 @@ export function postPage(p, { canonical, related, views }) {
         ${p.video?.id && /^[\w-]{11}$/.test(p.video.id)
           ? html`<figure class="video reveal">
               <iframe src="https://www.youtube-nocookie.com/embed/${p.video.id}" title="${p.video.title ?? '제품 영상'}" loading="lazy" allow="accelerometer; encrypted-media; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
-              <figcaption><span>${p.video.title ?? ''}</span><span>${p.video.channel ?? ''}</span></figcaption>
+              <figcaption>
+                <span>${p.video.match === 'product' ? '' : html`<em class="video__note">참고용 영상 · 이 글의 제품과 다를 수 있다</em>`}${p.video.title ?? ''}${p.video.channel ? html` · ${p.video.channel}` : ''}</span>
+                <a class="video__out" href="https://www.youtube.com/watch?v=${p.video.id}" target="_blank" rel="noopener">유튜브에서 보기 ↗</a>
+              </figcaption>
             </figure>`
           : ''}
         ${compareTable(p)}

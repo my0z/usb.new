@@ -17,7 +17,7 @@ async function search(key, q) {
   return (await res.json()).items ?? [];
 }
 
-const pick = (it) => it && { provider: 'youtube', id: it.id.videoId, title: it.snippet.title, channel: it.snippet.channelTitle, publishedAt: it.snippet.publishedAt };
+const pick = (it, match) => it && { provider: 'youtube', match, id: it.id.videoId, title: it.snippet.title, channel: it.snippet.channelTitle, publishedAt: it.snippet.publishedAt };
 
 /** 1순위 브랜드+모델(앞 4단어)로 찾은 제품 영상. 없으면 키워드 리뷰 영상을 관련 영상으로 넣는다. */
 export async function findVideo(productName, keyword = '') {
@@ -29,9 +29,9 @@ export async function findVideo(productName, keyword = '') {
     const title = `${it.snippet?.title ?? ''} ${it.snippet?.channelTitle ?? ''}`.toLowerCase();
     return toks.filter((t) => title.includes(t)).length >= Math.min(2, toks.length);
   });
-  if (hit) return pick(hit);
+  if (hit) return pick(hit, 'product');
   if (!keyword) return null;
   const related = await search(key, `${keyword} 리뷰`);
   if (!related.length) console.log(`  영상 없음: ${toks.join(' ')} · ${keyword} 리뷰`);
-  return pick(related[0]);
+  return pick(related[0], 'keyword');
 }

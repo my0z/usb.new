@@ -2392,3 +2392,22 @@ h3 {
   font-size: 12.5px;
   color: var(--ink-3);
 }
+.video figcaption > span {
+  min-width: 0;
+}
+.video__note {
+  display: block;
+  font-style: normal;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.video__out {
+  flex-shrink: 0;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-bottom: 1px solid var(--rule-strong);
+}
+.video__out:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
