@@ -111,16 +111,18 @@ export function homePage({ canonical, summaries, popular }) {
     heroSlot: featured ? hero(featured) : null,
     tickerItems: summaries.slice(0, 8),
     body,
-    jsonLd: {
-      '@context': 'https://schema.org',
-      '@type': 'WebSite',
-      name: 'USB.KR',
-      url: canonical,
-      potentialAction: {
-        '@type': 'SearchAction',
-        target: `${new URL(canonical).origin}/search?q={query}`,
-        'query-input': 'required name=query',
+    jsonLd: [
+      {
+        '@type': 'WebSite',
+        '@id': `${canonical}#website`,
+        name: 'USB.KR',
+        url: canonical,
+        inLanguage: 'ko',
+        description: '실시간 쿠팡 가격 데이터를 바탕으로 전자기기 스펙과 가격을 비교하는 리뷰 매거진.',
+        publisher: { '@id': `${canonical}#org` },
+        potentialAction: { '@type': 'SearchAction', target: `${new URL(canonical).origin}/search?q={query}`, 'query-input': 'required name=query' },
       },
-    },
+      { '@type': 'Organization', '@id': `${canonical}#org`, name: 'USB.KR', url: canonical, logo: `${new URL(canonical).origin}/assets/favicon.svg` },
+    ],
   });
 }

@@ -71,8 +71,12 @@ export function postPage(p, { canonical, related, views }) {
   const cover = first?.image ? imgProxy(first.image) : null;
   const description = p.metaDescription || p.tldr || excerpt(p.intro, 150);
 
+  const origin = new URL(canonical).origin;
+  const abs = (u) => (u ? new URL(u, origin).href : null);
+  const text = (h) => String(h ?? '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
   const body = html`<article class="post">
     <header class="post__head shell">
+      <nav class="crumbs" aria-label="현재 위치"><a href="/">홈</a>${cat ? html` › <a href="/category/${cat.slug}">${cat.name}</a>` : ''} › <span aria-current="page">${p.keyword}</span></nav>
       <p class="post__cat">${cat ? html`<a href="/category/${cat.slug}">${cat.name}</a>` : p.keyword}</p>
       <h1 class="post__title">${p.title}</h1>
       ${p.tldr ? html`<p class="post__sub">${p.tldr}</p>` : ''}
@@ -165,26 +169,57 @@ export function postPage(p, { canonical, related, views }) {
     active: cat?.slug ?? '',
     body,
     progress: true,
-    ogImage: first?.image ?? null,
-    jsonLd: {
-      '@context': 'https://schema.org',
-      '@type': 'Article',
-      headline: p.title,
-      description,
-      datePublished: p.createdAt,
-      dateModified: p.createdAt,
-      author: { '@type': 'Organization', name: 'USB.KR' },
-      publisher: { '@type': 'Organization', name: 'USB.KR' },
-      mainEntityOfPage: canonical,
-      ...(first?.image ? { image: [first.image] } : {}),
+    ogImage: abs(cover),
+    article: { published: p.createdAt, section: cat?.name ?? p.keyword },
+    jsonLd: [
+      {
+        '@type': 'Article',
+        '@id': `${canonical}#article`,
+        headline: p.title,
+        description,
+        inLanguage: 'ko',
+        datePublished: p.createdAt,
+        dateModified: p.updatedAt ?? p.createdAt,
+        articleSection: cat?.name ?? p.keyword,
+        keywords: [p.keyword, ...(p.products ?? []).map((x) => x.name)].filter(Boolean).slice(0, 6).join(', '),
+        wordCount: text([p.intro, ...(p.sections ?? []).map((s) => s.body_html), p.outro].join(' ')).length,
+        author: { '@type': 'Organization', name: 'USB.KR', url: `${origin}/about` },
+        publisher: { '@type': 'Organization', name: 'USB.KR', url: origin, logo: { '@type': 'ImageObject', url: `${origin}/assets/favicon.svg` } },
+        mainEntityOfPage: canonical,
+        ...(cover ? { image: [abs(cover)] } : {}),
+        ...(p.tldr ? { abstract: p.tldr, speakable: { '@type': 'SpeakableSpecification', cssSelector: ['.post__title', '.tldr p'] } } : {}),
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: '홈', item: `${origin}/` },
+          ...(cat ? [{ '@type': 'ListItem', position: 2, name: cat.name, item: `${origin}/category/${cat.slug}` }] : []),
+          { '@type': 'ListItem', position: cat ? 3 : 2, name: p.title, item: canonical },
+        ],
+      },
       ...(p.faq?.length
-        ? {
-            mainEntity: {
-              '@type': 'FAQPage',
-              mainEntity: p.faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+        ? [{ '@type': 'FAQPage', mainEntity: p.faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: text(f.a) } })) }]
+        : []),
+      ...(p.products?.length
+        ? [
+            {
+              '@type': 'ItemList',
+              name: p.title,
+              itemListOrder: 'https://schema.org/ItemListOrderAscending',
+              numberOfItems: p.products.length,
+              itemListElement: p.products.map((x, i) => ({
+                '@type': 'ListItem',
+                position: i + 1,
+                item: {
+                  '@type': 'Product',
+                  name: x.name,
+                  ...(x.image ? { image: abs(imgProxy(x.image)) } : {}),
+                  ...(Number(x.price) > 0 ? { offers: { '@type': 'Offer', price: Number(x.price), priceCurrency: 'KRW', availability: 'https://schema.org/InStock', url: x.affiliateUrl || undefined } } : {}),
+                },
+              })),
             },
-          }
-        : {}),
-    },
+          ]
+        : []),
+    ],
   });
 }

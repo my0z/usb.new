@@ -8,6 +8,7 @@ import { ASSET_VERSION, setTracking } from './views/layout.js';
 import { gaReport } from './lib/ga.js';
 import { categories, getCategory, categoryOfPost } from './data/categories.js';
 import { getStore, searchSummaries, excerpt } from './data/store.js';
+import { imgProxy } from './views/components.js';
 
 const HTML_CACHE = 'public, max-age=0, s-maxage=300, stale-while-revalidate=86400';
 const FEED_CACHE = 'public, max-age=0, s-maxage=1800, stale-while-revalidate=86400';
@@ -26,8 +27,8 @@ const EARLY_HINTS = [
   '<https://cdn.jsdelivr.net>; rel=preconnect; crossorigin',
 ].join(', ');
 
-function page(body, { status = 200, cache = HTML_CACHE } = {}) {
-  return htmlResponse(body, { status, headers: { 'cache-control': cache, link: EARLY_HINTS } });
+function page(body, { status = 200, cache = HTML_CACHE, noindex = false } = {}) {
+  return htmlResponse(body, { status, headers: { 'cache-control': cache, link: EARLY_HINTS, ...(noindex ? { 'x-robots-tag': 'noindex, nofollow' } : {}) } });
 }
 
 function xml(body, cache = FEED_CACHE) {
@@ -124,12 +125,14 @@ function rssFeed(origin, list) {
     </item>`,
     )
     .join('\n');
-  return xml(`<rss version="2.0">
+  return xml(`<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>USB.KR</title>
     <link>${origin}/</link>
+    <atom:link href="${origin}/rss.xml" rel="self" type="application/rss+xml" />
     <description>전자기기 스펙과 가격을 비교하는 리뷰 매거진</description>
     <language>ko</language>
+    <lastBuildDate>${new Date(list[0]?.createdAt ?? Date.now()).toUTCString()}</lastBuildDate>
 ${items}
   </channel>
 </rss>`);
@@ -137,34 +140,60 @@ ${items}
 
 function sitemap(origin, list) {
   const urls = [
-    { loc: `${origin}/`, priority: '1.0' },
+    { loc: `${origin}/`, priority: '1.0', lastmod: String(list[0]?.createdAt ?? '').slice(0, 10) || undefined },
     { loc: `${origin}/posts`, priority: '0.7' },
     { loc: `${origin}/categories`, priority: '0.5' },
     { loc: `${origin}/about`, priority: '0.3' },
     ...categories.map((c) => ({ loc: `${origin}/category/${c.slug}`, priority: '0.6' })),
-    ...list.map((p) => ({ loc: postHref(origin, p.slug), lastmod: String(p.createdAt).slice(0, 10), priority: '0.8' })),
+    ...list.map((p) => ({ loc: postHref(origin, p.slug), lastmod: String(p.createdAt).slice(0, 10), priority: '0.8', image: p.products?.[0]?.image ? `${origin}${imgProxy(p.products[0].image)}` : null, title: p.title })),
   ];
   const body = urls
     .map(
       (u) => `  <url>
     <loc>${u.loc}</loc>${u.lastmod ? `\n    <lastmod>${u.lastmod}</lastmod>` : ''}
-    <priority>${u.priority}</priority>
+    <priority>${u.priority}</priority>${u.image ? `\n    <image:image><image:loc>${escapeHtml(u.image)}</image:loc><image:title>${escapeHtml(u.title)}</image:title></image:image>` : ''}
   </url>`,
     )
     .join('\n');
-  return xml(`<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${body}\n</urlset>`);
+  return xml(`<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n${body}\n</urlset>`);
 }
+
+const LLMS_INTRO = `# usb.kr
+
+> 실시간 쿠팡 가격 데이터를 기반으로 전자기기 스펙과 가격을 비교하는 한국어 리뷰 매거진이다. AI 가 작성한 참고용 콘텐츠이며 정확한 스펙은 판매 페이지에서 확인을 권한다.
+> 인용할 때는 글 제목과 URL 을 함께 표기해 달라. 가격은 게재 시점 기준이다.
+`;
 
 function llmsTxt(origin, list) {
   const lines = list.slice(0, 40).map((p) => `- [${p.title}](${postHref(origin, p.slug)}): ${p.tldr || p.metaDescription || ''}`);
-  return text(`# usb.kr
-
-> 실시간 쿠팡 가격 데이터를 기반으로 전자기기 스펙과 가격을 비교하는 한국어 리뷰 매거진이다. AI 가 작성한 참고용 콘텐츠이며 정확한 스펙은 판매 페이지에서 확인을 권한다.
-
+  return text(`${LLMS_INTRO}
 ## 최근 게시글
 
 ${lines.join('\n')}
+
+## 전문
+- [llms-full.txt](${origin}/llms-full.txt): 최근 글 30건의 본문 전체
 `);
+}
+
+/** AI 검색용 전문. 최근 30건의 제목 · 요약 · 본문 · 제품 · FAQ 를 마크다운으로 준다. */
+function llmsFullTxt(origin, posts) {
+  const strip = (h) => String(h ?? '').replace(/<\/(p|h\d|li)>/gi, '\n').replace(/<[^>]+>/g, '').replace(/[ \t]+/g, ' ').replace(/\n{2,}/g, '\n').trim();
+  const docs = posts.map((p) => {
+    const cat = categoryOfPost(p)?.name ?? p.keyword;
+    const products = (p.products ?? []).map((x, i) => `${i + 1}. ${x.name} — ${Number(x.price) > 0 ? `${Number(x.price).toLocaleString('ko-KR')}원` : '가격 미확인'}`).join('\n');
+    const sections = (p.sections ?? []).map((s) => `### ${s.heading ?? ''}\n${strip(s.body_html)}`).join('\n\n');
+    const faq = (p.faq ?? []).map((f) => `- Q: ${f.q}\n  A: ${strip(f.a)}`).join('\n');
+    return `## ${p.title}
+- URL: ${postHref(origin, p.slug)}
+- 게재: ${String(p.createdAt).slice(0, 10)} · 분류: ${cat} · 키워드: ${p.keyword}
+${p.tldr ? `- 한줄요약: ${p.tldr}\n` : ''}
+${strip(p.intro)}
+
+${sections}
+${products ? `\n### 다룬 제품 (쿠팡 · 게재 시점 가격)\n${products}\n` : ''}${faq ? `\n### 자주 묻는 질문\n${faq}\n` : ''}${p.outro ? `\n${strip(p.outro)}\n` : ''}`;
+  });
+  return text(`${LLMS_INTRO}\n${docs.join('\n\n---\n\n')}\n`);
 }
 
 /* ── 라우터 ────────────────────────────────────────────────── */
@@ -214,7 +243,7 @@ async function route(url, env, request) {
     const cookie = request.headers.get('cookie') ?? '';
     if (key && url.searchParams.get('key') !== key && !cookie.includes(`adm=${key}`)) return notFound(path);
     const [summaries, visits, ga] = await Promise.all([store.summaries(), store.visitStats(), gaReport(env).catch((e) => ({ error: e.message }))]);
-    const res = page(statsPage({ canonical, summaries, visits, ga }), { cache: 'no-store' });
+    const res = page(statsPage({ canonical, summaries, visits, ga }), { cache: 'no-store', noindex: true });
     if (key) res.headers.set('set-cookie', `adm=${key}; Path=/0; Max-Age=31536000; HttpOnly; Secure; SameSite=Lax`);
     return res;
   }
@@ -233,7 +262,7 @@ async function route(url, env, request) {
         active: '',
         empty: '일치하는 글이 없다. 다른 키워드로 찾아보자.',
       }),
-      { cache: 'no-store' },
+      { cache: 'no-store', noindex: true },
     );
   }
 
@@ -257,7 +286,14 @@ async function route(url, env, request) {
   if (path === '/rss.xml' || path === '/feed.xml') return rssFeed(url.origin, await store.summaries());
   if (path === '/sitemap.xml') return sitemap(url.origin, await store.summaries());
   if (path === '/llms.txt') return llmsTxt(url.origin, await store.summaries());
-  if (path === '/robots.txt') return text(`User-agent: *\nAllow: /\nDisallow: /out\nDisallow: /search\nDisallow: /0\nSitemap: ${url.origin}/sitemap.xml\n`);
+  if (path === '/llms-full.txt') {
+    const slugs = (await store.summaries()).slice(0, 30).map((s) => s.slug);
+    return llmsFullTxt(url.origin, await store.getMany(slugs));
+  }
+  if (path === '/robots.txt') {
+    const ai = ['GPTBot', 'OAI-SearchBot', 'ChatGPT-User', 'ClaudeBot', 'Claude-SearchBot', 'anthropic-ai', 'PerplexityBot', 'Google-Extended', 'Applebot-Extended', 'Bytespider', 'CCBot', 'Amazonbot', 'meta-externalagent', 'DuckAssistBot', 'YouBot', 'cohere-ai'];
+    return text(`User-agent: *\nAllow: /\nDisallow: /out\nDisallow: /search\nDisallow: /0\nDisallow: /img/\nDisallow: /hit\n\n${ai.map((b) => `User-agent: ${b}\nAllow: /\n`).join('\n')}\nSitemap: ${url.origin}/sitemap.xml\n# AI 안내: ${url.origin}/llms.txt · 전문 ${url.origin}/llms-full.txt\n`);
+  }
 
   if (path === '/healthz') {
     const all = await store.summaries();

@@ -5,7 +5,7 @@ import { postUrl, won } from './components.js';
 const SITE_NAME = 'USB.KR';
 const SITE_TAGLINE = '전자기기 스펙과 가격을 비교한다';
 /** 스타일 변경 시 올려서 브라우저 캐시를 무효화한다. */
-export const ASSET_VERSION = '20260913a';
+export const ASSET_VERSION = '20260913b';
 
 /** GA4 측정 ID (G-XXXX) 와 Cloudflare Web Analytics 토큰. 요청마다 index.js 가 env 에서 넣는다. 비어 있으면 태그를 안 넣는다. */
 export let GA_ID = '';
@@ -55,7 +55,7 @@ const INLINE_SCRIPT = raw(`
 })();
 `);
 
-export function layout({ title, description, canonical, active, body, heroSlot = null, jsonLd = null, progress = false, tickerItems = null, ogImage = null }) {
+export function layout({ title, description, canonical, active, body, heroSlot = null, jsonLd = null, progress = false, tickerItems = null, ogImage = null, article = null }) {
   const fullTitle = title ? `${title} · ${SITE_NAME}` : `${SITE_NAME} · ${SITE_TAGLINE}`;
   return html`<html lang="ko">
   <head>
@@ -68,10 +68,15 @@ export function layout({ title, description, canonical, active, body, heroSlot =
     <meta property="og:site_name" content="${SITE_NAME}" />
     <meta property="og:title" content="${fullTitle}" />
     <meta property="og:description" content="${description}" />
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content="${article ? 'article' : 'website'}" />
     <meta property="og:url" content="${canonical}" />
+    <meta property="og:locale" content="ko_KR" />
     ${ogImage ? html`<meta property="og:image" content="${ogImage}" />` : ''}
+    ${article ? html`<meta property="article:published_time" content="${article.published}" />${article.section ? html`<meta property="article:section" content="${article.section}" />` : ''}` : ''}
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${fullTitle}" />
+    <meta name="twitter:description" content="${description}" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
     <link rel="alternate" type="application/rss+xml" title="${SITE_NAME}" href="/rss.xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -90,7 +95,7 @@ export function layout({ title, description, canonical, active, body, heroSlot =
       onload="this.media='all'"
     />
     <link rel="stylesheet" href="/assets/styles.css?v=${ASSET_VERSION}" />
-    ${jsonLd ? html`<script type="application/ld+json">${raw(JSON.stringify(jsonLd))}</script>` : ''}
+    ${jsonLd ? html`<script type="application/ld+json">${raw(JSON.stringify(Array.isArray(jsonLd) ? { '@context': 'https://schema.org', '@graph': jsonLd } : jsonLd))}</script>` : ''}
   </head>
   <body>
     <a class="skip" href="#main">본문으로 건너뛰기</a>
