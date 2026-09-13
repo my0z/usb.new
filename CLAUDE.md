@@ -1,13 +1,13 @@
 # usb.new
 
-usb.kr 리뉴얼 사이트. Cloudflare Workers SSR 이며 기존 usb.kr 의 KV(글)와 D1(조회수)을 그대로 읽는다. 자세한 구조는 README.md 를 본다.
+usb.kr 사이트. Cloudflare Workers SSR 이며 KV `new-usb-posts`(글)와 D1 `new-usb-db`(방문)를 읽는다. 옛 usb.kr 워커와 저장소는 2026-09-13 에 지웠다. 자세한 구조는 README.md 를 본다.
 
 ## 작업 규칙
 
 - 코드 생성 전에 `TZ=Asia/Seoul date` 로 시간을 먼저 맞춘다. 사용자 시간대는 한국 서울이다.
 - 한국어 문장에 쉼표를 쓰지 않는다.
 - 배포는 사용자의 오라클 VM 에서 `git pull && npm run deploy` 로 한다. 이 세션에서는 배포하지 않는다.
-- KV `usb-kr-posts` 와 D1 `usbkr-db` 는 읽기만 한다. 쓰기는 `generator/` 만 한다.
+- KV `new-usb-posts` 는 워커에서 읽기만 한다. 쓰기는 `generator/` 만 한다. D1 은 방문 비콘만 쓴다.
 
 ## 토큰 절약 도구
 

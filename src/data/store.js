@@ -1,6 +1,6 @@
 /**
  * 글 저장소.
- * 운영에서는 기존 usb.kr 이 쓰는 KV(POSTS) 와 D1(DB) 을 그대로 읽는다.
+ * 운영에서는 KV(POSTS) 와 D1(DB) 을 읽는다.
  * 바인딩이 없는 로컬 환경에서는 fixtures 로 대체한다.
  */
 import { buildFixturePosts, fixtureVisits } from './fixtures.js';
