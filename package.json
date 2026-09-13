@@ -1,0 +1,27 @@
+{
+  "name": "usb",
+  "version": "0.1.0",
+  "description": "영상 하나를 인스타그램 스레드 페이스북 틱톡 유튜브 블루스카이에 동시 업로드하는 CLI",
+  "type": "module",
+  "bin": {
+    "usb": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "upload": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@atproto/api": "^0.13.35",
+    "axios": "^1.7.9",
+    "commander": "^12.1.0",
+    "dotenv": "^16.4.7",
+    "form-data": "^4.0.1",
+    "googleapis": "^144.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}
