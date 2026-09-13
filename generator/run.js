@@ -33,7 +33,7 @@ const opt = (name, def = null) => {
 const COUNT = Math.max(1, parseInt(opt('count', '1'), 10) || 1);
 const DRY = flag('dry-run');
 const MOCK = flag('mock');
-const log = (...m) => console.log(new Date().toISOString().slice(11, 19), ...m);
+const log = (...m) => console.log(new Date().toLocaleTimeString('ko-KR', { hour12: false, timeZone: 'Asia/Seoul' }), ...m);
 
 const kv = MOCK || DRY ? new MemoryKv() : remoteKv;
 
