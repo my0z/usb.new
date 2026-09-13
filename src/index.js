@@ -49,8 +49,9 @@ function postHref(origin, slug) {
   return `${origin}/${encodeURIComponent(slug)}`;
 }
 
-function notFound(path) {
-  return redirect(`https://usb.kr${path}`, 301);
+function notFound(url) {
+  // 본 도메인에서 돌 때는 옛 사이트가 없으니 홈으로 보낸다
+  return redirect(url.hostname === 'usb.kr' ? '/' : `https://usb.kr${url.pathname}`, 301);
 }
 
 /* ── 이미지 프록시 · 아웃바운드 (기존 usb.kr 과 동일 규칙) ─────── */
@@ -241,7 +242,7 @@ async function route(url, env, request) {
   if (path === '/0') {
     const key = env?.ADMIN_KEY;
     const cookie = request.headers.get('cookie') ?? '';
-    if (key && url.searchParams.get('key') !== key && !cookie.includes(`adm=${key}`)) return notFound(path);
+    if (key && url.searchParams.get('key') !== key && !cookie.includes(`adm=${key}`)) return notFound(url);
     const [summaries, visits, ga] = await Promise.all([store.summaries(), store.visitStats(), gaReport(env).catch((e) => ({ error: e.message }))]);
     const res = page(statsPage({ canonical, summaries, visits, ga }), { cache: 'no-store', noindex: true });
     if (key) res.headers.set('set-cookie', `adm=${key}; Path=/0; Max-Age=31536000; HttpOnly; Secure; SameSite=Lax`);
@@ -269,7 +270,7 @@ async function route(url, env, request) {
   const categoryMatch = path.match(/^\/category\/([a-z0-9-]+)$/);
   if (categoryMatch) {
     const category = getCategory(categoryMatch[1]);
-    if (!category) return notFound(path);
+    if (!category) return notFound(url);
     const items = (await store.summaries()).filter((s) => categoryOfPost(s)?.slug === category.slug).slice(0, 60);
     return page(
       listPage({
@@ -312,10 +313,10 @@ async function route(url, env, request) {
     try {
       slug = decodeURIComponent(slugMatch[1]);
     } catch {
-      return notFound(path);
+      return notFound(url);
     }
     const [post, all, views] = await Promise.all([store.get(slug), store.summaries(), store.viewCount(slug)]);
-    if (!post) return notFound(path);
+    if (!post) return notFound(url);
     const cat = categoryOfPost(post);
     const same = all.filter((s) => s.slug !== slug && cat && categoryOfPost(s)?.slug === cat.slug);
     const rest = all.filter((s) => s.slug !== slug && !same.includes(s));
@@ -323,7 +324,7 @@ async function route(url, env, request) {
     return page(postPage(post, { canonical: postHref(url.origin, slug), related, views }));
   }
 
-  return notFound(path);
+  return notFound(url);
 }
 
 export default {

@@ -10,9 +10,11 @@ export const ASSET_VERSION = '20260913c';
 /** GA4 측정 ID (G-XXXX) 와 Cloudflare Web Analytics 토큰. 요청마다 index.js 가 env 에서 넣는다. 비어 있으면 태그를 안 넣는다. */
 export let GA_ID = '';
 let CF_BEACON = '';
+let VERIFY = [];
 export const setTracking = (env) => {
   GA_ID = String(env?.GA_ID ?? '').trim();
   CF_BEACON = String(env?.CF_BEACON_TOKEN ?? '').trim();
+  VERIFY = [['naver-site-verification', env?.NAVER_SITE_VERIFICATION], ['google-site-verification', env?.GOOGLE_SITE_VERIFICATION]].filter(([, v]) => String(v ?? '').trim());
 };
 const NAV_PRIMARY = ['audio', 'mobile', 'pc', 'display', 'wearable', 'smarthome', 'camera', 'car'];
 
@@ -77,6 +79,7 @@ export function layout({ title, description, canonical, active, body, heroSlot =
     <meta name="twitter:title" content="${fullTitle}" />
     <meta name="twitter:description" content="${description}" />
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    ${VERIFY.map(([k, v]) => html`<meta name="${k}" content="${v}" />`)}
     <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
     <link rel="alternate" type="application/rss+xml" title="${SITE_NAME}" href="/rss.xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />

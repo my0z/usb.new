@@ -125,9 +125,9 @@ async function chooseProducts(query, min = 3000) {
   return fresh.map((p, i) => ({ ...p, affiliateUrl: links[i] }));
 }
 
-async function writeArticle(keyword, query, products) {
+async function writeArticle(keyword, query, intent, products) {
   if (MOCK) return { article: parseArticle(mockArticleJson), model: 'mock' };
-  const { system, user, productLines } = buildPrompt({ keyword, query, products });
+  const { system, user, productLines } = buildPrompt({ keyword, query, intent, products });
   let lastErr;
   let issues = [];
   let prev = null;
@@ -179,7 +179,7 @@ async function runOnce(forcedKeyword, forcedQuery) {
   const products = await chooseProducts(item.q, item.min);
   log(`제품 ${products.length}개: ${products.map((p) => p.name.slice(0, 30)).join(' | ')}`);
   const [{ article, model }, video] = await Promise.all([
-    writeArticle(item.keyword, item.q, products),
+    writeArticle(item.keyword, item.q, item.t, products),
     MOCK ? null : findVideo(products[0].name, item.keyword).catch(() => null),
   ]);
   if (video) log(`영상: ${video.title} (${video.channel})`);

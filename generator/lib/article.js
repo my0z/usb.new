@@ -17,7 +17,7 @@ const SYSTEM = `당신은 한국 전자기기 리뷰 매거진의 에디터다. 
 - 본문 전체는 공백 포함 800자 이상으로 쓴다.
 출력 JSON 형식:
 {
-  "title": "40자 이내 제목. 제품 종류와 핵심 매력 한 가지",
+  "title": "40자 이내. 노리는 검색어로 시작하고 뒤에 주인공 제품의 핵심 매력 한 가지. 예: 맥세이프 보조배터리 추천 – 얇고 가벼운 ○○",
   "tldr": "90자 이내 한 줄 요약",
   "intro_html": "<p>..</p><p>..</p>  (2문단. 왜 이 제품이 눈에 띄는지)",
   "sections": [
@@ -37,12 +37,13 @@ function won(n) {
   return `${Number(n).toLocaleString('ko-KR')}원`;
 }
 
-export function buildPrompt({ keyword, query, products }) {
+export function buildPrompt({ keyword, query, intent = '', products }) {
   const lines = products.map((p, i) => {
     const ship = p.isRocket ? '로켓배송' : p.isFreeShipping ? '무료배송' : '일반배송';
     return `${i + 1}. ${p.name} — ${won(p.price)} · ${ship}${p.category ? ` · 분류: ${p.category}` : ''}`;
   });
   const user = `주제 키워드: ${keyword}
+노리는 검색어 (제목 앞에 넣는다): ${intent || keyword}
 검색어: ${query}
 제품 목록 (1번이 주인공):
 ${lines.join('\n')}
