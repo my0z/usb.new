@@ -26,7 +26,7 @@
     // Cloudflare Web Analytics 토큰. 대시보드에서 자동 삽입을 켰으면 비워 둔다.
     "CF_BEACON_TOKEN": "",
     // 네이버 서치어드바이저 · 구글 서치콘솔 소유 확인 값 (메타태그 content). 비우면 안 찍는다.
-    "NAVER_SITE_VERIFICATION": "",
+    "NAVER_SITE_VERIFICATION": "8de2e347621b6bfe27cced02c1224e50dc438605",
     "GOOGLE_SITE_VERIFICATION": ""
   },
   // KV · D1 · 구글 API 를 부르는 워커라 요청이 가까운 곳이 아니라 데이터에 가까운 곳에서 돌게 한다.
