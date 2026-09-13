@@ -4,6 +4,7 @@ import { postPage } from './views/post.js';
 import { listPage, categoriesPage } from './views/list.js';
 import { aboutPage, privacyPage } from './views/about.js';
 import { statsPage } from './views/stats.js';
+import { bestGroups, bestIndexPage, bestPage, bestUrl } from './views/best.js';
 import { ASSET_VERSION, setTracking } from './views/layout.js';
 import { gaReport } from './lib/ga.js';
 import { categories, getCategory, categoryOfPost } from './data/categories.js';
@@ -140,9 +141,12 @@ ${items}
 }
 
 function sitemap(origin, list) {
+  const today = new Date().toISOString().slice(0, 10);
   const urls = [
     { loc: `${origin}/`, priority: '1.0', lastmod: String(list[0]?.createdAt ?? '').slice(0, 10) || undefined },
     { loc: `${origin}/posts`, priority: '0.7' },
+    { loc: `${origin}/best`, priority: '0.8', lastmod: today },
+    ...bestGroups(list).map((g) => ({ loc: `${origin}${bestUrl(g.keyword)}`, priority: '0.8', lastmod: today })),
     { loc: `${origin}/categories`, priority: '0.5' },
     { loc: `${origin}/about`, priority: '0.3' },
     ...categories.map((c) => ({ loc: `${origin}/category/${c.slug}`, priority: '0.6' })),
@@ -239,6 +243,21 @@ async function route(url, env, request) {
   }
 
   if (path === '/about') return page(aboutPage({ canonical }));
+
+  if (path === '/best' || path.startsWith('/best/')) {
+    const [summaries, views] = await Promise.all([store.summaries(), store.viewsByPath()]);
+    const groups = bestGroups(summaries, views);
+    if (path === '/best') return page(bestIndexPage({ canonical, groups }));
+    let keyword;
+    try {
+      keyword = decodeURIComponent(path.slice(6));
+    } catch {
+      return notFound(url);
+    }
+    const group = groups.find((g) => g.keyword === keyword);
+    if (!group) return notFound(url);
+    return page(bestPage({ canonical: `${url.origin}${bestUrl(keyword)}`, group }));
+  }
   if (path === '/0') {
     const key = env?.ADMIN_KEY;
     const cookie = request.headers.get('cookie') ?? '';

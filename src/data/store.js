@@ -99,6 +99,14 @@ class KvStore {
     return raws.map((r) => safeParse(r, null)).filter(Boolean);
   }
 
+  /** path → 최근 30일 방문 수 */
+  async viewsByPath() {
+    if (!this.db) return new Map();
+    const since = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10);
+    const rows = await this.db.prepare('SELECT path, SUM(n) AS n FROM visits WHERE day >= ? GROUP BY path').bind(since).all().then((r) => r.results).catch(() => []);
+    return new Map(rows.map((r) => [r.path, Number(r.n)]));
+  }
+
   async popular() {
     return [];
   }
@@ -134,6 +142,9 @@ class FixtureStore {
   }
   async viewCount(slug) {
     return fixtureVisits[slug] ?? 0;
+  }
+  async viewsByPath() {
+    return new Map(Object.entries(fixtureVisits).map(([s, n]) => [`/${s}`, n]));
   }
   async recordVisit() {}
   async visitStats() {
