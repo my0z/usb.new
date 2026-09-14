@@ -273,7 +273,7 @@ async function route(url, env, request, ctx) {
       store.genRuns(),
       store.clickStats(),
     ]);
-    const res = page(statsPage({ canonical, summaries, visits, ga, gsc, runs, clicks, siteUrl: env?.SITE_URL || url.origin }), { cache: 'no-store', noindex: true });
+    const res = page(statsPage({ canonical, summaries, visits, ga, gsc, runs, clicks, siteUrl: env?.SITE_URL || url.origin, psiKey: env?.PSI_KEY ?? '' }), { cache: 'no-store', noindex: true });
     if (key) res.headers.set('set-cookie', `adm=${key}; Path=/0; Max-Age=31536000; HttpOnly; Secure; SameSite=Lax`);
     return res;
   }

@@ -60,7 +60,7 @@ npm run deploy
 
 ### 발행기 기록 · 페이지 속도
 
-`generator/run.js` 는 실행마다 KV `gen:runs` 에 성공 여부 · 시도 횟수 · 소요 시간 · 오류를 남기고 `/0` 가 30일 성공률로 보여 준다. 페이지 속도는 `/0` 를 연 브라우저가 PageSpeed Insights API 를 직접 불러 모바일 점수와 LCP · CLS · TBT 를 그린다 (1시간 localStorage 캐시).
+`generator/run.js` 는 실행마다 KV `gen:runs` 에 성공 여부 · 시도 횟수 · 소요 시간 · 오류를 남기고 `/0` 가 30일 성공률로 보여 준다. 페이지 속도는 `/0` 를 연 브라우저가 PageSpeed Insights API 를 직접 불러 모바일 점수와 LCP · CLS · TBT 를 그린다 (1시간 localStorage 캐시). 키 없이 쓰면 공용 한도라 가끔 429 가 나는데 30초 뒤 한 번 다시 재고 그래도 안 되면 PageSpeed 사이트 링크를 준다. 구글 클라우드에서 PageSpeed Insights API 를 켜고 API 키를 만들어 `wrangler.jsonc` 의 `PSI_KEY` 에 넣으면 한도가 따로 잡혀 사라진다 (키는 HTTP 리퍼러 `usb.kr/0` 으로 제한한다).
 
 ### Cloudflare 부가 기능
 

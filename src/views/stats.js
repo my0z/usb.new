@@ -64,7 +64,7 @@ const STYLE = raw(`
 const PSI_SCRIPT = raw(`
 (function(){
   var el=document.getElementById('psi');if(!el)return;
-  var u=el.getAttribute('data-url'),k='psi:'+u,ttl=36e5;
+  var u=el.getAttribute('data-url'),key=el.getAttribute('data-key')||'',k='psi:'+u,ttl=36e5;
   function cls(v,g,a){return v<=g?'g':v<=a?'a':'p'}
   function cell(l,v,c,unit){return '<div><b class="'+c+'">'+v+(unit?'<small>'+unit+'</small>':'')+'</b><span>'+l+'</span></div>'}
   function draw(d){
@@ -78,10 +78,15 @@ const PSI_SCRIPT = raw(`
     el.innerHTML=h
   }
   try{var c=JSON.parse(localStorage.getItem(k)||'null');if(c&&Date.now()-c.at<ttl){draw(c.d);return}}catch(e){}
-  fetch('https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url='+encodeURIComponent(u)+'&strategy=mobile&category=performance')
-    .then(function(r){if(!r.ok)throw new Error(r.status===429?'API 한도. 잠시 뒤 새로고침':'HTTP '+r.status);return r.json()})
-    .then(function(d){try{localStorage.setItem(k,JSON.stringify({at:Date.now(),d:d}))}catch(e){}draw(d)})
-    .catch(function(e){el.innerHTML='<p class="panel__note">측정 실패: '+e.message+'</p>'})
+  var api='https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url='+encodeURIComponent(u)+'&strategy=mobile&category=performance'+(key?'&key='+encodeURIComponent(key):'');
+  function go(retry){
+    fetch(api).then(function(r){
+      if(r.status===429&&retry){el.innerHTML='<p class="panel__note">API 한도에 걸려 30초 뒤 다시 잰다…</p>';return new Promise(function(res){setTimeout(function(){res(go(false))},3e4)})}
+      if(!r.ok)throw new Error(r.status===429?'API 한도. 키 없이 쓰는 공용 한도라 PSI_KEY 변수를 넣으면 사라진다':'HTTP '+r.status);
+      return r.json().then(function(d){try{localStorage.setItem(k,JSON.stringify({at:Date.now(),d:d}))}catch(e){}draw(d)})
+    }).catch(function(e){el.innerHTML='<p class="panel__note">측정 실패: '+e.message+' · <a href="https://pagespeed.web.dev/report?url='+encodeURIComponent(u)+'" target="_blank" rel="noopener">PageSpeed 사이트에서 직접 보기</a></p>'})
+  }
+  go(true)
 })();
 `);
 
@@ -103,7 +108,7 @@ function bars(rows, { alt = false, unit = '' } = {}) {
 const panel = (title, body, { note = '', wide = false, sub = '' } = {}) =>
   html`<section class="panel ${wide ? 'panel--wide' : ''}"><h2 class="panel__h">${title}${sub ? html`<small>${sub}</small>` : ''}</h2>${note ? html`<p class="panel__note">${note}</p>` : ''}${body}</section>`;
 
-export function statsPage({ canonical, summaries, visits = null, ga = null, gsc = null, runs = [], clicks = null, siteUrl = '' }) {
+export function statsPage({ canonical, summaries, visits = null, ga = null, gsc = null, runs = [], clicks = null, siteUrl = '', psiKey = '' }) {
   const byCat = new Map();
   const byDay = new Map();
   let products = 0;
@@ -186,7 +191,7 @@ export function statsPage({ canonical, summaries, visits = null, ga = null, gsc 
           : html`<p class="panel__note">아직 기록이 없다. 발행기가 다음 실행부터 남긴다.</p>`}`,
         { sub: '최근 12회', note: '' },
       )}
-      ${panel('페이지 속도', html`<div id="psi" data-url="${siteUrl || canonical.replace(/\/0$/, '/')}"><p class="panel__note">PageSpeed Insights 모바일 측정 중… 20초쯤 걸린다.</p></div>`, { sub: 'PageSpeed · 1시간 캐시' })}
+      ${panel('페이지 속도', html`<div id="psi" data-url="${siteUrl || canonical.replace(/\/0$/, '/')}" data-key="${psiKey}"><p class="panel__note">PageSpeed Insights 모바일 측정 중… 20초쯤 걸린다.</p></div>`, { sub: 'PageSpeed · 1시간 캐시' })}
       ${!ga ? panel('구글 애널리틱스', html`<p class="panel__note">GA_PROPERTY_ID 변수와 GA_SA_EMAIL · GA_SA_KEY 시크릿을 넣으면 실시간 접속 · 사용자 · 유입 경로가 여기에 뜬다. README 의 "구글 애널리틱스" 참고.</p>`) : ''}
       ${panel('발행 추이', bars(days.map(([d, n]) => [d, n]), { unit: '건' }), { sub: '14일' })}
       ${panel('카테고리별', bars(cats.map(([c, n]) => [c, n]), { unit: '건' }), { sub: `${cats.length}개` })}
