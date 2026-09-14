@@ -181,6 +181,26 @@ export function statsPage({ canonical, summaries, visits = null, ga = null, gsc 
     </div>
 
     <div class="adm__grid">
+      ${panel(
+        '글 생성 요청',
+        html`${msg ? html`<p class="panel__note genmsg">${msg}</p>` : ''}
+          <form class="genform" method="post" action="/0/gen" enctype="multipart/form-data" id="genform">
+            <input name="q" maxlength="80" placeholder="상품명 또는 쿠팡 검색어 (예: 앤커 나노 보조배터리 10000)" />
+            <input name="keyword" maxlength="40" placeholder="분류 키워드 (선택 · 예: 보조배터리)" />
+            <label class="genform__photo"><input type="file" name="photo" accept="image/*" /><span>사진으로</span></label>
+            <button type="submit">생성 요청</button>
+          </form>
+          ${queue.length
+            ? queue.map(
+                (r) => html`<div class="row">
+                  <span class="row__l">${r.status === '완료' && r.result ? html`<a href="/${r.result}">${r.q}</a>` : r.q}${r.status === '실패' ? html` <small>${r.result}</small>` : ''}</span>
+                  <span class="tag ${r.status === '완료' ? 'tag--gen' : ''}">${r.status}</span>
+                  <span class="row__n"><small>${ago(r.done_at || r.at)}</small></span>
+                </div>`,
+              )
+            : html`<p class="panel__note">아직 요청이 없다.</p>`}`,
+        { wide: true, sub: '최근 10건', note: '상품명을 쓰거나 사진을 고르면 된다. 사진은 Workers AI 가 제품명을 읽어 검색어로 쓴다. VM 발행기가 5분마다 가져가 글을 쓴다. 이미 다룬 제품이면 실패로 표시된다.' },
+      )}
       ${visits
         ? panel('일별 방문', bars(visits.days.map((r) => [r.day, r.n, `재 ${num(r.r)}`]), { unit: '회' }), { sub: '14일 · 비콘', note: '자바스크립트를 실행한 브라우저만 세고 재방문은 1년 쿠키로 구분한다. 크롤러와 AI 봇은 빠진다.' })
         : panel('일별 방문', html`<p class="panel__note">D1 이 연결되지 않았다.</p>`)}
@@ -209,26 +229,6 @@ export function statsPage({ canonical, summaries, visits = null, ga = null, gsc 
             )
           : html`<p class="panel__note">아직 기록이 없다. 발행기가 다음 실행부터 남긴다.</p>`}`,
         { sub: '최근 12회', note: '' },
-      )}
-      ${panel(
-        '글 생성 요청',
-        html`${msg ? html`<p class="panel__note genmsg">${msg}</p>` : ''}
-          <form class="genform" method="post" action="/0/gen" enctype="multipart/form-data" id="genform">
-            <input name="q" maxlength="80" placeholder="상품명 또는 쿠팡 검색어 (예: 앤커 나노 보조배터리 10000)" />
-            <input name="keyword" maxlength="40" placeholder="분류 키워드 (선택 · 예: 보조배터리)" />
-            <label class="genform__photo"><input type="file" name="photo" accept="image/*" /><span>사진으로</span></label>
-            <button type="submit">생성 요청</button>
-          </form>
-          ${queue.length
-            ? queue.map(
-                (r) => html`<div class="row">
-                  <span class="row__l">${r.status === '완료' && r.result ? html`<a href="/${r.result}">${r.q}</a>` : r.q}${r.status === '실패' ? html` <small>${r.result}</small>` : ''}</span>
-                  <span class="tag ${r.status === '완료' ? 'tag--gen' : ''}">${r.status}</span>
-                  <span class="row__n"><small>${ago(r.done_at || r.at)}</small></span>
-                </div>`,
-              )
-            : html`<p class="panel__note">아직 요청이 없다.</p>`}`,
-        { sub: '최근 10건', note: '상품명을 쓰거나 사진을 고르면 된다. 사진은 Workers AI 가 제품명을 읽어 검색어로 쓴다. VM 발행기가 5분마다 가져가 글을 쓴다. 이미 다룬 제품이면 실패로 표시된다.' },
       )}
       ${panel('페이지 속도', html`<div id="psi" data-url="${siteUrl || canonical.replace(/\/0$/, '/')}" data-key="${psiKey}"><p class="panel__note">PageSpeed Insights 모바일 측정 중… 20초쯤 걸린다.</p></div>`, { sub: 'PageSpeed · 1시간 캐시' })}
       ${!ga ? panel('구글 애널리틱스', html`<p class="panel__note">GA_PROPERTY_ID 변수와 GA_SA_EMAIL · GA_SA_KEY 시크릿을 넣으면 실시간 접속 · 사용자 · 유입 경로가 여기에 뜬다. README 의 "구글 애널리틱스" 참고.</p>`) : ''}
