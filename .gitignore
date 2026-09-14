@@ -1,0 +1,6 @@
+node_modules/
+.env
+.wrangler/
+relay/realtime-snapshot.json
+relay/mini-candle-cache.json
+*.log
