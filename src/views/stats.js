@@ -53,6 +53,10 @@ const STYLE = raw(`
 .tag{display:inline-block;font-size:10px;letter-spacing:.08em;padding:2px 6px;border-radius:4px;background:var(--paper-3);color:var(--ink-2);vertical-align:middle;margin-right:4px}
 .tag--gen{background:var(--green-soft);color:var(--green)}
 .row__n.is-bad{color:var(--accent)}
+.genform{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) auto;gap:8px;margin-bottom:12px}
+.genform input{font:inherit;font-size:14px;padding:9px 12px;border:1px solid var(--rule);border-radius:8px;background:var(--paper);color:var(--ink);min-width:0}
+.genform button{font:inherit;font-size:14px;font-weight:700;padding:9px 16px;border:0;border-radius:8px;background:var(--ink);color:var(--paper);cursor:pointer}
+@media (max-width:720px){.genform{grid-template-columns:1fr}}
 .psi{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;margin-bottom:10px}
 .psi b{display:block;font-family:var(--display);font-size:26px;line-height:1.1;letter-spacing:-.02em}
 .psi span{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
@@ -108,7 +112,7 @@ function bars(rows, { alt = false, unit = '' } = {}) {
 const panel = (title, body, { note = '', wide = false, sub = '' } = {}) =>
   html`<section class="panel ${wide ? 'panel--wide' : ''}"><h2 class="panel__h">${title}${sub ? html`<small>${sub}</small>` : ''}</h2>${note ? html`<p class="panel__note">${note}</p>` : ''}${body}</section>`;
 
-export function statsPage({ canonical, summaries, visits = null, ga = null, gsc = null, runs = [], clicks = null, siteUrl = '', psiKey = '' }) {
+export function statsPage({ canonical, summaries, visits = null, ga = null, gsc = null, runs = [], clicks = null, queue = [], siteUrl = '', psiKey = '' }) {
   const byCat = new Map();
   const byDay = new Map();
   let products = 0;
@@ -191,6 +195,24 @@ export function statsPage({ canonical, summaries, visits = null, ga = null, gsc 
             )
           : html`<p class="panel__note">아직 기록이 없다. 발행기가 다음 실행부터 남긴다.</p>`}`,
         { sub: '최근 12회', note: '' },
+      )}
+      ${panel(
+        '글 생성 요청',
+        html`<form class="genform" method="post" action="/0/gen">
+            <input name="q" required maxlength="80" placeholder="상품명 또는 쿠팡 검색어 (예: 앤커 나노 보조배터리 10000)" />
+            <input name="keyword" maxlength="40" placeholder="분류 키워드 (선택 · 예: 보조배터리)" />
+            <button type="submit">생성 요청</button>
+          </form>
+          ${queue.length
+            ? queue.map(
+                (r) => html`<div class="row">
+                  <span class="row__l">${r.status === '완료' && r.result ? html`<a href="/${r.result}">${r.q}</a>` : r.q}${r.status === '실패' ? html` <small>${r.result}</small>` : ''}</span>
+                  <span class="tag ${r.status === '완료' ? 'tag--gen' : ''}">${r.status}</span>
+                  <span class="row__n"><small>${ago(r.done_at || r.at)}</small></span>
+                </div>`,
+              )
+            : html`<p class="panel__note">아직 요청이 없다.</p>`}`,
+        { sub: '최근 10건', note: 'VM 발행기가 5분마다 가져가 글을 쓴다. 검색어로 쿠팡을 찾아 첫 제품이 주인공이 된다. 이미 다룬 제품이면 실패로 표시된다.' },
       )}
       ${panel('페이지 속도', html`<div id="psi" data-url="${siteUrl || canonical.replace(/\/0$/, '/')}" data-key="${psiKey}"><p class="panel__note">PageSpeed Insights 모바일 측정 중… 20초쯤 걸린다.</p></div>`, { sub: 'PageSpeed · 1시간 캐시' })}
       ${!ga ? panel('구글 애널리틱스', html`<p class="panel__note">GA_PROPERTY_ID 변수와 GA_SA_EMAIL · GA_SA_KEY 시크릿을 넣으면 실시간 접속 · 사용자 · 유입 경로가 여기에 뜬다. README 의 "구글 애널리틱스" 참고.</p>`) : ''}

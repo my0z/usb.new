@@ -106,6 +106,30 @@ class KvStore {
     return { rows, total, totalViews };
   }
 
+  /* 관리자 페이지에서 넣는 글 생성 요청. VM 의 generator/queue.js 가 5분마다 가져가 발행하고 결과를 적는다. */
+  async ensureQueue() {
+    await this.db.prepare('CREATE TABLE IF NOT EXISTS gen_queue(id INTEGER PRIMARY KEY AUTOINCREMENT, q TEXT, keyword TEXT, status TEXT DEFAULT \'대기\', at TEXT, done_at TEXT, result TEXT)').run().catch(() => {});
+  }
+  async enqueueGen(q, keyword) {
+    if (!this.db) return;
+    await this.ensureQueue();
+    await this.db.prepare('INSERT INTO gen_queue(q, keyword, at) VALUES(?, ?, ?)').bind(q, keyword, new Date().toISOString()).run();
+  }
+  async genQueue(limit = 10) {
+    if (!this.db) return [];
+    await this.ensureQueue();
+    return this.db.prepare('SELECT * FROM gen_queue ORDER BY id DESC LIMIT ?').bind(limit).all().then((r) => r.results).catch(() => []);
+  }
+  async pendingGen() {
+    if (!this.db) return [];
+    await this.ensureQueue();
+    return this.db.prepare("SELECT id, q, keyword FROM gen_queue WHERE status = '대기' ORDER BY id").all().then((r) => r.results).catch(() => []);
+  }
+  async finishGen(id, ok, result) {
+    if (!this.db) return;
+    await this.db.prepare('UPDATE gen_queue SET status = ?, done_at = ?, result = ? WHERE id = ?').bind(ok ? '완료' : '실패', new Date().toISOString(), String(result ?? '').slice(0, 200), Number(id)).run();
+  }
+
   async visitStats() {
     if (!this.db) return null;
     const q = (sql, ...b) => this.db.prepare(sql).bind(...b).all().then((r) => r.results).catch(() => []);
@@ -184,6 +208,14 @@ class FixtureStore {
   async clickStats() {
     return null;
   }
+  async enqueueGen() {}
+  async genQueue() {
+    return [];
+  }
+  async pendingGen() {
+    return [];
+  }
+  async finishGen() {}
   async visitStats() {
     return null;
   }

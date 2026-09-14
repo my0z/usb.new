@@ -50,6 +50,11 @@ function postHref(origin, slug) {
   return `${origin}/${encodeURIComponent(slug)}`;
 }
 
+function isAdmin(request, url, env) {
+  const key = env?.ADMIN_KEY;
+  return !key || url.searchParams.get('key') === key || (request.headers.get('cookie') ?? '').includes(`adm=${key}`);
+}
+
 function notFound(url) {
   // 본 도메인에서 돌 때는 옛 사이트가 없으니 홈으로 보낸다
   return redirect(url.hostname === 'usb.kr' ? '/' : `https://usb.kr${url.pathname}`, 301);
@@ -261,19 +266,24 @@ async function route(url, env, request, ctx) {
     if (!group) return notFound(url);
     return page(bestPage({ canonical: `${url.origin}${bestUrl(keyword)}`, group }));
   }
+  // VM 발행기가 가져가는 대기 목록
+  if (path === '/0/queue') {
+    if (!isAdmin(request, url, env)) return notFound(url);
+    return Response.json(await store.pendingGen(), { headers: { 'cache-control': 'no-store' } });
+  }
   if (path === '/0') {
     const key = env?.ADMIN_KEY;
-    const cookie = request.headers.get('cookie') ?? '';
-    if (key && url.searchParams.get('key') !== key && !cookie.includes(`adm=${key}`)) return notFound(url);
-    const [summaries, visits, ga, gsc, runs, clicks] = await Promise.all([
+    if (!isAdmin(request, url, env)) return notFound(url);
+    const [summaries, visits, ga, gsc, runs, clicks, queue] = await Promise.all([
       store.summaries(),
       store.visitStats(),
       gaReport(env).catch((e) => ({ error: e.message })),
       gscReport(env).catch((e) => ({ error: e.message })),
       store.genRuns(),
       store.clickStats(),
+      store.genQueue(),
     ]);
-    const res = page(statsPage({ canonical, summaries, visits, ga, gsc, runs, clicks, siteUrl: env?.SITE_URL || url.origin, psiKey: env?.PSI_KEY ?? '' }), { cache: 'no-store', noindex: true });
+    const res = page(statsPage({ canonical, summaries, visits, ga, gsc, runs, clicks, queue, siteUrl: env?.SITE_URL || url.origin, psiKey: env?.PSI_KEY ?? '' }), { cache: 'no-store', noindex: true });
     if (key) res.headers.set('set-cookie', `adm=${key}; Path=/0; Max-Age=31536000; HttpOnly; Secure; SameSite=Lax`);
     return res;
   }
@@ -377,6 +387,22 @@ export default {
       const returning = /(^|;\s*)uv=1(;|$)/.test(request.headers.get('cookie') ?? '');
       if (!bot && path && path !== '/0' && ctx) ctx.waitUntil(getStore(env).recordVisit(path, returning));
       return new Response(null, { status: 204, headers: returning ? {} : { 'set-cookie': 'uv=1; Max-Age=31536000; Path=/; Secure; SameSite=Lax' } });
+    }
+
+    // 관리자: 글 생성 요청 넣기 (폼) · 결과 적기 (VM 발행기)
+    if (request.method === 'POST' && (url.pathname === '/0/gen' || url.pathname === '/0/queue')) {
+      if (!isAdmin(request, url, env)) return notFound(url);
+      const store = getStore(env);
+      if (url.pathname === '/0/gen') {
+        const form = await request.formData();
+        const q = String(form.get('q') ?? '').trim().slice(0, 80);
+        const keyword = String(form.get('keyword') ?? '').trim().replace(/\s+/g, '').slice(0, 40) || q;
+        if (q) await store.enqueueGen(q, keyword);
+        return redirect('/0', 303);
+      }
+      const body = await request.json().catch(() => ({}));
+      if (body?.id) await store.finishGen(body.id, Boolean(body.ok), body.ok ? body.slug : body.err);
+      return Response.json({ ok: true });
     }
 
     if (request.method !== 'GET' && request.method !== 'HEAD') {

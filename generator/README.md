@@ -55,3 +55,7 @@ tail -f ~/usb-generator.log
 ## 키워드 바꾸기
 
 `generator/config.js` 의 `KEYWORD_POOL` 에 `{ q: '쿠팡 검색어', keyword: '분류 키워드' }` 를 추가한다. `keyword` 는 `src/data/categories.js` 의 키워드와 맞추면 카테고리에 자동 분류된다.
+
+## 관리자 페이지에서 글 요청
+
+`/0` 의 "글 생성 요청" 폼에 상품명이나 쿠팡 검색어를 넣으면 워커가 D1 `gen_queue` 에 적고 VM 의 `generator/queue.js` 가 5분마다 가져가 `run.js --keyword … --query …` 로 발행한 뒤 결과(글 링크 또는 실패 사유)를 돌려준다. `.env` 에 `ADMIN_KEY`(워커 시크릿과 같은 값)가 있어야 하고 크론은 `bash generator/install-cron.sh` 로 다시 등록한다. 정기 발행이 도는 동안엔 다음 틱으로 미룬다.
