@@ -180,6 +180,20 @@ export function postPage(p, { canonical, related, views, best = null }) {
             </section>`
           : ''}
 
+        ${first
+          ? html`<aside class="final reveal" aria-labelledby="final-title">
+              <p class="verdict__label" id="final-title">결론</p>
+              <div class="final__row">
+                <img src="${cover}" alt="" loading="lazy" width="96" height="96" />
+                <div class="final__body">
+                  <b class="final__name">${first.name}</b>
+                  <span class="final__price">${won(first.price)}${first.isRocket ? html`<span class="ship ship--rocket">${ICON_ROCKET} 로켓배송</span>` : first.isFreeShipping ? html`<span class="ship">무료배송</span>` : ''}</span>
+                  <small>가격은 게재 시점 기준이다. 지금 가격과 재고는 쿠팡에서 확인한다.</small>
+                </div>
+                <a class="btn btn--primary" href="${outUrl(first, p.slug)}" target="_blank" rel="nofollow sponsored noopener">쿠팡 최저가 확인 ${ICON_ARROW}</a>
+              </div>
+            </aside>`
+          : ''}
         ${best
           ? html`<p class="bestlink reveal"><a href="${bestUrl(best.keyword)}"><b>${best.keyword} 추천 TOP ${best.items.length}</b><span>리뷰한 ${best.keyword} ${best.items.length}개를 많이 본 순서로 모았다 →</span></a></p>`
           : ''}
@@ -190,6 +204,13 @@ export function postPage(p, { canonical, related, views, best = null }) {
     </div>
 
     ${related.length ? html`<div class="shell">${sectionHead('→', '이어서 읽기', cat ? `${cat.name} 글 더 보기` : '관련 글')} ${cardGrid(related, { variant: 'compact' })}</div>` : ''}
+    ${first
+      ? html`<div class="stickycta">
+          <img src="${cover}" alt="" loading="lazy" width="44" height="44" />
+          <span class="stickycta__text"><b>${won(first.price)}</b><small>${first.name}</small></span>
+          <a class="btn btn--primary btn--sm" href="${outUrl(first, p.slug)}" target="_blank" rel="nofollow sponsored noopener">최저가 보기 ${ICON_ARROW}</a>
+        </div>`
+      : ''}
   </article>`;
 
   return layout({
