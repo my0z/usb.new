@@ -161,12 +161,22 @@ class KvStore {
     return new Map(rows.map((r) => [r.path, Number(r.n)]));
   }
 
-  async popular() {
-    return [];
+  /** 홈 인기 순위. 최근 30일 방문이 있는 글을 많이 본 순서로. path 는 비콘이 보낸 location.pathname 과 같은 인코딩이다. */
+  async popular(limit = 6) {
+    const [all, views] = await Promise.all([this.summaries(), this.viewsByPath()]);
+    return all
+      .map((s) => ({ ...s, views: views.get(`/${encodeURIComponent(s.slug)}`) ?? 0 }))
+      .filter((s) => s.views >= 3)
+      .sort((a, b) => b.views - a.views)
+      .slice(0, limit);
   }
 
-  async viewCount() {
-    return 0;
+  /** 글 하나의 최근 30일 방문 수. 본문의 조회 표시에 쓴다. */
+  async viewCount(slug) {
+    if (!this.db) return 0;
+    const since = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10);
+    const r = await this.db.prepare('SELECT SUM(n) AS n FROM visits WHERE day >= ? AND path = ?').bind(since, `/${encodeURIComponent(slug)}`).first().catch(() => null);
+    return Number(r?.n ?? 0);
   }
 }
 

@@ -2539,3 +2539,125 @@ h3 {
     grid-template-columns: 1fr;
   }
 }
+
+/* ── 결론 CTA · 모바일 고정 바 ─────────────── */
+
+.final {
+  margin: 40px 0 0;
+  padding: 22px 24px;
+  border-radius: var(--radius-lg);
+  background: var(--paper-2);
+  border: 1px solid var(--rule-strong);
+  box-shadow: var(--shadow-sm);
+}
+.final .verdict__label {
+  margin-bottom: 14px;
+}
+.final__row {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: center;
+}
+.final__row img,
+.stickycta img {
+  object-fit: contain;
+  background: #fff;
+  border-radius: 8px;
+  padding: 4px;
+}
+.final__row img {
+  width: 96px;
+  height: 96px;
+}
+.final__body {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.final__name {
+  font-size: 16px;
+  line-height: 1.4;
+}
+.final__price {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--display);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+.final__body small {
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+.stickycta {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: none;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  background: color-mix(in srgb, var(--paper-2) 92%, transparent);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--rule);
+  box-shadow: 0 -12px 30px -20px rgba(0, 0, 0, 0.5);
+  transform: translateY(110%);
+  transition: transform 0.35s var(--ease);
+}
+.stickycta img {
+  width: 44px;
+  height: 44px;
+  flex: none;
+}
+.stickycta__text {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.3;
+}
+.stickycta__text b {
+  font-family: var(--display);
+  font-size: 17px;
+}
+.stickycta__text small {
+  font-size: 12px;
+  color: var(--ink-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.stickycta .btn {
+  flex: none;
+}
+@media (max-width: 1080px) {
+  .stickycta {
+    display: flex;
+  }
+  .stickycta.is-on {
+    transform: none;
+  }
+  body:has(.stickycta) .footer {
+    padding-bottom: 76px;
+  }
+}
+@media (max-width: 640px) {
+  .final {
+    padding: 18px;
+  }
+  .final__row {
+    grid-template-columns: 72px minmax(0, 1fr);
+  }
+  .final__row img {
+    width: 72px;
+    height: 72px;
+  }
+  .final__row .btn {
+    grid-column: 1 / -1;
+    justify-content: center;
+  }
+}
