@@ -44,6 +44,41 @@ npm run upload -- \
 - `src/config.ts` - 환경변수 로딩
 - `src/index.ts` - CLI 진입점
 
+## 오라클 VM 자동 배포
+
+`main` 브랜치에 푸시하면 GitHub Actions가 오라클 VM에 SSH로 접속해서 최신 코드를 가져오고 빌드까지 처리합니다 (`.github/workflows/deploy.yml`). CLI는 상시 실행되는 서버가 아니라서 재시작 단계는 없고 다음 실행부터 최신 코드가 적용됩니다.
+
+### VM 최초 설정 (한 번만)
+
+```bash
+sudo apt update && sudo apt install -y nodejs npm git
+git clone https://github.com/my0z/usb.new.git /opt/usb
+cd /opt/usb
+npm ci
+cp .env.example .env   # 여기서 실제 API 키 채워 넣기
+npm run build
+```
+
+배포용 SSH 키 쌍을 따로 만들어서 공개키는 VM의 `~/.ssh/authorized_keys`에 등록하세요.
+
+```bash
+ssh-keygen -t ed25519 -f deploy_key -N ""
+```
+
+### GitHub Secrets 등록
+
+레포 Settings → Secrets and variables → Actions에서 아래 값을 등록하세요.
+
+| Secret | 값 |
+| --- | --- |
+| `ORACLE_HOST` | VM 공인 IP |
+| `ORACLE_USER` | SSH 접속 계정 |
+| `ORACLE_SSH_KEY` | `deploy_key` 개인키 전체 내용 |
+| `ORACLE_PORT` | SSH 포트 (기본 22, 생략 가능) |
+| `ORACLE_APP_DIR` | VM 상의 레포 경로 (예: `/opt/usb`) |
+
+등록 후 `main`에 푸시하면 자동으로 VM 코드가 갱신됩니다. `.env`는 git 추적 대상이 아니라서 배포 때 덮어써지지 않습니다.
+
 ## 참고
 
 각 플랫폼의 앱 등록 승인 정책과 토큰 만료 주기가 다르므로 실제 운영 전 테스트 계정으로 먼저 검증하세요.
