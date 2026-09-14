@@ -70,7 +70,7 @@ npm run deploy
 | Smart Placement | 켜짐 | KV · D1 · 구글 API 에 가까운 곳에서 워커가 돈다 |
 | Image Transformations | 코드 준비됨 | 대시보드 → usb.kr 존 → Images → Transformations 켜기 |
 | Web Analytics (무료 · 쿠키 없음) | 선택 | 대시보드 → Analytics → Web Analytics → n.usb.kr 추가. 프록시 존이라 자동 삽입을 고르면 코드 없이 된다. 수동이면 토큰을 `CF_BEACON_TOKEN` 에 |
-| Workers AI | 발행기 심사관으로 사용 | 토큰에 "Workers AI: Read" 추가하면 llama-3.3-70b 가 세 번째 심사관이 된다 (유료 플랜 하루 1만 뉴런 포함) |
+| Workers AI | 발행기 심사관 · 관리자 페이지의 사진 → 제품명 인식 (`ai` 바인딩 · `VISION_MODEL`) | 토큰에 "Workers AI: Read" 추가하면 llama-3.3-70b 가 세 번째 심사관이 된다 (유료 플랜 하루 1만 뉴런 포함) |
 | Cache Reserve · Speed Brain · Early Hints | 선택 | 존 설정 → Caching / Speed 에서 토글. 코드 변경 없음 |
 
 ## 디렉터리

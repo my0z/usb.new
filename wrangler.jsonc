@@ -30,6 +30,8 @@
     "GA_PROPERTY_ID": "314252211",
     // 서치콘솔 속성. 도메인 속성이면 sc-domain:usb.kr · URL 접두어 속성이면 https://usb.kr/ 로 쓴다. 같은 서비스 계정을 서치콘솔 사용자로 추가해야 한다.
     "GSC_SITE": "https://usb.kr/",
+    // 사진에서 제품명을 읽는 Workers AI 모델. 모델이 내려가면 여기만 바꾼다.
+    "VISION_MODEL": "@cf/meta/llama-3.2-11b-vision-instruct",
     // PageSpeed Insights API 키는 시크릿 PSI_KEY 로 넣는다 (npx wrangler secret put PSI_KEY). 없으면 키 없는 공용 한도라 가끔 429 가 난다.
     // Cloudflare Web Analytics 토큰. 대시보드에서 자동 삽입을 켰으면 비워 둔다.
     "CF_BEACON_TOKEN": "",
@@ -37,6 +39,8 @@
     "NAVER_SITE_VERIFICATION": "8de2e347621b6bfe27cced02c1224e50dc438605",
     "GOOGLE_SITE_VERIFICATION": ""
   },
+  // 관리자 페이지의 사진 → 제품명 인식 (Workers AI · 무료 한도 안)
+  "ai": { "binding": "AI" },
   // KV · D1 · 구글 API 를 부르는 워커라 요청이 가까운 곳이 아니라 데이터에 가까운 곳에서 돌게 한다.
   "placement": { "mode": "smart" },
   // 새 사이트 전용 저장소. generator/ 만 쓴다.

@@ -53,7 +53,11 @@ const STYLE = raw(`
 .tag{display:inline-block;font-size:10px;letter-spacing:.08em;padding:2px 6px;border-radius:4px;background:var(--paper-3);color:var(--ink-2);vertical-align:middle;margin-right:4px}
 .tag--gen{background:var(--green-soft);color:var(--green)}
 .row__n.is-bad{color:var(--accent)}
-.genform{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) auto;gap:8px;margin-bottom:12px}
+.genform{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) auto auto;gap:8px;margin-bottom:12px}
+.genform__photo{display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;padding:9px 14px;border:1px dashed var(--rule-strong);border-radius:8px;cursor:pointer;white-space:nowrap}
+.genform__photo input{display:none}
+.genform__photo.has{border-style:solid;border-color:var(--accent);color:var(--accent)}
+.genmsg{padding:8px 12px;background:var(--gold-soft);border-radius:8px;color:var(--ink)}
 .genform input{font:inherit;font-size:14px;padding:9px 12px;border:1px solid var(--rule);border-radius:8px;background:var(--paper);color:var(--ink);min-width:0}
 .genform button{font:inherit;font-size:14px;font-weight:700;padding:9px 16px;border:0;border-radius:8px;background:var(--ink);color:var(--paper);cursor:pointer}
 @media (max-width:720px){.genform{grid-template-columns:1fr}}
@@ -66,6 +70,16 @@ const STYLE = raw(`
 
 /* PageSpeed Insights 는 브라우저가 직접 부른다. 워커에서 부르면 30초를 넘겨 끊기고 API 한도도 워커 IP 로 잡힌다. 결과는 localStorage 에 1시간 둔다. */
 const PSI_SCRIPT = raw(`
+(function(){
+  // 사진은 올리기 전에 1024px 로 줄인다 (폰 원본 5MB 를 그대로 보내면 느리고 AI 입력 한도도 넘는다)
+  var f=document.getElementById('genform'),fi=f&&f.querySelector('input[type=file]');
+  if(fi){fi.addEventListener('change',function(){fi.parentNode.classList.toggle('has',!!fi.files.length);fi.parentNode.querySelector('span').textContent=fi.files.length?'사진 1장':'사진으로'});
+    f.addEventListener('submit',function(e){var file=fi.files[0];if(!file||f.q.value.trim())return;e.preventDefault();var b=f.querySelector('button');b.disabled=true;b.textContent='사진 읽는 중…';
+      var img=new Image();img.onload=function(){var s=Math.min(1,1024/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+        c.toBlob(function(blob){var fd=new FormData();fd.append('q','');fd.append('keyword',f.keyword.value);fd.append('photo',blob,'photo.jpg');
+          fetch(f.action,{method:'POST',body:fd}).then(function(r){location.href=r.url||'/0'}).catch(function(){location.reload()})},'image/jpeg',0.85)};
+      img.src=URL.createObjectURL(file)})}
+})();
 (function(){
   var el=document.getElementById('psi');if(!el)return;
   var u=el.getAttribute('data-url'),key=el.getAttribute('data-key')||'',k='psi:'+u,ttl=36e5;
@@ -112,7 +126,7 @@ function bars(rows, { alt = false, unit = '' } = {}) {
 const panel = (title, body, { note = '', wide = false, sub = '' } = {}) =>
   html`<section class="panel ${wide ? 'panel--wide' : ''}"><h2 class="panel__h">${title}${sub ? html`<small>${sub}</small>` : ''}</h2>${note ? html`<p class="panel__note">${note}</p>` : ''}${body}</section>`;
 
-export function statsPage({ canonical, summaries, visits = null, ga = null, gsc = null, runs = [], clicks = null, queue = [], siteUrl = '', psiKey = '' }) {
+export function statsPage({ canonical, summaries, visits = null, ga = null, gsc = null, runs = [], clicks = null, queue = [], msg = '', siteUrl = '', psiKey = '' }) {
   const byCat = new Map();
   const byDay = new Map();
   let products = 0;
@@ -198,9 +212,11 @@ export function statsPage({ canonical, summaries, visits = null, ga = null, gsc 
       )}
       ${panel(
         '글 생성 요청',
-        html`<form class="genform" method="post" action="/0/gen">
-            <input name="q" required maxlength="80" placeholder="상품명 또는 쿠팡 검색어 (예: 앤커 나노 보조배터리 10000)" />
+        html`${msg ? html`<p class="panel__note genmsg">${msg}</p>` : ''}
+          <form class="genform" method="post" action="/0/gen" enctype="multipart/form-data" id="genform">
+            <input name="q" maxlength="80" placeholder="상품명 또는 쿠팡 검색어 (예: 앤커 나노 보조배터리 10000)" />
             <input name="keyword" maxlength="40" placeholder="분류 키워드 (선택 · 예: 보조배터리)" />
+            <label class="genform__photo"><input type="file" name="photo" accept="image/*" /><span>사진으로</span></label>
             <button type="submit">생성 요청</button>
           </form>
           ${queue.length
@@ -212,7 +228,7 @@ export function statsPage({ canonical, summaries, visits = null, ga = null, gsc 
                 </div>`,
               )
             : html`<p class="panel__note">아직 요청이 없다.</p>`}`,
-        { sub: '최근 10건', note: 'VM 발행기가 5분마다 가져가 글을 쓴다. 검색어로 쿠팡을 찾아 첫 제품이 주인공이 된다. 이미 다룬 제품이면 실패로 표시된다.' },
+        { sub: '최근 10건', note: '상품명을 쓰거나 사진을 고르면 된다. 사진은 Workers AI 가 제품명을 읽어 검색어로 쓴다. VM 발행기가 5분마다 가져가 글을 쓴다. 이미 다룬 제품이면 실패로 표시된다.' },
       )}
       ${panel('페이지 속도', html`<div id="psi" data-url="${siteUrl || canonical.replace(/\/0$/, '/')}" data-key="${psiKey}"><p class="panel__note">PageSpeed Insights 모바일 측정 중… 20초쯤 걸린다.</p></div>`, { sub: 'PageSpeed · 1시간 캐시' })}
       ${!ga ? panel('구글 애널리틱스', html`<p class="panel__note">GA_PROPERTY_ID 변수와 GA_SA_EMAIL · GA_SA_KEY 시크릿을 넣으면 실시간 접속 · 사용자 · 유입 경로가 여기에 뜬다. README 의 "구글 애널리틱스" 참고.</p>`) : ''}

@@ -50,6 +50,20 @@ function postHref(origin, slug) {
   return `${origin}/${encodeURIComponent(slug)}`;
 }
 
+/** 사진에서 쿠팡 검색어로 쓸 제품명 한 줄을 읽는다. */
+async function productFromPhoto(env, file) {
+  if (!env?.AI) throw new Error('AI 바인딩이 없다');
+  const r = await env.AI.run(env.VISION_MODEL || '@cf/meta/llama-3.2-11b-vision-instruct', {
+    prompt: '이 사진에 있는 전자제품의 브랜드와 모델명을 쇼핑몰 검색어로 쓸 수 있게 한 줄로만 답하라. 설명 없이 제품명만. 브랜드나 모델명이 안 보이면 제품 종류와 특징을 한국어로 짧게 (예: 맥세이프 보조배터리 10000mAh).',
+    image: [...new Uint8Array(await file.arrayBuffer())],
+    max_tokens: 60,
+  });
+  const text = String(r?.response ?? r?.choices?.[0]?.message?.content ?? r?.description ?? '').trim();
+  const name = text.split('\n')[0].replace(/^[\s"'*:-]+|[\s"'*.]+$/g, '').slice(0, 80);
+  if (!name) throw new Error('제품명을 못 읽었다');
+  return name;
+}
+
 function isAdmin(request, url, env) {
   const key = env?.ADMIN_KEY;
   return !key || url.searchParams.get('key') === key || (request.headers.get('cookie') ?? '').includes(`adm=${key}`);
@@ -283,7 +297,7 @@ async function route(url, env, request, ctx) {
       store.clickStats(),
       store.genQueue(),
     ]);
-    const res = page(statsPage({ canonical, summaries, visits, ga, gsc, runs, clicks, queue, siteUrl: env?.SITE_URL || url.origin, psiKey: env?.PSI_KEY ?? '' }), { cache: 'no-store', noindex: true });
+    const res = page(statsPage({ canonical, summaries, visits, ga, gsc, runs, clicks, queue, msg: url.searchParams.get('msg') ?? '', siteUrl: env?.SITE_URL || url.origin, psiKey: env?.PSI_KEY ?? '' }), { cache: 'no-store', noindex: true });
     if (key) res.headers.set('set-cookie', `adm=${key}; Path=/0; Max-Age=31536000; HttpOnly; Secure; SameSite=Lax`);
     return res;
   }
@@ -395,10 +409,20 @@ export default {
       const store = getStore(env);
       if (url.pathname === '/0/gen') {
         const form = await request.formData();
-        const q = String(form.get('q') ?? '').trim().slice(0, 80);
+        let q = String(form.get('q') ?? '').trim().slice(0, 80);
+        const photo = form.get('photo');
+        let msg = '';
+        if (!q && photo && typeof photo === 'object' && photo.size > 0) {
+          try {
+            q = await productFromPhoto(env, photo);
+            msg = `사진에서 읽은 제품명: ${q}`;
+          } catch (e) {
+            msg = `사진 인식 실패: ${e.message}`;
+          }
+        }
         const keyword = String(form.get('keyword') ?? '').trim().replace(/\s+/g, '').slice(0, 40) || q;
         if (q) await store.enqueueGen(q, keyword);
-        return redirect('/0', 303);
+        return redirect(`/0${msg ? `?msg=${encodeURIComponent(msg)}` : ''}`, 303);
       }
       const body = await request.json().catch(() => ({}));
       if (body?.id) await store.finishGen(body.id, Boolean(body.ok), body.ok ? body.slug : body.err);
