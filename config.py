@@ -1,27 +1,47 @@
-"""Trading bot configuration."""
+"""Signal bot configuration. Secrets come from environment variables (.env)."""
+import os
 
-# Account
-IS_MOCK_ACCOUNT = True  # 모의투자 서버 접속 여부
+from dotenv import load_dotenv
 
-# Daily targets and risk limits (KRW)
+load_dotenv()
+
+# Kiwoom REST API credentials
+KIWOOM_APP_KEY = os.getenv("KIWOOM_APP_KEY", "")
+KIWOOM_APP_SECRET = os.getenv("KIWOOM_APP_SECRET", "")
+IS_MOCK_ACCOUNT = os.getenv("KIWOOM_IS_MOCK", "true").lower() == "true"
+
+# Telegram notification
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
+
+TIMEZONE = "Asia/Seoul"
+
+# Daily targets and risk limits (KRW) — advisory only, no order is ever sent automatically
 DAILY_TARGET_PROFIT = 1_000_000
 DAILY_MAX_LOSS = -500_000
 
-# Per-trade risk
-RISK_PER_TRADE_RATIO = 0.02       # 계좌 잔고 대비 1회 매매 최대 손실 비율
-STOP_LOSS_RATIO = 0.02            # 매수가 대비 손절 비율
-TAKE_PROFIT_RATIO = 0.03          # 매수가 대비 익절 비율
+# Per-trade sizing suggestion
+ACCOUNT_BALANCE_HINT = int(os.getenv("ACCOUNT_BALANCE_HINT", "10000000"))
+RISK_PER_TRADE_RATIO = 0.02
+STOP_LOSS_RATIO = 0.02
+TAKE_PROFIT_RATIO = 0.03
 MAX_CONCURRENT_POSITIONS = 3
 MAX_TRADES_PER_DAY = 15
 
-# Screening (거래량 급증 종목 스크리닝)
+# Screening
 MIN_PRICE = 1_000
 MAX_PRICE = 200_000
-MIN_VOLUME_RATIO = 3.0            # 전일 대비 거래량 배수
+MIN_VOLUME_RATIO = 3.0
 BREAKOUT_LOOKBACK_TICKS = 20
 
-# Session cutoff (동시호가 진입 방지 및 강제 청산)
+# Manual fallback watchlist, used when the auto-screening call is unavailable.
+# Fill in codes you want monitored regardless of the screener result.
+WATCHLIST = [c for c in os.getenv("WATCHLIST", "").split(",") if c]
+
+# Market session (KST)
+MARKET_OPEN_TIME = "09:00:00"
 ENTRY_CUTOFF_TIME = "15:00:00"
 FORCE_CLOSE_TIME = "15:20:00"
+MARKET_CLOSE_TIME = "15:30:00"
 
 LOG_DIR = "logs"

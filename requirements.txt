@@ -1,2 +1,3 @@
-PyQt5==5.15.10
-pywin32==306
+kiwoom-client
+requests
+python-dotenv
