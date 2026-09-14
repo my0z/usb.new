@@ -7,7 +7,9 @@ NODE="$(command -v node)"
 LOG="$HOME/usb-generator.log"
 LINE="0 0,4,8,12,16,20 * * * cd $REPO && $NODE generator/run.js --count 2 >> $LOG 2>&1"
 QUEUE="*/5 * * * * cd $REPO && $NODE generator/queue.js >> $LOG 2>&1"
-{ crontab -l 2>/dev/null | grep -v 'generator/run.js' | grep -v 'generator/queue.js' || true; echo "$LINE"; echo "$QUEUE"; } | crontab -
+# 10분마다 저장소를 따라온다 (발행기 코드 갱신). 사이트 배포는 GitHub Actions 가 한다.
+PULL="*/10 * * * * cd $REPO && git pull -q --ff-only >> $LOG 2>&1"
+{ crontab -l 2>/dev/null | grep -v 'generator/run.js' | grep -v 'generator/queue.js' | grep -v 'git pull' || true; echo "$LINE"; echo "$QUEUE"; echo "$PULL"; } | crontab -
 echo "등록됨:"
 crontab -l | grep 'generator/'
 echo "로그: $LOG"

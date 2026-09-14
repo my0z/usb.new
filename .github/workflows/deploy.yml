@@ -1,0 +1,22 @@
+# 푸시하면 Cloudflare 에 배포한다. 비밀 CLOUDFLARE_API_TOKEN 하나만 GitHub 저장소 설정에 넣으면 된다 (README "배포" 참고).
+name: deploy
+on:
+  push:
+    branches: [main, claude/usb-kr-renewal-site-6725i8]
+    paths-ignore: ['generator/**', '**.md', 'tools/**', '.claude/**']
+  workflow_dispatch:
+concurrency: deploy
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx wrangler deploy --env=""
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: 709dcc6af36c8ee7b6d3d99e7a9fe422

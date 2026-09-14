@@ -62,6 +62,15 @@ npm run deploy
 
 `generator/run.js` 는 실행마다 KV `gen:runs` 에 성공 여부 · 시도 횟수 · 소요 시간 · 오류를 남기고 `/0` 가 30일 성공률로 보여 준다. 페이지 속도는 `/0` 를 연 브라우저가 PageSpeed Insights API 를 직접 불러 모바일 점수와 LCP · CLS · TBT 를 그린다 (1시간 localStorage 캐시). 키 없이 쓰면 공용 한도라 가끔 429 가 나는데 30초 뒤 한 번 다시 재고 그래도 안 되면 PageSpeed 사이트 링크를 준다. 구글 클라우드에서 PageSpeed Insights API 를 켜고 API 키를 만들어 시크릿으로 넣으면(`echo 키 | npx wrangler secret put PSI_KEY`) 한도가 따로 잡혀 사라진다. 키는 관리자 페이지 HTML 에 실리니 구글 콘솔에서 웹사이트 `https://usb.kr/*` 로 제한한다.
 
+### 자동 배포
+
+`claude/usb-kr-renewal-site-6725i8` 나 `main` 에 푸시하면 `.github/workflows/deploy.yml` 이 `wrangler deploy` 를 돌린다. 한 번만 준비한다:
+
+1. dash.cloudflare.com → 오른쪽 위 프로필 → API 토큰 → 토큰 만들기 → "Cloudflare Workers 편집" 템플릿 → 계정과 usb.kr 존 선택 → 만들기 → 값 복사
+2. github.com/my0z/usb.new → Settings → Secrets and variables → Actions → New repository secret → 이름 `CLOUDFLARE_API_TOKEN` · 값 붙여넣기
+
+VM 의 발행기는 크론이 10분마다 `git pull` 해서 따라온다 (`bash generator/install-cron.sh` 로 등록).
+
 ### Cloudflare 부가 기능
 
 | 기능 | 상태 | 어떻게 |
@@ -93,7 +102,7 @@ scripts/gen-covers.mjs 커버 SVG 생성기
 npm install
 npm run dev          # fixtures 로 동작 · http://127.0.0.1:8787
 npm run dev:remote   # 실제 KV/D1 을 읽으며 동작
-npm run deploy       # Cloudflare 계정에 배포
+npm run deploy       # 손으로 배포 (보통은 푸시하면 GitHub Actions 가 한다)
 ```
 
 커버 이미지를 다시 만들려면 `node scripts/gen-covers.mjs` 를 실행한다.
