@@ -45,3 +45,24 @@ FORCE_CLOSE_TIME = "15:20:00"
 MARKET_CLOSE_TIME = "15:30:00"
 
 LOG_DIR = "logs"
+
+# Pump-then-dump-then-base pattern scan (src/backtest): a stock creeps up for
+# several days, has one standout spike day, holds near that level, then
+# crashes at least CRASH_MIN_PCT within CRASH_WINDOW_DAYS and settles again.
+RISE_LOOKBACK_MIN = 3
+RISE_LOOKBACK_MAX = 10
+RISE_DAILY_MAX_PCT = 5.0        # 상승 구간의 하루 상승폭 상한 ("조금씩")
+RISE_MIN_UP_DAY_RATIO = 0.6     # 상승 구간에서 상승한 날의 최소 비율
+
+SPIKE_MIN_PCT = 7.0             # 스파이크 당일 최소 상승률
+SPIKE_TO_RISE_RATIO = 1.5       # 스파이크가 상승 구간 평균 상승률 대비 최소 몇 배 커야 하는지
+
+PLATEAU_MIN_DAYS = 2
+PLATEAU_MAX_DAYS = 10
+PLATEAU_TOLERANCE_PCT = 6.0     # 스파이크 종가 대비 유지 구간 허용 변동폭
+
+CRASH_WINDOW_DAYS = 2           # 유지 구간 이후 급락을 찾는 최대 거래일 수
+CRASH_MIN_PCT = 20.0            # 최소 급락폭
+
+POST_CRASH_MIN_DAYS = 3
+POST_CRASH_TOLERANCE_PCT = 6.0  # 급락 이후 신규 저점 유지 구간 허용 변동폭
