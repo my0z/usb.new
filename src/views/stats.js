@@ -174,6 +174,7 @@ export function statsPage({ canonical, summaries, visits = null, ga = null, gsc 
         : ''}
       ${gaOk ? panel('GA 유입 경로', bars(ga.sources.map((r) => [r.source, r.sessions]), { alt: true, unit: ' 세션' }), { sub: '7일' }) : ''}
       ${ga?.error ? panel('구글 애널리틱스', html`<p class="panel__note">불러오기 실패: ${ga.error}</p>`) : ''}
+      ${ga?.stale ? panel('구글 애널리틱스', html`<p class="panel__note">방금 갱신에 실패해 이전 값을 보여 준다: ${ga.stale}</p>`) : ''}
       ${gscOk ? panel('검색 유입', bars(gsc.days.map((r) => [r.date, r.clicks, `노출 ${num(r.impressions)}`]), { alt: true, unit: '클릭' }), { sub: '14일 · 서치콘솔', note: '구글 검색 결과에서 클릭한 수. 이틀쯤 늦게 집계된다.' }) : ''}
       ${gscOk ? panel('검색어', bars(gsc.queries.map((r) => [r.q, r.clicks, `${num(r.impressions)}회 노출 · ${r.position.toFixed(0)}위`]), { alt: true, unit: '클릭' }), { sub: '28일' }) : ''}
       ${gscOk ? panel('검색 유입 페이지', bars(gsc.pages.map((r) => [r.path, r.clicks, `노출 ${num(r.impressions)}`, r.path]), { alt: true, unit: '클릭' }), { sub: '28일' }) : ''}

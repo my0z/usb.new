@@ -30,14 +30,19 @@ async function accessToken(env) {
   return token.value;
 }
 
+/** 엣지에서 구글로 가다 5xx 가 나면 한 번 더 간다 (Cloudflare "error code: 502" 는 대개 일시적이다). */
+async function post(url, token, body, label) {
+  for (let i = 0; ; i += 1) {
+    const res = await fetch(url, { method: 'POST', headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' }, body: JSON.stringify(body) });
+    if (res.ok) return res.json();
+    const text = (await res.text()).slice(0, 200);
+    if (res.status < 500 || i) throw new Error(`${label} ${res.status}: ${text}`);
+    await new Promise((r) => setTimeout(r, 400));
+  }
+}
+
 async function run(env, method, body) {
-  const res = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${env.GA_PROPERTY_ID}:${method}`, {
-    method: 'POST',
-    headers: { authorization: `Bearer ${await accessToken(env)}`, 'content-type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) throw new Error(`GA ${method} ${res.status}: ${(await res.text()).slice(0, 200)}`);
-  return res.json();
+  return post(`https://analyticsdata.googleapis.com/v1beta/properties/${env.GA_PROPERTY_ID}:${method}`, await accessToken(env), body, `GA ${method}`);
 }
 
 const rows = (r) => (r.rows ?? []).map((x) => ({ d: (x.dimensionValues ?? []).map((v) => v.value), m: x.metricValues.map((v) => Number(v.value)) }));
@@ -50,6 +55,16 @@ export const gaConfigured = (env) => Boolean(env?.GA_PROPERTY_ID && env?.GA_SA_E
 export async function gaReport(env) {
   if (!gaConfigured(env)) return null;
   if (Date.now() - report.at < TTL) return report.data;
+  try {
+    return await loadGa(env);
+  } catch (e) {
+    // 실패하면 최근 값을 그대로 보여 주고 10분 뒤 다시 시도한다
+    if (report.data) return { ...report.data, stale: e.message };
+    throw e;
+  }
+}
+
+async function loadGa(env) {
   const metrics = [{ name: 'activeUsers' }, { name: 'screenPageViews' }, { name: 'sessions' }];
   const [ranges, pages, sources, daily, realtime] = await Promise.all([
     run(env, 'runReport', { dateRanges: [{ startDate: 'today', endDate: 'today' }, week, { startDate: '28daysAgo', endDate: 'today' }], metrics }),
@@ -78,13 +93,8 @@ export async function gaReport(env) {
 const ymd = (daysAgo) => new Date(Date.now() - daysAgo * 864e5).toISOString().slice(0, 10);
 
 async function query(env, body) {
-  const res = await fetch(`https://searchconsole.googleapis.com/webmasters/v3/sites/${encodeURIComponent(env.GSC_SITE)}/searchAnalytics/query`, {
-    method: 'POST',
-    headers: { authorization: `Bearer ${await accessToken(env)}`, 'content-type': 'application/json' },
-    body: JSON.stringify({ startDate: ymd(28), endDate: ymd(0), ...body }),
-  });
-  if (!res.ok) throw new Error(`Search Console ${res.status}: ${(await res.text()).slice(0, 200)}`);
-  return (await res.json()).rows ?? [];
+  const data = await post(`https://searchconsole.googleapis.com/webmasters/v3/sites/${encodeURIComponent(env.GSC_SITE)}/searchAnalytics/query`, await accessToken(env), { startDate: ymd(28), endDate: ymd(0), ...body }, 'Search Console');
+  return data.rows ?? [];
 }
 
 export const gscConfigured = (env) => Boolean(env?.GSC_SITE && env?.GA_SA_EMAIL && env?.GA_SA_KEY);
@@ -93,6 +103,15 @@ export const gscConfigured = (env) => Boolean(env?.GSC_SITE && env?.GA_SA_EMAIL 
 export async function gscReport(env) {
   if (!gscConfigured(env)) return null;
   if (Date.now() - gsc.at < TTL) return gsc.data;
+  try {
+    return await loadGsc(env);
+  } catch (e) {
+    if (gsc.data) return { ...gsc.data, stale: e.message };
+    throw e;
+  }
+}
+
+async function loadGsc(env) {
   const [total, days, queries, pages] = await Promise.all([
     query(env, {}),
     query(env, { dimensions: ['date'] }),
