@@ -1,0 +1,14 @@
+[Unit]
+Description=usb multi-channel video upload server
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/usb
+ExecStart=/usr/bin/node /opt/usb/dist/server.js
+Restart=always
+RestartSec=5
+User=usb
+
+[Install]
+WantedBy=multi-user.target

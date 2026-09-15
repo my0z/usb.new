@@ -7,6 +7,10 @@ function env(name: string): string | undefined {
 
 export const config = {
   videoPublicUrl: env("VIDEO_PUBLIC_URL"),
+  server: {
+    port: Number(env("PORT") ?? "3000"),
+    apiKey: env("API_KEY"),
+  },
 
   youtube: {
     clientId: env("YOUTUBE_CLIENT_ID"),

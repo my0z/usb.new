@@ -1,6 +1,6 @@
 # usb
 
-영상 하나를 인스타그램 스레드 페이스북 틱톡 유튜브 블루스카이 6개 채널에 동시 업로드하는 CLI입니다.
+영상 하나를 인스타그램 스레드 페이스북 틱톡 유튜브 블루스카이 6개 채널에 동시 업로드하는 도구입니다. CLI로 한 번 실행하거나 서버 모드로 상시 띄워둘 수 있습니다.
 
 ## 설치
 
@@ -37,27 +37,56 @@ npm run upload -- \
 
 각 채널의 업로드 성공 여부와 게시물 URL이 콘솔에 출력됩니다.
 
+## 서버 모드
+
+VM처럼 상시 켜둔 환경에서는 CLI 대신 HTTP 서버로 띄워두고 요청이 올 때마다 업로드하는 방식이 더 맞습니다.
+
+```bash
+npm run build
+npm start   # PORT(기본 3000)에서 대기
+```
+
+```bash
+curl -X POST http://localhost:3000/upload \
+  -H "x-api-key: $API_KEY" \
+  -F "video=@./sample.mp4" \
+  -F "title=영상 제목" \
+  -F "caption=게시글 본문" \
+  -F "hashtags=shorts,daily"
+```
+
+`videoUrl` 필드로 로컬 파일 대신 공개 URL을 넘길 수도 있습니다. `.env`에 `API_KEY`를 설정하면 `x-api-key` 헤더가 일치할 때만 요청을 받아들입니다. VM처럼 외부에 열린 서버는 반드시 설정하세요.
+
 ## 구조
 
 - `src/platforms/*.ts` - 플랫폼별 업로드 구현
 - `src/orchestrator.ts` - 설정된 채널만 골라 병렬 업로드
 - `src/config.ts` - 환경변수 로딩
 - `src/index.ts` - CLI 진입점
+- `src/server.ts` - 서버 모드 진입점 (`npm start`)
 
 ## 오라클 VM 자동 배포
 
-`main` 브랜치에 푸시하면 GitHub Actions가 오라클 VM에 SSH로 접속해서 최신 코드를 가져오고 빌드까지 처리합니다 (`.github/workflows/deploy.yml`). CLI는 상시 실행되는 서버가 아니라서 재시작 단계는 없고 다음 실행부터 최신 코드가 적용됩니다.
+`main` 브랜치에 푸시하면 GitHub Actions가 오라클 VM에 SSH로 접속해서 최신 코드를 가져오고 빌드한 뒤 `usb` 서비스를 재시작합니다 (`.github/workflows/deploy.yml`).
 
 ### VM 최초 설정 (한 번만)
 
 ```bash
 sudo apt update && sudo apt install -y nodejs npm git
+sudo useradd -r -s /usr/sbin/nologin usb
 git clone https://github.com/my0z/usb.new.git /opt/usb
 cd /opt/usb
 npm ci
-cp .env.example .env   # 여기서 실제 API 키 채워 넣기
+cp .env.example .env   # 여기서 실제 API 키와 API_KEY 채워 넣기
 npm run build
+sudo chown -R usb:usb /opt/usb
+
+sudo cp deploy/usb.service /etc/systemd/system/usb.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now usb
 ```
+
+배포 계정이 `sudo systemctl restart usb`를 비밀번호 없이 실행할 수 있게 `visudo`로 등록해두세요 (예: `deploy ALL=(ALL) NOPASSWD: /bin/systemctl restart usb`).
 
 배포용 SSH 키 쌍을 따로 만들어서 공개키는 VM의 `~/.ssh/authorized_keys`에 등록하세요.
 
