@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__SITE_TITLE__</title>
+<style>
+  :root { --bg:#f6f6f8; --card:#fff; --line:#e6e6ea; --text:#111; --muted:#666; --brand:#5b4bff; --chip:#eef0ff; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif; }
+  header { padding:20px 16px 8px; }
+  header h1 { margin:0 0 4px; font-size:20px; }
+  header p { margin:0; color:var(--muted); font-size:13px; }
+  .bar { display:flex; gap:8px; padding:8px 16px 12px; overflow-x:auto; }
+  .bar input { flex:1; min-width:140px; padding:10px 12px; border:1px solid var(--line); border-radius:10px; font-size:14px; }
+  .chips { display:flex; gap:6px; padding:0 16px 12px; flex-wrap:wrap; }
+  .chip { padding:6px 10px; border-radius:999px; background:#fff; border:1px solid var(--line); font-size:12px; cursor:pointer; }
+  .chip.on { background:var(--brand); color:#fff; border-color:var(--brand); }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; padding:0 16px 40px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden; display:flex; flex-direction:column; }
+  .card video { width:100%; aspect-ratio:9/12; object-fit:cover; background:#000; display:block; }
+  .card .novid { width:100%; aspect-ratio:9/12; background:#ddd; display:flex; align-items:center; justify-content:center; color:#888; font-size:12px; }
+  .card .body { padding:10px; display:flex; flex-direction:column; gap:6px; flex:1; }
+  .card .cat { font-size:11px; color:var(--brand); font-weight:600; }
+  .card .title { font-size:13px; font-weight:600; line-height:1.35; }
+  .card .tags { display:flex; flex-wrap:wrap; gap:4px; }
+  .card .tags span { font-size:10px; background:var(--chip); color:#444; padding:2px 6px; border-radius:6px; }
+  .btn { display:block; text-align:center; padding:9px; border-radius:8px; font-size:12px; font-weight:600; text-decoration:none; cursor:pointer; border:1px solid var(--line); background:#fff; color:var(--text); }
+  .btn.primary { background:var(--brand); color:#fff; border-color:var(--brand); }
+  .btn.buy { background:#e8f0ff; color:#1b47c9; border-color:#c9d8ff; }
+  .btns { display:flex; flex-direction:column; gap:6px; margin-top:auto; }
+  footer { padding:16px; font-size:11px; color:var(--muted); text-align:center; }
+  .modal { position:fixed; inset:0; background:rgba(0,0,0,.5); display:none; align-items:flex-end; justify-content:center; z-index:9; }
+  .modal.open { display:flex; }
+  .sheet { background:#fff; width:100%; max-width:640px; max-height:85vh; border-radius:16px 16px 0 0; overflow:auto; padding:16px; }
+  .sheet h2 { font-size:15px; margin:0 0 10px; }
+  .tabs { display:flex; gap:6px; margin-bottom:10px; }
+  .tabs button { flex:1; padding:8px; border:1px solid var(--line); background:#fff; border-radius:8px; font-size:12px; cursor:pointer; }
+  .tabs button.on { background:var(--brand); color:#fff; border-color:var(--brand); }
+  pre { white-space:pre-wrap; word-break:break-word; font-family:inherit; font-size:13px; line-height:1.55; background:#f6f6f8; padding:12px; border-radius:8px; min-height:120px; }
+  .row { display:flex; gap:6px; }
+  .row .btn { flex:1; }
+  .empty { padding:40px 16px; text-align:center; color:var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <h1>__SITE_TITLE__</h1>
+  <p>직접 촬영한 제품 영상 아카이브. 영상 받아서 글 쓰고 링크 붙여 올리면 된다.</p>
+</header>
+<div class="bar"><input id="q" type="search" placeholder="제품명이나 태그 검색"></div>
+<div class="chips" id="cats"></div>
+<div class="grid" id="grid"></div>
+<div class="empty" id="empty" hidden>등록된 제품이 없다.</div>
+<footer>
+  __DISCLOSURE__<br>
+  <span id="owner"></span>
+</footer>
+
+<div class="modal" id="modal">
+  <div class="sheet">
+    <h2 id="mTitle"></h2>
+    <div class="tabs" id="tabs"></div>
+    <pre id="mText"></pre>
+    <div class="row">
+      <button class="btn primary" id="copy">글 복사</button>
+      <a class="btn buy" id="mBuy" target="_blank" rel="noopener">구매 링크</a>
+      <button class="btn" id="close">닫기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DATA = __DATA__;
+const PROFILE = "__PROFILE_URL__";
+const OWNER = "__SITE_OWNER__";
+const LABEL = { threads:"스레드", instagram:"인스타", blog:"블로그" };
+
+const $ = s => document.querySelector(s);
+if (OWNER) $("#owner").textContent = "운영: " + OWNER + (PROFILE ? " · " : "");
+if (PROFILE) { const a=document.createElement("a"); a.href=PROFILE; a.target="_blank"; a.textContent="프로필 링크"; $("#owner").appendChild(a); }
+
+let cat = "";
+const cats = [...new Set(DATA.map(d => d.category).filter(Boolean))];
+const catsEl = $("#cats");
+function drawCats(){
+  catsEl.innerHTML = "";
+  ["전체", ...cats].forEach(c => {
+    const b = document.createElement("span");
+    b.className = "chip" + ((c==="전체" && !cat) || c===cat ? " on" : "");
+    b.textContent = c;
+    b.onclick = () => { cat = c==="전체" ? "" : c; drawCats(); draw(); };
+    catsEl.appendChild(b);
+  });
+}
+
+function draw(){
+  const q = $("#q").value.trim().toLowerCase();
+  const grid = $("#grid"); grid.innerHTML = "";
+  const list = DATA.filter(d =>
+    (!cat || d.category===cat) &&
+    (!q || d.title.toLowerCase().includes(q) || d.tags.some(t => t.toLowerCase().includes(q)))
+  );
+  $("#empty").hidden = list.length > 0;
+  for (const d of list) {
+    const card = document.createElement("div"); card.className = "card";
+    const vid = d.video
+      ? `<video src="${d.video}" preload="metadata" muted playsinline controls></video>`
+      : `<div class="novid">영상 없음</div>`;
+    const hasPosts = Object.keys(d.posts||{}).length > 0;
+    card.innerHTML = `
+      ${vid}
+      <div class="body">
+        <div class="cat">#${d.category || "기타"}</div>
+        <div class="title">${d.title}</div>
+        <div class="tags">${d.tags.map(t => `<span>#${t}</span>`).join("")}</div>
+        <div class="btns">
+          <a class="btn primary" data-id="${d.id}">✍️ 이 영상으로 글쓰기${hasPosts ? "" : " (글 없음)"}</a>
+          ${d.video ? `<a class="btn" href="${d.video}" download>영상 다운로드</a>` : ""}
+          ${d.link ? `<a class="btn buy" href="${d.link}" target="_blank" rel="noopener">구매 링크</a>` : ""}
+        </div>
+      </div>`;
+    card.querySelector(".primary").onclick = () => openModal(d);
+    grid.appendChild(card);
+  }
+}
+
+let current = null, platform = "threads";
+function openModal(d){
+  current = d;
+  $("#mTitle").textContent = d.title;
+  $("#mBuy").href = d.link || "#";
+  $("#mBuy").style.display = d.link ? "" : "none";
+  const keys = Object.keys(d.posts||{});
+  platform = keys.includes(platform) ? platform : (keys[0] || "threads");
+  drawTabs(); showText();
+  $("#modal").classList.add("open");
+}
+function drawTabs(){
+  const t = $("#tabs"); t.innerHTML = "";
+  const keys = Object.keys(current.posts||{});
+  if (!keys.length) { t.innerHTML = "<button disabled>아직 생성된 글이 없다. archive.py write 로 만들면 된다.</button>"; return; }
+  keys.forEach(k => {
+    const b = document.createElement("button");
+    b.textContent = LABEL[k] || k; b.className = k===platform ? "on" : "";
+    b.onclick = () => { platform = k; drawTabs(); showText(); };
+    t.appendChild(b);
+  });
+}
+function showText(){
+  const body = (current.posts||{})[platform] || "";
+  $("#mText").textContent = body ? body + (current.link ? "\n\n👉 " + current.link : "") : "";
+}
+$("#copy").onclick = async () => {
+  try { await navigator.clipboard.writeText($("#mText").textContent); $("#copy").textContent = "복사됨 ✓"; setTimeout(()=>$("#copy").textContent="글 복사", 1200); }
+  catch { alert("복사 실패. 길게 눌러 직접 복사해라."); }
+};
+$("#close").onclick = () => $("#modal").classList.remove("open");
+$("#modal").onclick = e => { if (e.target.id==="modal") $("#modal").classList.remove("open"); };
+$("#q").oninput = draw;
+drawCats(); draw();
+</script>
+</body>
+</html>
