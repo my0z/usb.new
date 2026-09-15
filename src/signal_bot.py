@@ -2,6 +2,7 @@
 import asyncio
 import contextlib
 import logging
+import time
 
 from kiwoom_client import extract_records
 
@@ -12,8 +13,6 @@ from src.risk.risk_manager import RiskManager
 from src.strategy.momentum_scalping import MomentumScalpingStrategy
 
 logger = logging.getLogger("signal_bot")
-
-MAX_SCREEN_CANDIDATES = 20
 
 
 def screen_candidates(api):
@@ -41,7 +40,7 @@ def screen_candidates(api):
             seen.append(code)
     if not seen:
         logger.warning("screening returned nothing and WATCHLIST is empty")
-    return seen[:MAX_SCREEN_CANDIDATES]
+    return seen[:config.MAX_SCREEN_CANDIDATES]
 
 
 class SignalBot:
@@ -51,29 +50,50 @@ class SignalBot:
         self.risk = RiskManager(starting_balance=config.ACCOUNT_BALANCE_HINT)
         self.stopped = False
         self.ws = None
+        self.watched = []
 
     async def run_session(self):
         candidates = await asyncio.to_thread(screen_candidates, self.api)
         if not candidates:
             return
-        telegram_notifier.send(f"[감시 시작] {len(candidates)}개 종목: {', '.join(candidates)}")
 
         self.ws = await asyncio.to_thread(self.api.create_websocket)
         self.ws.on("0B", self._on_tick)
         await self.ws.connect()
-        for code in candidates:
-            await self.ws.subscribe("0B", code)
+        added = await self._watch(candidates)
+        telegram_notifier.send(f"[감시 시작] {len(added)}개 종목: {', '.join(added)}")
 
         listen_task = asyncio.create_task(self.ws.listen())
+        next_rescreen = time.monotonic() + config.RESCREEN_INTERVAL_SEC
         try:
             while not self.stopped:
                 await asyncio.sleep(1)
+                if time.monotonic() < next_rescreen:
+                    continue
+                next_rescreen = time.monotonic() + config.RESCREEN_INTERVAL_SEC
+                if is_past_entry_cutoff(now_kst()):
+                    continue
+                fresh = await asyncio.to_thread(screen_candidates, self.api)
+                added = await self._watch(fresh)
+                if added:
+                    telegram_notifier.send(f"[감시 추가] {len(added)}개 종목: {', '.join(added)}")
         finally:
             with contextlib.suppress(Exception):
                 await self.ws.disconnect()
             listen_task.cancel()
-            with contextlib.suppress(Exception):
+            with contextlib.suppress(Exception, asyncio.CancelledError):
                 await listen_task
+
+    async def _watch(self, codes):
+        """Subscribes to codes not already watched, within MAX_WATCHED_CODES. Returns the new ones."""
+        room = config.MAX_WATCHED_CODES - len(self.watched)
+        new_codes = [c for c in codes if c not in self.watched][:max(0, room)]
+        for code in new_codes:
+            await self.ws.subscribe("0B", code)
+            self.watched.append(code)
+        if new_codes:
+            logger.info("watching %d new codes (%d total): %s", len(new_codes), len(self.watched), new_codes)
+        return new_codes
 
     def _on_tick(self, data):
         if self.stopped:
