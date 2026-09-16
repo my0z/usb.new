@@ -107,11 +107,11 @@ export function articleMessage(post, site = 'https://usb.kr') {
 
 export function dealsMessage(items, site = 'https://usb.kr') {
   const top = items.slice(0, 5);
-  const line = (p, i) => `${i + 1}. ${shorten(p.name, 34)} ${p.discountRate ? `${p.discountRate}%↓ ` : ''}${p.price.toLocaleString('ko-KR')}원`;
+  const line = (p, i) => `${i + 1}. ${shorten(p.name, 34)} ${p.discountRate ? `${p.discountRate}%↓ ` : ''}${p.price.toLocaleString('ko-KR')}원${p.gold ? ' 🎁' : ''}`;
   const date = new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', timeZone: 'Asia/Seoul' });
   return {
-    text: `🔥 ${date} 쿠팡 골드박스 특가\n\n${top.map(line).join('\n')}\n\n전체 보기 👉 ${site}/deals`,
-    textShort: `🔥 오늘의 쿠팡 골드박스\n${top.slice(0, 3).map((p, i) => line(p, i)).join('\n')}\n${site}/deals`,
+    text: `🔥 ${date} 쿠팡 전자기기 특가 (🎁 = 오늘의 골드박스)\n\n${top.map(line).join('\n')}\n\n전체 보기 👉 ${site}/deals`,
+    textShort: `🔥 오늘의 쿠팡 전자기기 특가\n${top.slice(0, 3).map((p, i) => line(p, i)).join('\n')}\n${site}/deals`,
     imageUrl: top[0]?.image || null,
   };
 }

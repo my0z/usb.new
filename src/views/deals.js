@@ -6,14 +6,15 @@ import { imgProxy, outUrl, won, ICON_ARROW, ICON_ROCKET } from './components.js'
 export function dealsPage({ canonical, deals }) {
   const items = deals?.items ?? [];
   const when = deals?.date ? new Date(deals.date).toLocaleString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Seoul' }) : '';
-  const title = '오늘의 쿠팡 골드박스 특가';
-  const description = items.length ? `${when} 기준 골드박스 ${items.length}개. ${items[0].name} 등 할인율 순으로 본다.` : '매일 아침 갱신되는 쿠팡 골드박스 특가 모음.';
+  const title = '오늘의 쿠팡 전자기기 특가';
+  const gold = items.filter((p) => p.gold).length;
+  const description = items.length ? `${when} 기준 골드박스 ${gold}개와 가전디지털 베스트 ${items.length - gold}개. ${items[0].name} 등.` : '매일 아침 갱신되는 쿠팡 골드박스와 가전디지털 베스트 모음.';
   const body = html`<div class="shell">
     <nav class="crumbs" aria-label="현재 위치"><a href="/">홈</a> › <span>핫딜</span></nav>
     <header class="page-head reveal">
       <p class="eyebrow">핫딜 · ${when || '준비 중'}</p>
       <h1 class="page-title">${title}</h1>
-      <p class="page-desc">쿠팡 골드박스는 매일 아침 7시에 바뀐다. 할인율 높은 순서로 보여 주고 재고와 가격은 쿠팡에서 다시 확인한다.</p>
+      <p class="page-desc">쿠팡 골드박스 중 전자기기와 가전디지털 베스트를 매일 아침 7시 30분에 갱신한다. 재고와 가격은 쿠팡에서 다시 확인한다.</p>
       <span class="page-count">${items.length}<small>개</small></span>
     </header>
     ${items.length
@@ -22,7 +23,7 @@ export function dealsPage({ canonical, deals }) {
             (p, i) => html`<li class="deal reveal" style="--i:${i}">
               <a class="deal__media" href="${outUrl(p, 'deals')}" target="_blank" rel="nofollow sponsored noopener">
                 <img src="${imgProxy(p.image)}" alt="${p.name}" loading="lazy" decoding="async" width="300" height="300" />
-                ${p.discountRate ? html`<span class="deal__off">${p.discountRate}%</span>` : ''}
+                ${p.discountRate ? html`<span class="deal__off">${p.discountRate}%</span>` : p.gold ? html`<span class="deal__off deal__off--gold">골드박스</span>` : ''}
               </a>
               <div class="deal__body">
                 <p class="deal__name">${p.name}</p>

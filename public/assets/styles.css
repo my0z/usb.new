@@ -2702,6 +2702,10 @@ h3 {
   background: var(--accent);
   color: #fff;
 }
+.deal__off--gold {
+  background: var(--gold);
+  font-size: 12px;
+}
 .deal__body {
   padding: 12px 14px 14px;
   display: flex;
