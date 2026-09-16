@@ -54,11 +54,21 @@ function postHref(origin, slug) {
 /** 사진에서 쿠팡 검색어로 쓸 제품명 한 줄을 읽는다. */
 async function productFromPhoto(env, file) {
   if (!env?.AI) throw new Error('AI 바인딩이 없다');
-  const r = await env.AI.run(env.VISION_MODEL || '@cf/meta/llama-3.2-11b-vision-instruct', {
+  const model = env.VISION_MODEL || '@cf/meta/llama-3.2-11b-vision-instruct';
+  const input = {
     prompt: '이 사진에 있는 전자제품의 브랜드와 모델명을 쇼핑몰 검색어로 쓸 수 있게 한 줄로만 답하라. 설명 없이 제품명만. 브랜드나 모델명이 안 보이면 제품 종류와 특징을 한국어로 짧게 (예: 맥세이프 보조배터리 10000mAh).',
     image: [...new Uint8Array(await file.arrayBuffer())],
     max_tokens: 60,
-  });
+  };
+  let r;
+  try {
+    r = await env.AI.run(model, input);
+  } catch (e) {
+    // 라마 모델은 계정당 한 번 'agree' 프롬프트로 라이선스에 동의해야 한다 (오류 5016). 동의를 보내고 한 번 다시 부른다.
+    if (!/5016|'agree'/.test(String(e?.message))) throw e;
+    await env.AI.run(model, { prompt: 'agree' });
+    r = await env.AI.run(model, input);
+  }
   const text = String(r?.response ?? r?.choices?.[0]?.message?.content ?? r?.description ?? '').trim();
   const name = text.split('\n')[0].replace(/^[\s"'*:-]+|[\s"'*.]+$/g, '').slice(0, 80);
   if (!name) throw new Error('제품명을 못 읽었다');
