@@ -1470,7 +1470,7 @@ h3 {
     max-width: 720px;
   }
   .post__layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 40px;
   }
   .post__side .verdict {
