@@ -147,6 +147,11 @@ class KvStore {
     return raws.map((r) => safeParse(r, null)).filter(Boolean);
   }
 
+  /** 오늘의 골드박스. generator/deals.js 가 넣는다. */
+  async deals() {
+    return safeParse(await this.kv.get('deals:latest', { cacheTtl: 300 }), null);
+  }
+
   /** 발행기 실행 기록. generator/run.js 가 남긴다. 최신이 앞. */
   async genRuns() {
     const v = safeParse(await this.kv.get('gen:runs', { cacheTtl: 60 }), []);
@@ -188,6 +193,10 @@ class FixtureStore {
   }
   async genRuns() {
     return [];
+  }
+  async deals() {
+    const p = this.posts.flatMap((x) => x.products ?? []).filter((x) => x?.image && x.price > 0).slice(0, 8);
+    return p.length ? { date: new Date().toISOString(), items: p.map((x, i) => ({ ...x, affiliateUrl: x.affiliateUrl || x.productUrl || 'https://www.coupang.com/', discountRate: 45 - i * 4, originalPrice: Math.round(x.price * 1.6) })) } : null;
   }
   async popular(limit = 6) {
     const all = await this.summaries();

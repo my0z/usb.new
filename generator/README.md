@@ -59,3 +59,17 @@ tail -f ~/usb-generator.log
 ## 관리자 페이지에서 글 요청
 
 `/0` 의 "글 생성 요청" 폼에 상품명이나 쿠팡 검색어를 넣으면 워커가 D1 `gen_queue` 에 적고 VM 의 `generator/queue.js` 가 5분마다 가져가 `run.js --keyword … --query …` 로 발행한 뒤 결과(글 링크 또는 실패 사유)를 돌려준다. `.env` 에 `ADMIN_KEY`(워커 시크릿과 같은 값)가 있어야 하고 크론은 `bash generator/install-cron.sh` 로 다시 등록한다. 정기 발행이 도는 동안엔 다음 틱으로 미룬다.
+
+## 핫딜과 SNS 알림
+
+`generator/deals.js` 가 매일 07:30 에 쿠팡 골드박스를 받아 KV `deals:latest` 에 저장한다. 사이트의 `/deals` 가 그걸 보여 주고 클릭은 `/out` 을 지나 `deals` 슬러그로 집계된다. 저장 뒤 요약을 SNS 에 올리고 `run.js` 도 글을 발행할 때마다 제목과 한줄요약과 링크를 올린다. 키가 없는 곳은 조용히 건너뛴다.
+
+`.env` 에 넣는 값:
+
+| 곳 | 값 | 얻는 곳 |
+| --- | --- | --- |
+| 텔레그램 | `TELEGRAM_BOT_TOKEN` · `TELEGRAM_CHAT_ID` | @BotFather 로 봇 만들기 → 채널 만들고 봇을 관리자로 추가 → CHAT_ID 는 `@채널아이디` |
+| 스레드 | `THREADS_USER_ID` · `THREADS_TOKEN` | developers.facebook.com 앱 → Threads API 사용 사례 → 테스트 사용자로 본인 계정 추가 → 장기 토큰 발급 (60일 · 갱신 필요) |
+| X | `X_API_KEY` · `X_API_SECRET` · `X_ACCESS_TOKEN` · `X_ACCESS_SECRET` | developer.x.com 무료 플랜 → 앱 → Keys and tokens (권한 Read and write) |
+
+한 번 보내 보기: `node generator/deals.js --dry-run` 은 목록만 보여 주고 `node generator/deals.js` 는 실제로 올린다.

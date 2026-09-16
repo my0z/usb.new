@@ -68,3 +68,30 @@ export async function deeplinks(urls) {
     return urls;
   }
 }
+
+function normalize(p) {
+  return {
+    productId: p.productId ?? null,
+    name: String(p.productName ?? '').trim(),
+    price: Number(p.productPrice) || 0,
+    image: p.productImage,
+    productUrl: p.productUrl,
+    isRocket: !!p.isRocket,
+    isFreeShipping: !!p.isFreeShipping,
+    category: p.categoryName ?? '',
+    discountRate: Number(p.discountRate) || 0,
+    originalPrice: Number(p.originalPrice) || 0,
+  };
+}
+
+/** 오늘의 골드박스. 응답의 productUrl 은 이미 파트너스 태그가 붙은 링크다. */
+export async function goldbox() {
+  const data = await call('GET', `${BASE}/products/goldbox`);
+  return (data?.data ?? []).map(normalize).filter((p) => p.name && p.productUrl && p.image);
+}
+
+/** 카테고리 베스트 (쿠팡 카테고리 ID · 예: 1016 가전디지털). */
+export async function bestCategory(categoryId, limit = 20) {
+  const data = await call('GET', `${BASE}/products/bestcategories/${categoryId}?limit=${limit}`);
+  return (data?.data ?? []).map(normalize).filter((p) => p.name && p.productUrl && p.image);
+}

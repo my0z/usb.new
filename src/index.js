@@ -5,6 +5,7 @@ import { listPage, categoriesPage } from './views/list.js';
 import { aboutPage, privacyPage } from './views/about.js';
 import { statsPage } from './views/stats.js';
 import { bestGroups, bestIndexPage, bestPage, bestUrl } from './views/best.js';
+import { dealsPage } from './views/deals.js';
 import { ASSET_VERSION, setTracking } from './views/layout.js';
 import { gaReport, gscReport } from './lib/ga.js';
 import { categories, getCategory, categoryOfPost } from './data/categories.js';
@@ -168,6 +169,7 @@ function sitemap(origin, list) {
     { loc: `${origin}/`, priority: '1.0', lastmod: String(list[0]?.createdAt ?? '').slice(0, 10) || undefined },
     { loc: `${origin}/posts`, priority: '0.7' },
     { loc: `${origin}/best`, priority: '0.8', lastmod: today },
+    { loc: `${origin}/deals`, priority: '0.8', lastmod: today },
     ...bestGroups(list).map((g) => ({ loc: `${origin}${bestUrl(g.keyword)}`, priority: '0.8', lastmod: today })),
     { loc: `${origin}/categories`, priority: '0.5' },
     { loc: `${origin}/about`, priority: '0.3' },
@@ -266,6 +268,7 @@ async function route(url, env, request, ctx) {
 
   if (path === '/about') return page(aboutPage({ canonical }));
 
+  if (path === '/deals') return page(dealsPage({ canonical, deals: await store.deals() }));
   if (path === '/best' || path.startsWith('/best/')) {
     const [summaries, views] = await Promise.all([store.summaries(), store.viewsByPath()]);
     const groups = bestGroups(summaries, views);
