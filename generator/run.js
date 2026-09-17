@@ -135,7 +135,7 @@ async function writeArticle(keyword, query, intent, products, facts = []) {
   let issues = [];
   let prev = null;
   for (let attempt = 1; attempt <= 2; attempt += 1) {
-    const feedback = !issues.length ? '' : `\n\n아래는 이전 초안이다. 지적된 문제만 고치고 나머지는 유지해서 같은 JSON 형식으로 다시 출력하라.\n이전 초안: ${JSON.stringify(prev)}\n문제점:\n- ${issues.join('\n- ')}`;
+    const feedback = !issues.length ? '' : `\n\n아래는 이전 초안이다. 지적된 문장은 근거 없는 수치와 기능을 빼고 "고를 때 확인할 점" 으로 바꾼다. 새로운 기능 · 수치 · 사양을 절대 추가하지 않는다. 나머지는 유지해서 같은 JSON 형식으로 다시 출력하라.\n이전 초안: ${JSON.stringify(prev)}\n문제점:\n- ${issues.join('\n- ')}`;
     const { text, model } = await generateJson(system, user + feedback);
     let article;
     try {
