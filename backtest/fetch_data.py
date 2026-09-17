@@ -103,7 +103,15 @@ def fetch_all(start: str, end: str, tickers: list[str], sleep: float = 0.3) -> N
 
 
 def load_panel() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """캐시를 읽어 (open close inst foreign) 와이드 패널을 돌려준다. index=date columns=ticker."""
+    """캐시를 읽어 (open close inst foreign) 와이드 패널을 돌려준다. index=date columns=ticker.
+
+    data/panel.parquet (pack_data.py 결과) 가 있으면 그것을 우선 읽는다.
+    """
+    packed = DATA_DIR / "panel.parquet"
+    if packed.exists():
+        pn = pd.read_parquet(packed)
+        wide = {c: pn[c].unstack("ticker").sort_index() for c in ["open", "close", "inst", "foreign"]}
+        return wide["open"], wide["close"], wide["inst"], wide["foreign"]
     opens, closes, insts, foreigns = {}, {}, {}, {}
     for p_path in sorted(PRICE_DIR.glob("*.parquet")):
         t = p_path.stem

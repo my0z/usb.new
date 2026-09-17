@@ -46,3 +46,15 @@ python test_backtest.py           # 합성 데이터 로직 검증
 - 현재 상장 종목 기준으로 유니버스를 잡으므로 상장폐지 종목이 빠지는 생존 편향이 있다.
 - 3년 전 종목 코드 목록을 함께 쓰려면 `ticker_universe(start)` 결과를 합치면 된다.
 - 전 종목 수집은 종목당 2회 요청이라 약 2500종목 기준 30분 안팎 걸린다. 재실행 시 캐시된 종목은 건너뛴다.
+
+## 수집한 데이터를 저장소에 올려 세션에서 결과를 받는 방법
+
+```bash
+python fetch_data.py                 # 1. 수집 (data/price data/flow)
+python pack_data.py                  # 2. data/panel.parquet 한 파일로 압축
+git add backtest/data/panel.parquet  # 3. 이 파일만 커밋 (나머지 data/ 는 gitignore)
+git commit -m "Add KRX panel data"
+git push
+```
+
+푸시 후 세션에 알려주면 `python backtest.py --cost-bps 24` 를 실행해 두 시나리오 결과를 산출한다.
