@@ -178,7 +178,7 @@ export function postPage(p, { canonical, related, views, best = null }) {
         ${p.sources?.length
           ? html`<section class="sources reveal" aria-labelledby="sources-title">
               <h2 class="sources__title" id="sources-title">참고 자료</h2>
-              <ul>${p.sources.map((s) => html`<li><a href="${s.link}" target="_blank" rel="nofollow noopener">${s.title}</a><small>${s.kind === 'news' ? '뉴스' : '블로그'}</small></li>`)}</ul>
+              <ul>${p.sources.map((s) => html`<li><a href="${s.link}" target="_blank" rel="nofollow noopener">${s.title}</a><small>${{ news: '뉴스', web: '웹' }[s.kind] ?? '블로그'}</small></li>`)}</ul>
             </section>`
           : ''}
         ${p.faq?.length
