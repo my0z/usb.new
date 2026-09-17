@@ -20,17 +20,32 @@ async function api(kind, query, display = 5) {
 /** 제품명 앞 4단어. 모델명까지 들어가 검색이 잘 맞는다. */
 const shortName = (name) => cleanName(name).split(/\s+/).slice(0, 4).join(' ');
 
-/** 블로그 · 뉴스 · 웹문서에서 리뷰 문장 최대 n 개. [{ title, text, link, kind }] */
+const GENERIC = new Set(['리뷰', '추천', '무선', '유선', '이어폰', '블루투스', '정품', '신형', '신제품', '세트', '화이트', '블랙', '용', '형', '개', '국내', '해외']);
+// 광고성 블로그 패턴. 검색 결과의 절반이 이런 글이라 걸러야 엉뚱한 사실이 안 들어간다
+const SPAM = /추천 상품을 소개|할인율|가격 확인|상세 정보|쿠팡파트너스|파트너스 활동|수수료를|최저가 보기|구매 링크|(#\S+\s*){3,}/;
+
+/** 제품명의 핵심 단어 두 개 이상(모델명처럼 숫자 섞인 건 하나만 있어도)이 문장에 있어야 같은 제품 이야기로 본다. */
+function about(name, hay) {
+  const toks = [...new Set(cleanName(name).toLowerCase().split(/[\s/]+/).filter((t) => t.length >= 2 && !GENERIC.has(t) && !/^\d+(개|입|매|p|ea)$/.test(t)))];
+  if (!toks.length) return true;
+  const hit = toks.filter((t) => hay.includes(t));
+  if (hit.some((t) => /\d/.test(t) && t.length >= 4)) return true;
+  return hit.length >= Math.min(2, toks.length);
+}
+
+/** 블로그 · 뉴스 · 웹문서에서 같은 제품의 리뷰 문장 최대 n 개. [{ title, text, link, kind }] */
 export async function snippets(name, n = 6) {
   if (!ready()) return [];
   const q = `${shortName(name)} 리뷰`;
-  const [blog, news, web] = await Promise.all([api('blog', q, 5).catch(() => []), api('news', q, 3).catch(() => []), api('webkr', q, 3).catch(() => [])]);
+  const [blog, news, web] = await Promise.all([api('blog', q, 10).catch(() => []), api('news', q, 5).catch(() => []), api('webkr', q, 5).catch(() => [])]);
   const out = [];
-  for (const [kind, list] of [['blog', blog], ['news', news], ['web', web]]) {
+  for (const [kind, list] of [['news', news], ['web', web], ['blog', blog]]) {
     for (const it of list) {
+      const title = strip(it.title);
       const text = strip(it.description);
-      if (text.length < 40) continue;
-      out.push({ kind, title: strip(it.title).slice(0, 80), text: text.slice(0, 220), link: it.originallink || it.link });
+      const hay = `${title} ${text}`.toLowerCase();
+      if (text.length < 40 || SPAM.test(hay) || !about(name, hay)) continue;
+      out.push({ kind, title: title.slice(0, 80), text: text.slice(0, 220), link: it.originallink || it.link });
     }
   }
   return out.slice(0, n);
