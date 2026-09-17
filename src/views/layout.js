@@ -122,10 +122,10 @@ export function layout({ title, description, canonical, active, body, heroSlot =
         <a class="brand" href="/" aria-label="USB.KR 홈">
           <span class="brand__mark">USB</span><span class="brand__dot">.</span><span class="brand__tld">KR</span>
         </a>
-        <form class="search" role="search" action="/search" method="get">
-          <label class="sr-only" for="q">글 검색</label>
+        <form class="search" role="search" action="/search" method="get" title="쿠팡에서 검색한다. 쿠팡 파트너스 활동의 일환으로 수수료를 받을 수 있다">
+          <label class="sr-only" for="q">쿠팡에서 제품 검색</label>
           <svg class="search__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-          <input id="q" name="q" type="search" placeholder="제품 또는 키워드 검색" autocomplete="off" />
+          <input id="q" name="q" type="search" placeholder="쿠팡에서 제품 검색" autocomplete="off" required />
           <kbd aria-hidden="true">↵</kbd>
         </form>
       </div>

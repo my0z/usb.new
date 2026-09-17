@@ -8,6 +8,7 @@ import { bestGroups, bestIndexPage, bestPage, bestUrl } from './views/best.js';
 import { dealsPage } from './views/deals.js';
 import { ASSET_VERSION, setTracking } from './views/layout.js';
 import { gaReport, gscReport } from './lib/ga.js';
+import { coupangConfigured, deeplink, searchUrl } from './lib/coupang.js';
 import { categories, getCategory, categoryOfPost } from './data/categories.js';
 import { getStore, searchSummaries, excerpt } from './data/store.js';
 import { imgProxy } from './views/components.js';
@@ -317,7 +318,13 @@ async function route(url, env, request, ctx) {
   if (path === '/privacy') return page(privacyPage({ canonical }));
 
   if (path === '/search') {
-    const q = url.searchParams.get('q') ?? '';
+    const q = (url.searchParams.get('q') ?? '').trim().slice(0, 80);
+    // 검색창은 쿠팡 파트너스 검색으로 보낸다. 키워드마다 딥링크를 만들어 30일 캐시하고 클릭은 search 로 센다. 키가 없으면 사이트 안 검색
+    if (q && coupangConfigured(env)) {
+      const link = await deeplink(env, searchUrl(q)).catch((e) => (console.warn(e.message), searchUrl(q)));
+      if (ctx) ctx.waitUntil(store.recordClick('search'));
+      return new Response(null, { status: 302, headers: { location: link, 'cache-control': 'no-store', 'referrer-policy': 'no-referrer' } });
+    }
     const items = searchSummaries(await store.summaries(), q).slice(0, 60);
     return page(
       listPage({

@@ -24,6 +24,7 @@ usb.kr 리뉴얼 사이트. USB 주변기기를 다루는 매거진 · 리뷰형
 | `/about` `/privacy` | 소개 · 개인정보처리방침 |
 | `/rss.xml` `/feed.xml` `/sitemap.xml` `/llms.txt` `/robots.txt` | 피드와 색인용 |
 | `/healthz` | 상태 확인 JSON (`source` 가 `kv` 면 실데이터) |
+| `/search?q=` | 검색창. 키워드의 쿠팡 검색 결과를 파트너스 딥링크로 바꿔 보낸다 (워커 시크릿 `COUPANG_ACCESS_KEY` · `COUPANG_SECRET_KEY`). 키가 없으면 사이트 안 글 검색 |
 | `/0` | 관리자 통계. 방문(사람만 · 재방문 구분) · 글별 쿠팡 클릭률 · 발행 현황 · 발행기 성공률과 소요 시간 · 구글 애널리틱스 · 서치콘솔 검색 유입 · PageSpeed 점수 |
 
 ### 구글 애널리틱스
