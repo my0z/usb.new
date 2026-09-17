@@ -229,16 +229,20 @@ async function main() {
     if (LLM.groqKey) log(`모델: Groq ${LLM.groqModel} (예비: Ollama ${health.ok ? LLM.ollamaModel : '없음'})`);
     else if (!health.ok) throw new Error(`Ollama 사용 불가: ${health.reason}. \`ollama pull ${LLM.ollamaModel}\` 을 먼저 실행하라.`);
   }
+  // 심사 불합격이나 제품 없음으로 실패하면 다른 키워드로 다시 고른다. 목표 건수의 세 배까지 시도한다
   let ok = 0;
-  for (let i = 0; i < COUNT; i += 1) {
+  let tries = 0;
+  while (ok < COUNT && tries < COUNT * 3) {
+    tries += 1;
     try {
       await runOnce(opt('keyword'), opt('query'));
       ok += 1;
     } catch (e) {
-      log(`실패 (${i + 1}/${COUNT}): ${e.message}`);
+      log(`실패 (시도 ${tries} · 성공 ${ok}/${COUNT}): ${e.message}`);
+      if (opt('keyword') || /모든 키워드/.test(e.message)) break;
     }
   }
-  log(`완료: ${ok}/${COUNT} 건`);
+  log(`완료: ${ok}/${COUNT} 건 (${tries}회 시도)`);
   process.exit(ok ? 0 : 1);
 }
 
