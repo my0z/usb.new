@@ -22,6 +22,7 @@ import { buildPost, embedImages, summarize, newSlug } from './lib/post.js';
 import { mockProducts, mockArticleJson } from './lib/mock.js';
 import { findVideo } from './lib/video.js';
 import { announce, articleMessage } from './lib/social.js';
+import { enrich } from './lib/naver.js';
 
 loadEnv();
 
@@ -127,9 +128,9 @@ async function chooseProducts(query, min = 3000) {
   return fresh.map((p, i) => ({ ...p, affiliateUrl: links[i] }));
 }
 
-async function writeArticle(keyword, query, intent, products) {
+async function writeArticle(keyword, query, intent, products, facts = []) {
   if (MOCK) return { article: parseArticle(mockArticleJson), model: 'mock' };
-  const { system, user, productLines } = buildPrompt({ keyword, query, intent, products });
+  const { system, user, productLines } = buildPrompt({ keyword, query, intent, products, facts });
   let lastErr;
   let issues = [];
   let prev = null;
@@ -188,17 +189,17 @@ async function runOnce(forcedKeyword, forcedQuery) {
     const item = await pickKeyword(forcedKeyword ? { keyword: forcedKeyword, q: forcedQuery || forcedKeyword } : null);
     run.keyword = item.keyword;
     log(`키워드: ${item.keyword} · 검색어: ${item.q}`);
-    const products = await chooseProducts(item.q, item.min);
-    log(`제품 ${products.length}개: ${products.map((p) => p.name.slice(0, 30)).join(' | ')}`);
+    const { products, facts } = MOCK ? { products: await chooseProducts(item.q, item.min), facts: [] } : await enrich(await chooseProducts(item.q, item.min));
+    log(`제품 ${products.length}개: ${products.map((p) => p.name.slice(0, 30)).join(' | ')}${facts.length ? ` · 참고 자료 ${facts.length}건` : ''}`);
     const [{ article, model, attempts }, video] = await Promise.all([
-      writeArticle(item.keyword, item.q, item.t, products),
+      writeArticle(item.keyword, item.q, item.t, products, facts),
       MOCK ? null : findVideo(products[0].name, item.keyword).catch(() => null),
     ]);
     Object.assign(run, { model, attempts: attempts ?? 1 });
     if (video) log(`영상: ${video.title} (${video.channel})`);
     let slug = newSlug();
     while (await kv.get(`post:${slug}`)) slug = newSlug();
-    const post = buildPost({ article: embedImages(article, products), keyword: item.keyword, products, modelUsed: model, slug, video });
+    const post = buildPost({ article: embedImages(article, products), keyword: item.keyword, products, modelUsed: model, slug, video, facts });
     run.slug = post.slug;
     if (DRY || MOCK) {
       console.log(JSON.stringify(post, null, 2));

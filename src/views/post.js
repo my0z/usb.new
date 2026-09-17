@@ -43,19 +43,21 @@ function flow(p) {
 function compareTable(p) {
   const products = p.products ?? [];
   if (products.length < 2) return '';
+  const naver = products.some((x) => x.naverPrice > 0);
   return html`<section class="compare reveal" aria-labelledby="compare-title">
     <div class="specs__head">
       <h2 class="specs__title" id="compare-title">한눈에 비교</h2>
-      <span class="specs__note">COUPANG PRICE</span>
+      <span class="specs__note">${naver ? 'COUPANG · NAVER' : 'COUPANG PRICE'}</span>
     </div>
     <div class="compare__scroll">
       <table>
-        <thead><tr><th>제품</th><th class="num">가격</th><th>배송</th><th></th></tr></thead>
+        <thead><tr><th>제품</th><th class="num">쿠팡 가격</th>${naver ? html`<th class="num">네이버 최저가</th>` : ''}<th>배송</th><th></th></tr></thead>
         <tbody>
           ${products.map(
             (prod, i) => html`<tr class="${i === 0 ? 'is-top' : ''}">
-              <td>${i === 0 ? html`<span class="compare__crown">추천</span>` : ''}${prod.name}</td>
+              <td>${i === 0 ? html`<span class="compare__crown">추천</span>` : ''}${prod.brand ? html`<small class="compare__brand">${prod.brand}</small>` : ''}${prod.name}</td>
               <td class="num">${won(prod.price)}</td>
+              ${naver ? html`<td class="num ${prod.naverPrice > 0 && prod.naverPrice < prod.price ? 'is-lower' : ''}">${prod.naverPrice > 0 ? won(prod.naverPrice) : '-'}</td>` : ''}
               <td>${prod.isRocket ? html`<span class="ship ship--rocket">${ICON_ROCKET} 로켓</span>` : prod.isFreeShipping ? html`<span class="ship">무료배송</span>` : ''}</td>
               <td><a class="compare__go" href="${outUrl(prod, p.slug)}" target="_blank" rel="nofollow sponsored noopener">보러가기 →</a></td>
             </tr>`,
@@ -173,6 +175,12 @@ export function postPage(p, { canonical, related, views, best = null }) {
             </section>`
           : ''}
 
+        ${p.sources?.length
+          ? html`<section class="sources reveal" aria-labelledby="sources-title">
+              <h2 class="sources__title" id="sources-title">참고 자료</h2>
+              <ul>${p.sources.map((s) => html`<li><a href="${s.link}" target="_blank" rel="nofollow noopener">${s.title}</a><small>${s.kind === 'news' ? '뉴스' : '블로그'}</small></li>`)}</ul>
+            </section>`
+          : ''}
         ${p.faq?.length
           ? html`<section class="faq reveal" aria-labelledby="faq-title">
               <h2 class="faq__title" id="faq-title">자주 묻는 질문</h2>

@@ -32,7 +32,7 @@ export function newSlug() {
   return Array.from({ length: 5 }, () => CHARS[randomInt(CHARS.length)]).join('');
 }
 
-export function buildPost({ article, keyword, products, modelUsed, slug = newSlug(), video = null }) {
+export function buildPost({ article, keyword, products, modelUsed, slug = newSlug(), video = null, facts = [] }) {
   const main = products[0];
   return {
     slug,
@@ -52,9 +52,12 @@ export function buildPost({ article, keyword, products, modelUsed, slug = newSlu
       isRocket: p.isRocket,
       isFreeShipping: p.isFreeShipping,
       productId: p.productId ?? null,
+      brand: p.brand ?? null,
+      naverPrice: p.naverPrice ?? null,
     })),
     alternatives: [],
     video,
+    sources: facts.map((f) => ({ title: f.title, link: f.link, kind: f.kind })),
     metaDescription: article.tldr || makeExcerpt(article.intro_html, 150) || `${main.name} 리뷰`,
     type: products.length > 1 ? 'comparison' : 'review',
     modelUsed,

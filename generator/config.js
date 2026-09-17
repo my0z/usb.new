@@ -67,7 +67,7 @@ export const KEYWORD_POOL = [
 ];
 
 /** 글 하나에 넣을 제품 수. 첫 번째가 주인공이고 나머지는 비교 대상이다. */
-export const PRODUCTS_PER_POST = 3;
+export const PRODUCTS_PER_POST = 4;
 
 /** 본문에 넣을 사진 수 (1~2). */
 export const IMAGES_PER_POST = 2;

@@ -2745,3 +2745,46 @@ h3 {
   margin-top: auto;
   justify-content: center;
 }
+
+/* 비교표 브랜드 · 네이버 최저가 · 참고 자료 */
+.compare__brand {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.compare td.is-lower {
+  color: var(--green);
+  font-weight: 700;
+}
+.sources {
+  margin-top: 36px;
+}
+.sources__title {
+  font-size: 16px;
+  margin: 0 0 10px;
+}
+.sources ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.sources li {
+  font-size: 14px;
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+.sources li a {
+  color: var(--ink-2);
+  text-decoration: underline;
+  text-decoration-color: var(--rule-strong);
+}
+.sources li small {
+  color: var(--ink-3);
+  font-size: 11px;
+  white-space: nowrap;
+}

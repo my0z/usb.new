@@ -73,3 +73,7 @@ tail -f ~/usb-generator.log
 | X | `X_API_KEY` · `X_API_SECRET` · `X_ACCESS_TOKEN` · `X_ACCESS_SECRET` | developer.x.com 무료 플랜 → 앱 → Keys and tokens (권한 Read and write) |
 
 한 번 보내 보기: `node generator/deals.js --dry-run` 은 목록만 보여 주고 `node generator/deals.js` 는 실제로 올린다.
+
+## 네이버 검색으로 제품 자료 보강
+
+쿠팡 API 는 제품명 · 가격 · 배송만 준다. `.env` 에 `NAVER_CLIENT_ID` 와 `NAVER_CLIENT_SECRET` 을 넣으면 발행기가 네이버 쇼핑 검색에서 브랜드 · 제조사 · 네이버 최저가를 받고 블로그 · 뉴스에서 리뷰 발췌 5건을 가져와 모델에 참고 자료로 준다. 글에는 비교표에 네이버 최저가 열이 생기고 아래에 "참고 자료" 출처 링크가 붙는다. 키는 developers.naver.com → 애플리케이션 등록 → 사용 API "검색" 체크 → 발급 (무료 · 하루 2만5천 건). 키가 없으면 지금처럼 동작한다.

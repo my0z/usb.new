@@ -9,7 +9,9 @@ const SYSTEM = `당신은 한국 전자기기 리뷰 매거진의 에디터다. 
 규칙:
 - 반드시 JSON 하나만 출력한다. 설명이나 마크다운 코드블록을 붙이지 않는다.
 - 한국어 경어체("~합니다")로 쓴다. 과장 광고 문구와 이모지는 쓰지 않는다.
-- 주어진 제품 정보(제품명 · 가격 · 배송)에 없는 기능이나 수치를 지어내지 않는다. 센서 정확도 · 암호화 · 앱 연동 · 배터리 시간 · 무게 · 구성품 · 재질처럼 제품명에 없는 것은 쓰지 않는다. 다른 제품의 특징을 주인공 제품 것처럼 쓰지 않는다. 대신 "이런 제품을 고를 때 무엇을 봐야 하는가"를 설명한다.
+- 주어진 제품 정보(제품명 · 가격 · 배송 · 브랜드 · 제조사 · 네이버 최저가)와 참고 자료에 없는 기능이나 수치를 지어내지 않는다. 센서 정확도 · 암호화 · 앱 연동 · 배터리 시간 · 무게 · 구성품 · 재질처럼 근거 없는 것은 쓰지 않는다. 다른 제품의 특징을 주인공 제품 것처럼 쓰지 않는다. 대신 "이런 제품을 고를 때 무엇을 봐야 하는가"를 설명한다.
+- 참고 자료(블로그 · 뉴스 리뷰 발췌)에 있는 사실은 써도 된다. 그때는 "사용기에 따르면" "리뷰에서는" 처럼 출처가 있음을 드러낸다. 참고 자료끼리 어긋나면 쓰지 않는다.
+- 쿠팡 가격과 네이버 최저가가 둘 다 있으면 어느 쪽이 얼마나 싼지 한 문장으로 짚는다.
 - 느낌표와 "혁신" "최첨단" "강력히 추천" 같은 광고 표현을 쓰지 않는다. 담담한 설명체로 쓴다.
 - 문단은 <p> 태그로 감싼다. 다른 HTML 태그는 쓰지 않는다.
 - 첫 번째 제품이 주인공이다. 나머지는 비교 대상으로 짧게 다룬다.
@@ -37,20 +39,23 @@ function won(n) {
   return `${Number(n).toLocaleString('ko-KR')}원`;
 }
 
-export function buildPrompt({ keyword, query, intent = '', products }) {
+export function buildPrompt({ keyword, query, intent = '', products, facts = [] }) {
   const lines = products.map((p, i) => {
     const ship = p.isRocket ? '로켓배송' : p.isFreeShipping ? '무료배송' : '일반배송';
-    return `${i + 1}. ${p.name} — ${won(p.price)} · ${ship}${p.category ? ` · 분류: ${p.category}` : ''}`;
+    const extra = [p.brand && `브랜드: ${p.brand}`, p.maker && p.maker !== p.brand && `제조사: ${p.maker}`, p.naverPrice && `네이버 최저가: ${won(p.naverPrice)}`].filter(Boolean);
+    return `${i + 1}. ${p.name} — 쿠팡 ${won(p.price)} · ${ship}${p.category ? ` · 분류: ${p.category}` : ''}${extra.length ? ` · ${extra.join(' · ')}` : ''}`;
   });
+  const factLines = facts.map((f, i) => `${i + 1}. [${f.kind === 'news' ? '뉴스' : '블로그'}] ${f.title}: ${f.text}`);
+  const factBlock = factLines.length ? `\n주인공 제품 참고 자료 (실제 리뷰 발췌 · 여기 있는 사실은 써도 된다):\n${factLines.join('\n')}\n` : '';
   const user = `주제 키워드: ${keyword}
 노리는 검색어 (제목 앞에 넣는다): ${intent || keyword}
 검색어: ${query}
 제품 목록 (1번이 주인공):
 ${lines.join('\n')}
-
+${factBlock}
 섹션 구성 제안: 1) 무엇이 새로운가 2) 실제로 쓸 때 어떤 점이 편한가 3) 비교 대상과의 차이와 고를 때 기준
 위 형식의 JSON 으로만 답하라.`;
-  return { system: SYSTEM, user, productLines: `주제 키워드: ${keyword} · 검색어(제품 사실 아님): ${query}\n${lines.join('\n')}` };
+  return { system: SYSTEM, user, productLines: `주제 키워드: ${keyword} · 검색어(제품 사실 아님): ${query}\n${lines.join('\n')}${factBlock}` };
 }
 
 function ensureParagraphs(html) {
