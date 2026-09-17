@@ -20,16 +20,17 @@ async function api(kind, query, display = 5) {
 /** 제품명 앞 4단어. 모델명까지 들어가 검색이 잘 맞는다. */
 const shortName = (name) => cleanName(name).split(/\s+/).slice(0, 4).join(' ');
 
-const GENERIC = new Set(['리뷰', '추천', '무선', '유선', '이어폰', '블루투스', '정품', '신형', '신제품', '세트', '화이트', '블랙', '용', '형', '개', '국내', '해외']);
+const GENERIC = new Set(['리뷰', '추천', '무선', '유선', '이어폰', '블루투스', '정품', '신형', '신제품', '세트', '화이트', '블랙', '용', '형', '개', '국내', '해외', '프로', 'pro', '맥스', 'max', '플러스', 'plus', '울트라', 'ultra', '미니', 'mini', '라이트', 'lite', '에디션', '시리즈']);
 // 광고성 블로그 패턴. 검색 결과의 절반이 이런 글이라 걸러야 엉뚱한 사실이 안 들어간다
 const SPAM = /추천 상품을 소개|할인율|가격 확인|상세 정보|쿠팡파트너스|파트너스 활동|수수료를|최저가 보기|구매 링크|(#\S+\s*){3,}/;
 
-/** 제품명의 핵심 단어 두 개 이상(모델명처럼 숫자 섞인 건 하나만 있어도)이 문장에 있어야 같은 제품 이야기로 본다. */
+/** 같은 제품 이야기인지. 모델명(숫자 섞인 단어 · 버즈3 · hx2540)이 있으면 그게 꼭 있어야 하고 나머지 핵심 단어도 하나 더 맞아야 한다. */
 function about(name, hay) {
   const toks = [...new Set(cleanName(name).toLowerCase().split(/[\s/]+/).filter((t) => t.length >= 2 && !GENERIC.has(t) && !/^\d+(개|입|매|p|ea)$/.test(t)))];
   if (!toks.length) return true;
+  const models = toks.filter((t) => /\d/.test(t));
+  if (models.length && !models.some((t) => hay.includes(t))) return false;
   const hit = toks.filter((t) => hay.includes(t));
-  if (hit.some((t) => /\d/.test(t) && t.length >= 4)) return true;
   return hit.length >= Math.min(2, toks.length);
 }
 
