@@ -47,12 +47,15 @@ export async function snippets(name, n = 6) {
   const q = `${shortName(name)} 리뷰`;
   const [blog, news, web] = await Promise.all([api('blog', q, 10).catch(() => []), api('news', q, 5).catch(() => []), api('webkr', q, 5).catch(() => [])]);
   const out = [];
+  const seen = new Set();
   for (const [kind, list] of [['news', news], ['web', web], ['blog', blog]]) {
     for (const it of list) {
       const title = strip(it.title);
       const text = strip(it.description);
       const hay = `${title} ${text}`.toLowerCase();
-      if (text.length < 40 || SPAM.test(hay) || !about(name, hay)) continue;
+      const key = title.toLowerCase().replace(/\s+/g, '').slice(0, 30);
+      if (text.length < 40 || SPAM.test(hay) || !about(name, hay) || seen.has(key)) continue;
+      seen.add(key);
       out.push({ kind, title: title.slice(0, 80), text: text.slice(0, 220), link: it.originallink || it.link });
     }
   }
