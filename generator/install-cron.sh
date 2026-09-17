@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-# 하루 6번 (4시간 간격) 글 2건씩 발행하고 5분마다 관리자 페이지의 생성 요청을 처리하는 crontab 을 등록한다. 시각은 VM 시간대(서울) 기준.
+# 2시간마다 글 1건 발행(하루 12건)하고 5분마다 관리자 페이지의 생성 요청을 처리하는 crontab 을 등록한다. 시각은 VM 시간대(서울) 기준.
+# 하루 총량은 키워드 풀(44개 · 5일 재사용 금지)과 새 사이트의 크롤 예산에 맞춘 것이다. 늘리려면 풀부터 키운다.
 # 사용법: bash generator/install-cron.sh
 set -euo pipefail
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 NODE="$(command -v node)"
 LOG="$HOME/usb-generator.log"
-LINE="0 0,4,8,12,16,20 * * * cd $REPO && $NODE generator/run.js --count 2 >> $LOG 2>&1"
+LINE="10 */2 * * * cd $REPO && $NODE generator/run.js --count 1 >> $LOG 2>&1"
 QUEUE="*/5 * * * * cd $REPO && $NODE generator/queue.js >> $LOG 2>&1"
 # 10분마다 저장소를 따라온다 (발행기 코드 갱신). 사이트 배포는 GitHub Actions 가 한다.
 PULL="*/10 * * * * cd $REPO && git pull -q --ff-only >> $LOG 2>&1"
