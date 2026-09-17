@@ -130,6 +130,25 @@ class KvStore {
     await this.db.prepare('UPDATE gen_queue SET status = ?, done_at = ?, result = ? WHERE id = ?').bind(ok ? '완료' : '실패', new Date().toISOString(), String(result ?? '').slice(0, 200), Number(id)).run();
   }
 
+  /* 검색창에서 들어와 발행할 만하다고 판단한 검색어. 발행기가 /0/keywords 로 받아 풀에 합친다. */
+  async ensureKeywords() {
+    await this.db.prepare('CREATE TABLE IF NOT EXISTS keywords(q TEXT PRIMARY KEY, keyword TEXT, t TEXT, at TEXT)').run().catch(() => {});
+  }
+  async hasKeyword(q) {
+    if (!this.db) return true;
+    await this.ensureKeywords();
+    return Boolean(await this.db.prepare('SELECT 1 FROM keywords WHERE q = ?').bind(q).first().catch(() => null));
+  }
+  async addKeyword({ q, keyword, t }) {
+    if (!this.db) return;
+    await this.db.prepare('INSERT OR IGNORE INTO keywords(q, keyword, t, at) VALUES(?, ?, ?, ?)').bind(q, keyword, t, new Date().toISOString()).run().catch(() => {});
+  }
+  async keywords(limit = 200) {
+    if (!this.db) return [];
+    await this.ensureKeywords();
+    return this.db.prepare('SELECT q, keyword, t, at FROM keywords ORDER BY at DESC LIMIT ?').bind(limit).all().then((r) => r.results).catch(() => []);
+  }
+
   async visitStats() {
     if (!this.db) return null;
     const q = (sql, ...b) => this.db.prepare(sql).bind(...b).all().then((r) => r.results).catch(() => []);
@@ -226,6 +245,13 @@ class FixtureStore {
   async recordClick() {}
   async clickStats() {
     return null;
+  }
+  async hasKeyword() {
+    return true;
+  }
+  async addKeyword() {}
+  async keywords() {
+    return [];
   }
   async enqueueGen() {}
   async genQueue() {

@@ -32,6 +32,8 @@
     "GSC_SITE": "https://usb.kr/",
     // 사진에서 제품명을 읽는 Workers AI 모델. 모델이 내려가면 여기만 바꾼다.
     "VISION_MODEL": "@cf/meta/llama-3.2-11b-vision-instruct",
+    // 검색창 검색어가 발행할 만한 제품 종류인지 판단하는 모델
+    "JUDGE_MODEL": "@cf/meta/llama-3.1-8b-instruct",
     // PageSpeed Insights API 키는 시크릿 PSI_KEY 로 넣는다 (npx wrangler secret put PSI_KEY). 없으면 키 없는 공용 한도라 가끔 429 가 난다.
     // Cloudflare Web Analytics 토큰. 대시보드에서 자동 삽입을 켰으면 비워 둔다.
     "CF_BEACON_TOKEN": "",

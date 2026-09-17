@@ -8,7 +8,7 @@ import { bestGroups, bestIndexPage, bestPage, bestUrl } from './views/best.js';
 import { dealsPage } from './views/deals.js';
 import { ASSET_VERSION, setTracking } from './views/layout.js';
 import { gaReport, gscReport } from './lib/ga.js';
-import { coupangConfigured, deeplink, searchUrl } from './lib/coupang.js';
+import { coupangConfigured, deeplink, searchUrl, productCount } from './lib/coupang.js';
 import { categories, getCategory, categoryOfPost } from './data/categories.js';
 import { getStore, searchSummaries, excerpt } from './data/store.js';
 import { imgProxy } from './views/components.js';
@@ -74,6 +74,30 @@ async function productFromPhoto(env, file) {
   const name = text.split('\n')[0].replace(/^[\s"'*:-]+|[\s"'*.]+$/g, '').slice(0, 80);
   if (!name) throw new Error('제품명을 못 읽었다');
   return name;
+}
+
+/** 검색어가 발행할 만한 제품 종류인지 판단해 D1 에 넣는다. 검색 응답 뒤에 waitUntil 로 돈다. */
+async function judgeKeyword(env, store, q) {
+  if (!env?.AI || q.length < 2 || q.length > 30 || /[<>{}\[\]"'`$]/.test(q) || (await store.hasKeyword(q))) return;
+  const r = await env.AI.run(env.JUDGE_MODEL || '@cf/meta/llama-3.1-8b-instruct', {
+    messages: [
+      { role: 'system', content: '전자기기·가전 리뷰 사이트의 편집자다. 검색어가 "리뷰 글로 쓸 만한 전자기기나 가전 제품 종류" 인지 판단한다. 사람 이름 · 브랜드만 있는 것 · 성인 · 의약품 · 식품 · 의류 · 모호한 단어는 아니오. JSON 하나만 출력: {"ok":true|false,"keyword":"분류 키워드 (예: 보조배터리 · 공백 없이)","t":"글이 노릴 검색어 (예: 맥세이프 보조배터리 추천)"}' },
+      { role: 'user', content: `검색어: ${q}` },
+    ],
+    max_tokens: 120,
+  });
+  const text = String(r?.response ?? r?.choices?.[0]?.message?.content ?? '');
+  const m = text.match(/\{[\s\S]*\}/);
+  if (!m) return;
+  let j;
+  try {
+    j = JSON.parse(m[0]);
+  } catch {
+    return;
+  }
+  if (!j.ok) return;
+  if ((await productCount(env, q)) < 3) return;
+  await store.addKeyword({ q, keyword: String(j.keyword || q).replace(/\s+/g, '').slice(0, 30), t: String(j.t || `${q} 추천`).slice(0, 60) });
 }
 
 function isAdmin(request, url, env) {
@@ -294,6 +318,11 @@ async function route(url, env, request, ctx) {
     if (!group) return notFound(url);
     return page(bestPage({ canonical: `${url.origin}${bestUrl(keyword)}`, group }));
   }
+  // 검색창에서 추가된 키워드. 발행기가 풀에 합친다
+  if (path === '/0/keywords') {
+    if (!isAdmin(request, url, env)) return notFound(url);
+    return Response.json(await store.keywords(), { headers: { 'cache-control': 'no-store' } });
+  }
   // VM 발행기가 가져가는 대기 목록
   if (path === '/0/queue') {
     if (!isAdmin(request, url, env)) return notFound(url);
@@ -302,7 +331,7 @@ async function route(url, env, request, ctx) {
   if (path === '/0') {
     const key = env?.ADMIN_KEY;
     if (!isAdmin(request, url, env)) return notFound(url);
-    const [summaries, visits, ga, gsc, runs, clicks, queue] = await Promise.all([
+    const [summaries, visits, ga, gsc, runs, clicks, queue, extraKeywords] = await Promise.all([
       store.summaries(),
       store.visitStats(),
       gaReport(env).catch((e) => ({ error: e.message })),
@@ -310,8 +339,9 @@ async function route(url, env, request, ctx) {
       store.genRuns(),
       store.clickStats(),
       store.genQueue(),
+      store.keywords(30),
     ]);
-    const res = page(statsPage({ canonical, summaries, visits, ga, gsc, runs, clicks, queue, msg: url.searchParams.get('msg') ?? '', siteUrl: env?.SITE_URL || url.origin, psiKey: env?.PSI_KEY ?? '' }), { cache: 'no-store', noindex: true });
+    const res = page(statsPage({ canonical, summaries, visits, ga, gsc, runs, clicks, queue, extraKeywords, msg: url.searchParams.get('msg') ?? '', siteUrl: env?.SITE_URL || url.origin, psiKey: env?.PSI_KEY ?? '' }), { cache: 'no-store', noindex: true });
     if (key) res.headers.set('set-cookie', `adm=${key}; Path=/0; Max-Age=31536000; HttpOnly; Secure; SameSite=Lax`);
     return res;
   }
@@ -322,7 +352,7 @@ async function route(url, env, request, ctx) {
     // 검색창은 쿠팡 파트너스 검색으로 보낸다. 키워드마다 딥링크를 만들어 30일 캐시하고 클릭은 search 로 센다. 키가 없으면 사이트 안 검색
     if (q && coupangConfigured(env)) {
       const link = await deeplink(env, searchUrl(q)).catch((e) => (console.warn(e.message), searchUrl(q)));
-      if (ctx) ctx.waitUntil(store.recordClick('search'));
+      if (ctx) ctx.waitUntil(Promise.all([store.recordClick('search'), judgeKeyword(env, store, q).catch((e) => console.warn(`검색어 판단 실패: ${e.message}`))]));
       return new Response(null, { status: 302, headers: { location: link, 'cache-control': 'no-store', 'referrer-policy': 'no-referrer' } });
     }
     const items = searchSummaries(await store.summaries(), q).slice(0, 60);

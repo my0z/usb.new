@@ -62,10 +62,25 @@ async function keywordUsedRecently(keyword) {
   return list.some((e) => e.at >= cutoff && e.keyword !== keyword && (e.tokens ?? []).some((t) => mine.includes(t)));
 }
 
+/** 검색창에서 추가된 키워드 (/0/keywords). config 풀에 없는 것만 d=20 으로 합친다. 실패하면 빈 배열. */
+async function extraKeywords() {
+  if (MOCK || !process.env.ADMIN_KEY) return [];
+  try {
+    const site = (process.env.SITE_URL || 'https://usb.kr').replace(/\/$/, '');
+    const res = await fetch(`${site}/0/keywords?key=${encodeURIComponent(process.env.ADMIN_KEY)}`, { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) return [];
+    const known = new Set(KEYWORD_POOL.flatMap((k) => [k.keyword, k.q]));
+    return (await res.json()).filter((k) => !known.has(k.keyword) && !known.has(k.q)).map((k) => ({ d: 20, min: 3000, q: k.q, t: k.t, keyword: k.keyword }));
+  } catch {
+    return [];
+  }
+}
+
 async function pickKeyword(forced) {
   if (forced) return forced;
   // 검색량(d)으로 가중한 무작위 순서. 지수 100 이 지수 4 보다 다섯 배쯤 앞에 온다 (제곱근 가중)
-  const pool = KEYWORD_POOL.map((k) => [Math.random() ** (1 / Math.sqrt(Math.max(1, k.d ?? 1))), k]).sort((a, b) => b[0] - a[0]).map(([, k]) => k);
+  const all = [...KEYWORD_POOL, ...(await extraKeywords())];
+  const pool = all.map((k) => [Math.random() ** (1 / Math.sqrt(Math.max(1, k.d ?? 1))), k]).sort((a, b) => b[0] - a[0]).map(([, k]) => k);
   for (const item of pool) {
     if (!(await keywordUsedRecently(item.keyword))) return item;
   }

@@ -126,7 +126,7 @@ function bars(rows, { alt = false, unit = '' } = {}) {
 const panel = (title, body, { note = '', wide = false, sub = '' } = {}) =>
   html`<section class="panel ${wide ? 'panel--wide' : ''}"><h2 class="panel__h">${title}${sub ? html`<small>${sub}</small>` : ''}</h2>${note ? html`<p class="panel__note">${note}</p>` : ''}${body}</section>`;
 
-export function statsPage({ canonical, summaries, visits = null, ga = null, gsc = null, runs = [], clicks = null, queue = [], msg = '', siteUrl = '', psiKey = '' }) {
+export function statsPage({ canonical, summaries, visits = null, ga = null, gsc = null, runs = [], clicks = null, queue = [], extraKeywords = [], msg = '', siteUrl = '', psiKey = '' }) {
   const byCat = new Map();
   const byDay = new Map();
   let products = 0;
@@ -229,6 +229,13 @@ export function statsPage({ canonical, summaries, visits = null, ga = null, gsc 
             )
           : html`<p class="panel__note">아직 기록이 없다. 발행기가 다음 실행부터 남긴다.</p>`}`,
         { sub: '최근 12회', note: '' },
+      )}
+      ${panel(
+        '검색창에서 추가된 키워드',
+        extraKeywords.length
+          ? extraKeywords.map((k) => html`<div class="row"><span class="row__l">${k.q}<small> → ${k.keyword} · ${k.t}</small></span><span></span><span class="row__n"><small>${ago(k.at)}</small></span></div>`)
+          : html`<p class="panel__note">아직 없다. 방문자가 검색창에 친 말 중 제품 종류로 판단된 것이 여기 쌓이고 발행기가 풀에 합친다.</p>`,
+        { sub: `${extraKeywords.length}개` },
       )}
       ${panel('페이지 속도', html`<div id="psi" data-url="${siteUrl || canonical.replace(/\/0$/, '/')}" data-key="${psiKey}"><p class="panel__note">PageSpeed Insights 모바일 측정 중… 20초쯤 걸린다.</p></div>`, { sub: 'PageSpeed · 1시간 캐시' })}
       ${!ga ? panel('구글 애널리틱스', html`<p class="panel__note">GA_PROPERTY_ID 변수와 GA_SA_EMAIL · GA_SA_KEY 시크릿을 넣으면 실시간 접속 · 사용자 · 유입 경로가 여기에 뜬다. README 의 "구글 애널리틱스" 참고.</p>`) : ''}
