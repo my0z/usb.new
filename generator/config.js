@@ -101,7 +101,8 @@ export const LLM = {
   numPredict: 3500, // 한글은 글자당 토큰이 많아 1600 이면 800자 글이 중간에 잘린다
   temperature: 0.7,
   groqKey: process.env.GROQ_API_KEY || '',
-  groqModel: process.env.GROQ_MODEL || 'openai/gpt-oss-120b',
+  // 글쓴이. 생각 담당이 gpt-oss-120b 를 맡으면 글쓴이는 다른 모델(qwen 27b)이 된다. 모델은 둘 · 시스템은 하나
+  groqModel: process.env.GROQ_MODEL || (process.env.BRAIN_MODEL ?? (process.env.GROQ_API_KEY ? 'groq:openai/gpt-oss-120b' : '')) === 'groq:openai/gpt-oss-120b' ? 'qwen/qwen3.8-27b' : 'openai/gpt-oss-120b',
   cfToken: process.env.CLOUDFLARE_API_TOKEN || '',
   cfAccount: process.env.CLOUDFLARE_ACCOUNT_ID || '',
   // 생각 담당 (자료를 읽고 알맹이를 정리 · 글쓴이는 그 답을 글로 옮긴다). 비우면 글쓴이가 자료를 직접 읽는다
