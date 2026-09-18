@@ -21,7 +21,8 @@ const SYSTEM = `당신은 한국 전자기기 리뷰 매거진의 팩트체커�
 issues 는 확실한 문제만 최대 3개. 문제가 없으면 pass 는 true 이고 issues 는 빈 배열이다.`;
 
 function textOf(a) {
-  return [`제목: ${a.title}`, `요약: ${a.tldr}`, strip(a.intro_html), ...a.sections.map((s) => `[${s.heading}] ${strip(s.body_html)}`), strip(a.outro_html), ...a.faq.map((f) => `Q: ${f.q} A: ${f.a}`)].join('\n');
+  const li = (label, arr) => (arr?.length ? [`${label}: ${arr.join(' / ')}`] : []);
+  return [`제목: ${a.title}`, `요약: ${a.tldr}`, ...(a.verdict ? [`결론: ${a.verdict}`] : []), ...li('맞는 사람', a.fit), ...li('안 맞는 사람', a.unfit), ...li('장점', a.pros), ...li('단점', a.cons), ...li('스펙', (a.specs ?? []).map((r) => `${r.k}=${r.v}`)), strip(a.intro_html), ...a.sections.map((s) => `[${s.heading}] ${strip(s.body_html)}`), ...li('구매 팁', a.tips), strip(a.outro_html), ...a.faq.map((f) => `Q: ${f.q} A: ${f.a}`)].join('\n');
 }
 
 /** 합격이면 [] · 불합격이면 문제 목록. 심사관 전원이 오류면 통과시킨다 (생성 자체는 이미 형식 검증을 거쳤다). */

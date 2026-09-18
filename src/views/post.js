@@ -147,6 +147,30 @@ export function postPage(p, { canonical, related, views, best = null }) {
 
       <div class="post__main">
         ${p.tldr ? html`<div class="tldr reveal"><span class="tldr__label">✦ 한줄요약</span><p>${p.tldr}</p></div>` : ''}
+        ${p.verdict
+          ? html`<section class="quick reveal" aria-label="결론">
+              <p class="quick__verdict">${p.verdict}</p>
+              ${p.fit?.length || p.unfit?.length
+                ? html`<div class="quick__fit">
+                    ${p.fit?.length ? html`<div><b>이런 분께</b><ul>${p.fit.map((x) => html`<li>${x}</li>`)}</ul></div>` : ''}
+                    ${p.unfit?.length ? html`<div><b>이런 분께는 아님</b><ul>${p.unfit.map((x) => html`<li>${x}</li>`)}</ul></div>` : ''}
+                  </div>`
+                : ''}
+              ${p.pros?.length || p.cons?.length
+                ? html`<div class="quick__pc">
+                    ${p.pros?.length ? html`<div class="quick__pros"><b>장점</b><ul>${p.pros.map((x) => html`<li>${x}</li>`)}</ul></div>` : ''}
+                    ${p.cons?.length ? html`<div class="quick__cons"><b>단점</b><ul>${p.cons.map((x) => html`<li>${x}</li>`)}</ul></div>` : ''}
+                  </div>`
+                : ''}
+            </section>`
+          : ''}
+        ${p.specs?.length
+          ? html`<section class="specs2 reveal" aria-label="주요 사양">
+              <h2 class="specs__title">주요 사양</h2>
+              <dl>${p.specs.map((r) => html`<div><dt>${r.k}</dt><dd>${r.v}</dd></div>`)}</dl>
+              <p class="specs2__note">제품명 · 게재 시점 가격 · 참고 자료에서 확인된 항목만 적는다.</p>
+            </section>`
+          : ''}
         ${p.video?.id && /^[\w-]{11}$/.test(p.video.id)
           ? html`<figure class="video reveal">
               <iframe src="https://www.youtube-nocookie.com/embed/${p.video.id}" title="${p.video.title ?? '제품 영상'}" loading="lazy" allow="accelerometer; encrypted-media; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -175,6 +199,12 @@ export function postPage(p, { canonical, related, views, best = null }) {
             </section>`
           : ''}
 
+        ${p.tips?.length
+          ? html`<section class="tips reveal" aria-label="구매 팁">
+              <h2 class="specs__title">구매 전 확인</h2>
+              <ul>${p.tips.map((x) => html`<li>${x}</li>`)}</ul>
+            </section>`
+          : ''}
         ${p.sources?.length
           ? html`<section class="sources reveal" aria-labelledby="sources-title">
               <h2 class="sources__title" id="sources-title">참고 자료</h2>

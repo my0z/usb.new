@@ -132,7 +132,7 @@ async function chooseProducts(query, min = 3000) {
   for (const p of found) {
     if (used.has(productKey(p))) continue;
     if (await kv.get(`product-post-map:${normalizeName(p.name)}`)) continue;
-    if (p.price < min) continue;
+    if (!MOCK && p.price < min) continue;
     const nameKey = normalizeName(p.name).slice(0, 18);
     if (seenNames.has(nameKey)) continue;
     seenNames.add(nameKey);
