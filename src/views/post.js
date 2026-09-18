@@ -229,7 +229,7 @@ export function postPage(p, { canonical, related, views, best = null }) {
     body,
     progress: true,
     ogImage: abs(cover),
-    article: { published: p.createdAt, section: cat?.name ?? p.keyword },
+    article: { published: p.createdAt, section: cat?.name ?? p.keyword, keywords: [p.keyword, cat?.name, ...(p.products ?? []).slice(0, 3).map((x) => x.name.split(',')[0])].filter(Boolean).join(', ') },
     jsonLd: [
       {
         '@type': 'Article',

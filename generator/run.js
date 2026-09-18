@@ -23,6 +23,7 @@ import { mockProducts, mockArticleJson } from './lib/mock.js';
 import { findVideo } from './lib/video.js';
 import { announce, articleMessage } from './lib/social.js';
 import { enrich } from './lib/naver.js';
+import { indexNow } from './lib/indexnow.js';
 
 loadEnv();
 
@@ -222,6 +223,7 @@ async function runOnce(forcedKeyword, forcedQuery) {
     } else {
       await publish(post, products);
       log(`발행 완료: https://usb.kr/${post.slug} — ${post.title}`);
+      log(`IndexNow: ${JSON.stringify(await indexNow([`/${post.slug}`, '/', '/sitemap.xml']))}`);
       const sns = await announce(articleMessage(post));
       if (Object.values(sns).some((v) => v !== 'skip')) log(`SNS: ${JSON.stringify(sns)}`);
     }

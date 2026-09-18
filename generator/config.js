@@ -83,6 +83,9 @@ export const KEYWORD_POOL = [
   { d: 30, min: 40000, q: '무선 다리미 신상', t: '무선 다리미 추천', keyword: '무선다리미' },
 ];
 
+/** IndexNow 키. wrangler.jsonc 의 INDEXNOW_KEY 와 같아야 한다 (워커가 /<키>.txt 로 공개한다). */
+export const INDEXNOW_KEY = process.env.INDEXNOW_KEY || '80bdbe5352244e8cce7a9c5d36560a00';
+
 /** 글 하나에 넣을 제품 수. 첫 번째가 주인공이고 나머지는 비교 대상이다. */
 export const PRODUCTS_PER_POST = 4;
 

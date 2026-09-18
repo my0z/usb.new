@@ -73,6 +73,7 @@ export function layout({ title, description, canonical, active, body, heroSlot =
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>${fullTitle}</title>
     <meta name="description" content="${description}" />
+    ${article?.keywords ? html`<meta name="keywords" content="${article.keywords}" />` : ''}
     <meta name="theme-color" content="#0e0d10" />
     <link rel="canonical" href="${canonical}" />
     <meta property="og:site_name" content="${SITE_NAME}" />

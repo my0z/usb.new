@@ -9,6 +9,7 @@ import { loadEnv, requireEnv } from './lib/env.js';
 import { goldbox, bestCategory, deeplinks } from './lib/coupang.js';
 import { remoteKv, MemoryKv } from './lib/kv.js';
 import { announce, dealsMessage } from './lib/social.js';
+import { indexNow } from './lib/indexnow.js';
 
 loadEnv();
 const args = process.argv.slice(2);
@@ -38,6 +39,7 @@ async function main() {
   await kv.put('deals:latest', doc);
   await kv.put(`deals:${doc.date.slice(0, 10)}`, doc, { ttl: 30 * 24 * 3600 });
   if (DRY) return console.log(JSON.stringify(items.slice(0, 5), null, 2));
+  log(`IndexNow: ${JSON.stringify(await indexNow(['/deals']))}`);
   if (QUIET) return;
   const r = await announce(dealsMessage(items));
   log(`알림: ${JSON.stringify(r)}`);
