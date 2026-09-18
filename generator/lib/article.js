@@ -42,7 +42,7 @@ function won(n) {
   return `${Number(n).toLocaleString('ko-KR')}원`;
 }
 
-export function buildPrompt({ keyword, query, intent = '', products, facts = [] }) {
+export function buildPrompt({ keyword, query, intent = '', products, facts = [], brief = '' }) {
   const lines = products.map((p, i) => {
     const ship = p.isRocket ? '로켓배송' : p.isFreeShipping ? '무료배송' : '일반배송';
     const extra = [p.brand && `브랜드: ${p.brand}`, p.maker && p.maker !== p.brand && `제조사: ${p.maker}`, p.naverPrice && `네이버 최저가: ${won(p.naverPrice)}`].filter(Boolean);
@@ -55,7 +55,7 @@ export function buildPrompt({ keyword, query, intent = '', products, facts = [] 
 검색어: ${query}
 제품 목록 (1번이 주인공):
 ${lines.join('\n')}
-${factBlock}
+${factBlock}${brief}
 섹션 구성 제안: 1) 무엇이 새로운가 2) 실제로 쓸 때 어떤 점이 편한가 3) 비교 대상과의 차이와 고를 때 기준
 위 형식의 JSON 으로만 답하라.`;
   return { system: SYSTEM, user, productLines: `주제 키워드: ${keyword} · 검색어(제품 사실 아님): ${query}\n${lines.join('\n')}${factBlock}` };

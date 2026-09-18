@@ -104,6 +104,8 @@ export const LLM = {
   groqModel: process.env.GROQ_MODEL || 'openai/gpt-oss-120b',
   cfToken: process.env.CLOUDFLARE_API_TOKEN || '',
   cfAccount: process.env.CLOUDFLARE_ACCOUNT_ID || '',
+  // 생각 담당 (자료를 읽고 알맹이를 정리 · 글쓴이는 그 답을 글로 옮긴다). 비우면 글쓴이가 자료를 직접 읽는다
+  brainModel: process.env.BRAIN_MODEL ?? (process.env.GROQ_API_KEY ? 'groq:openai/gpt-oss-120b' : ''),
   // 심사관 목록 ("groq:모델" · "ollama:모델" · "cf:@cf/모델" 을 쉼표로). 글쓴 모델은 자동 제외된다.
   reviewModels: (process.env.REVIEW_MODELS ?? 'groq:qwen/qwen3.8-27b,groq:openai/gpt-oss-20b,cf:@cf/meta/llama-3.3-70b-instruct-fp8-fast').split(',').map((s) => s.trim()).filter(Boolean),
 };

@@ -18,6 +18,7 @@ import { remoteKv, MemoryKv } from './lib/kv.js';
 import { generateJson, ollamaHealthy } from './lib/llm.js';
 import { buildPrompt, parseArticle } from './lib/article.js';
 import { reviewArticle } from './lib/review.js';
+import { think, briefBlock } from './lib/brain.js';
 import { buildPost, embedImages, summarize, newSlug } from './lib/post.js';
 import { mockProducts, mockArticleJson } from './lib/mock.js';
 import { findVideo } from './lib/video.js';
@@ -145,7 +146,10 @@ async function chooseProducts(query, min = 3000) {
 
 async function writeArticle(keyword, query, intent, products, facts = []) {
   if (MOCK) return { article: parseArticle(mockArticleJson), model: 'mock' };
-  const { system, user, productLines } = buildPrompt({ keyword, query, intent, products, facts });
+  const raw = buildPrompt({ keyword, query, intent, products, facts });
+  const brief = await think(raw.productLines).catch((e) => (log(`조사 담당 건너뜀: ${e.message}`), null));
+  if (brief) log(`조사 담당 ${brief.model}: ${brief.verdict} · 알맹이 ${brief.points.length} · 숫자 ${brief.numbers.length} · 확인 ${brief.checks.length}`);
+  const { system, user, productLines } = brief ? buildPrompt({ keyword, query, intent, products, facts, brief: briefBlock(brief) }) : raw;
   let lastErr;
   let issues = [];
   let prev = null;
@@ -162,7 +166,7 @@ async function writeArticle(keyword, query, intent, products, facts = []) {
     }
     prev = article;
     issues = await reviewArticle(article, productLines, model);
-    if (!issues.length) return { article, model, attempts: attempt };
+    if (!issues.length) return { article, model: brief ? `${brief.model} → ${model}` : model, attempts: attempt };
     lastErr = new Error(`심사 불합격: ${issues.join(' / ')}`);
     log(`심사 불합격 (${attempt}/2) → 고쳐 씀: ${issues.slice(0, 3).join(' / ')}`);
   }
