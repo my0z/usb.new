@@ -93,6 +93,8 @@ export const IMAGES_PER_POST = 2;
 export const KEYWORD_USED_TTL_SECONDS = 3 * 24 * 60 * 60;
 export const PRODUCT_USED_TTL_SECONDS = 5 * 24 * 60 * 60;
 
+const BRAIN = process.env.BRAIN_MODEL ?? (process.env.GROQ_API_KEY ? 'groq:openai/gpt-oss-120b' : '');
+
 export const LLM = {
   ollamaUrl: process.env.OLLAMA_URL || 'http://127.0.0.1:11434',
   ollamaModel: process.env.OLLAMA_MODEL || 'exaone3.5:7.8b',
@@ -102,11 +104,11 @@ export const LLM = {
   temperature: 0.7,
   groqKey: process.env.GROQ_API_KEY || '',
   // 글쓴이. 생각 담당이 gpt-oss-120b 를 맡으면 글쓴이는 다른 모델(qwen 27b)이 된다. 모델은 둘 · 시스템은 하나
-  groqModel: process.env.GROQ_MODEL || (process.env.BRAIN_MODEL ?? (process.env.GROQ_API_KEY ? 'groq:openai/gpt-oss-120b' : '')) === 'groq:openai/gpt-oss-120b' ? 'qwen/qwen3.8-27b' : 'openai/gpt-oss-120b',
+  groqModel: process.env.GROQ_MODEL || (BRAIN === 'groq:openai/gpt-oss-120b' ? 'qwen/qwen3.8-27b' : 'openai/gpt-oss-120b'),
   cfToken: process.env.CLOUDFLARE_API_TOKEN || '',
   cfAccount: process.env.CLOUDFLARE_ACCOUNT_ID || '',
   // 생각 담당 (자료를 읽고 알맹이를 정리 · 글쓴이는 그 답을 글로 옮긴다). 비우면 글쓴이가 자료를 직접 읽는다
-  brainModel: process.env.BRAIN_MODEL ?? (process.env.GROQ_API_KEY ? 'groq:openai/gpt-oss-120b' : ''),
+  brainModel: BRAIN,
   // 심사관 목록 ("groq:모델" · "ollama:모델" · "cf:@cf/모델" 을 쉼표로). 글쓴 모델은 자동 제외된다.
   reviewModels: (process.env.REVIEW_MODELS ?? 'groq:qwen/qwen3.8-27b,groq:openai/gpt-oss-20b,cf:@cf/meta/llama-3.3-70b-instruct-fp8-fast').split(',').map((s) => s.trim()).filter(Boolean),
 };
