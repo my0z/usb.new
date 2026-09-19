@@ -2788,3 +2788,107 @@ h3 {
   font-size: 11px;
   white-space: nowrap;
 }
+
+/* 결론 상자 · 장단점 · 사양 · 구매 팁 */
+.quick {
+  margin: 22px 0 8px;
+  padding: 20px 22px;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-lg);
+  background: var(--paper-2);
+}
+.quick__verdict {
+  margin: 0 0 14px;
+  font-family: var(--display);
+  font-size: 20px;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+.quick__fit,
+.quick__pc {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px 24px;
+}
+.quick__fit + .quick__pc {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--rule);
+}
+.quick b {
+  display: block;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 6px;
+}
+.quick ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 5px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+.quick li::before {
+  content: '· ';
+  color: var(--ink-3);
+}
+.quick__pros li::before {
+  content: '+ ';
+  color: var(--green);
+  font-weight: 700;
+}
+.quick__cons li::before {
+  content: '– ';
+  color: var(--accent);
+  font-weight: 700;
+}
+.specs2 {
+  margin: 26px 0 8px;
+}
+.specs2 dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0 24px;
+  border-top: 2px solid var(--rule-strong);
+}
+.specs2 dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--rule);
+  font-size: 15px;
+}
+.specs2 dt {
+  color: var(--ink-3);
+}
+.specs2 dd {
+  margin: 0;
+  font-weight: 600;
+  text-align: right;
+}
+.specs2__note {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.tips {
+  margin: 30px 0 0;
+  padding: 18px 22px;
+  border-left: 4px solid var(--gold);
+  background: var(--gold-soft);
+  border-radius: var(--radius-lg);
+}
+.tips ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+  font-size: 15px;
+  line-height: 1.5;
+}

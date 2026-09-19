@@ -396,9 +396,11 @@ async function route(url, env, request, ctx) {
     const slugs = (await store.summaries()).slice(0, 30).map((s) => s.slug);
     return llmsFullTxt(url.origin, await store.getMany(slugs));
   }
+  // IndexNow 키 확인 파일
+  if (env?.INDEXNOW_KEY && path === `/${env.INDEXNOW_KEY}.txt`) return text(env.INDEXNOW_KEY);
   if (path === '/robots.txt') {
     const ai = ['GPTBot', 'OAI-SearchBot', 'ChatGPT-User', 'ClaudeBot', 'Claude-SearchBot', 'anthropic-ai', 'PerplexityBot', 'Google-Extended', 'Applebot-Extended', 'Bytespider', 'CCBot', 'Amazonbot', 'meta-externalagent', 'DuckAssistBot', 'YouBot', 'cohere-ai'];
-    return text(`User-agent: *\nAllow: /\nDisallow: /out\nDisallow: /search\nDisallow: /0\nDisallow: /img/\nDisallow: /hit\n\n${ai.map((b) => `User-agent: ${b}\nAllow: /\n`).join('\n')}\nSitemap: ${url.origin}/sitemap.xml\n# AI 안내: ${url.origin}/llms.txt · 전문 ${url.origin}/llms-full.txt\n`);
+    return text(`User-agent: *\nAllow: /\nDisallow: /out\nDisallow: /search\nDisallow: /0\nDisallow: /img/\nDisallow: /hit\n\nUser-agent: Yeti\nAllow: /\nDisallow: /out\nDisallow: /search\nDisallow: /0\n\n${ai.map((b) => `User-agent: ${b}\nAllow: /\n`).join('\n')}\nSitemap: ${url.origin}/sitemap.xml\n# AI 안내: ${url.origin}/llms.txt · 전문 ${url.origin}/llms-full.txt\n`);
   }
 
   if (path === '/healthz') {

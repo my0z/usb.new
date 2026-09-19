@@ -39,7 +39,9 @@
     "CF_BEACON_TOKEN": "",
     // 네이버 서치어드바이저 · 구글 서치콘솔 소유 확인 값 (메타태그 content). 비우면 안 찍는다.
     "NAVER_SITE_VERIFICATION": "8de2e347621b6bfe27cced02c1224e50dc438605",
-    "GOOGLE_SITE_VERIFICATION": ""
+    "GOOGLE_SITE_VERIFICATION": "",
+    // IndexNow 키. 네이버 · 빙이 새 글을 바로 가져가게 발행기가 알린다. /<키>.txt 로 공개되는 값이라 비밀이 아니다. generator/config.js 와 같아야 한다.
+    "INDEXNOW_KEY": "80bdbe5352244e8cce7a9c5d36560a00"
   },
   // 관리자 페이지의 사진 → 제품명 인식 (Workers AI · 무료 한도 안)
   "ai": { "binding": "AI" },

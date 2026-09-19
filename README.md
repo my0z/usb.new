@@ -63,6 +63,10 @@ npm run deploy
 
 `generator/run.js` 는 실행마다 KV `gen:runs` 에 성공 여부 · 시도 횟수 · 소요 시간 · 오류를 남기고 `/0` 가 30일 성공률로 보여 준다. 페이지 속도는 `/0` 를 연 브라우저가 PageSpeed Insights API 를 직접 불러 모바일 점수와 LCP · CLS · TBT 를 그린다 (1시간 localStorage 캐시). 키 없이 쓰면 공용 한도라 가끔 429 가 나는데 30초 뒤 한 번 다시 재고 그래도 안 되면 PageSpeed 사이트 링크를 준다. 구글 클라우드에서 PageSpeed Insights API 를 켜고 API 키를 만들어 시크릿으로 넣으면(`echo 키 | npx wrangler secret put PSI_KEY`) 한도가 따로 잡혀 사라진다. 키는 관리자 페이지 HTML 에 실리니 구글 콘솔에서 웹사이트 `https://usb.kr/*` 로 제한한다.
 
+### 네이버 · 빙 색인
+
+발행기가 글을 올릴 때마다 IndexNow(`generator/lib/indexnow.js`)로 새 URL 을 알린다. 네이버 서치어드바이저가 IndexNow 를 받으므로 크롤러를 기다리지 않는다. 키는 `wrangler.jsonc` 의 `INDEXNOW_KEY` 와 `generator/config.js` 가 같아야 하고 워커가 `/<키>.txt` 로 공개한다. 서치어드바이저에서 손으로 할 것: 요청 → 사이트맵 제출(`/sitemap.xml`) · RSS 제출(`/rss.xml`) 한 번씩.
+
 ### 자동 배포
 
 `claude/usb-kr-renewal-site-6725i8` 나 `main` 에 푸시하면 `.github/workflows/deploy.yml` 이 `wrangler deploy` 를 돌린다. 한 번만 준비한다:

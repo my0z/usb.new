@@ -5,7 +5,7 @@ import { postUrl, won } from './components.js';
 const SITE_NAME = 'USB.KR';
 const SITE_TAGLINE = '전자기기 스펙과 가격을 비교한다';
 /** 스타일 변경 시 올려서 브라우저 캐시를 무효화한다. */
-export const ASSET_VERSION = '20260917a';
+export const ASSET_VERSION = '20260918a';
 
 /** GA4 측정 ID (G-XXXX) 와 Cloudflare Web Analytics 토큰. 요청마다 index.js 가 env 에서 넣는다. 비어 있으면 태그를 안 넣는다. */
 export let GA_ID = '';
@@ -73,6 +73,7 @@ export function layout({ title, description, canonical, active, body, heroSlot =
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>${fullTitle}</title>
     <meta name="description" content="${description}" />
+    ${article?.keywords ? html`<meta name="keywords" content="${article.keywords}" />` : ''}
     <meta name="theme-color" content="#0e0d10" />
     <link rel="canonical" href="${canonical}" />
     <meta property="og:site_name" content="${SITE_NAME}" />

@@ -12,7 +12,7 @@
  *       → 사진 삽입 → KV 저장(post · index · summary · 중복 방지 키)
  */
 import { loadEnv, requireEnv } from './lib/env.js';
-import { KEYWORD_POOL, PRODUCTS_PER_POST, KEYWORD_USED_TTL_SECONDS, PRODUCT_USED_TTL_SECONDS, LLM } from './config.js';
+import { KEYWORD_POOL, INTENTS, PRODUCTS_PER_POST, KEYWORD_USED_TTL_SECONDS, PRODUCT_USED_TTL_SECONDS, LLM } from './config.js';
 import { searchProducts, deeplinks } from './lib/coupang.js';
 import { remoteKv, MemoryKv } from './lib/kv.js';
 import { generateJson, ollamaHealthy } from './lib/llm.js';
@@ -24,6 +24,7 @@ import { mockProducts, mockArticleJson } from './lib/mock.js';
 import { findVideo } from './lib/video.js';
 import { announce, articleMessage } from './lib/social.js';
 import { enrich } from './lib/naver.js';
+import { indexNow } from './lib/indexnow.js';
 
 loadEnv();
 
@@ -88,6 +89,14 @@ async function pickKeyword(forced) {
   throw new Error('모든 키워드가 최근에 쓰였다. KEYWORD_POOL 을 늘리거나 며칠 뒤 다시 실행하라.');
 }
 
+/** t 의 "추천" 을 이번 회전의 검색 의도로 바꾼다. 강제 키워드는 t 가 없으니 keyword 를 쓴다. */
+function pickIntent(item) {
+  const base = (item.t || item.keyword).replace(/\s*추천$/, '');
+  let r = Math.random() * INTENTS.reduce((a, i) => a + i.w, 0);
+  const it = INTENTS.find((i) => (r -= i.w) < 0) ?? INTENTS[0];
+  return { t: `${base} ${it.suffix}`, hint: it.hint };
+}
+
 async function recentlyUsedProductKeys() {
   const list = await kv.getJson('recent-used-products', []);
   const cutoff = Date.now() - PRODUCT_USED_TTL_SECONDS * 1000;
@@ -132,7 +141,7 @@ async function chooseProducts(query, min = 3000) {
   for (const p of found) {
     if (used.has(productKey(p))) continue;
     if (await kv.get(`product-post-map:${normalizeName(p.name)}`)) continue;
-    if (p.price < min) continue;
+    if (!MOCK && p.price < min) continue;
     const nameKey = normalizeName(p.name).slice(0, 18);
     if (seenNames.has(nameKey)) continue;
     seenNames.add(nameKey);
@@ -144,12 +153,12 @@ async function chooseProducts(query, min = 3000) {
   return fresh.map((p, i) => ({ ...p, affiliateUrl: links[i] }));
 }
 
-async function writeArticle(keyword, query, intent, products, facts = []) {
+async function writeArticle(keyword, query, intent, hint, products, facts = []) {
   if (MOCK) return { article: parseArticle(mockArticleJson), model: 'mock' };
-  const raw = buildPrompt({ keyword, query, intent, products, facts });
+  const raw = buildPrompt({ keyword, query, intent, hint, products, facts });
   const brief = await think(raw.productLines).catch((e) => (log(`조사 담당 건너뜀: ${e.message}`), null));
   if (brief) log(`조사 담당 ${brief.model}: ${brief.verdict} · 알맹이 ${brief.points.length} · 숫자 ${brief.numbers.length} · 확인 ${brief.checks.length}`);
-  const { system, user, productLines } = brief ? buildPrompt({ keyword, query, intent, products, facts, brief: briefBlock(brief) }) : raw;
+  const { system, user, productLines } = brief ? buildPrompt({ keyword, query, intent, hint, products, facts, brief: briefBlock(brief) }) : raw;
   let lastErr;
   let issues = [];
   let prev = null;
@@ -207,11 +216,12 @@ async function runOnce(forcedKeyword, forcedQuery) {
   try {
     const item = await pickKeyword(forcedKeyword ? { keyword: forcedKeyword, q: forcedQuery || forcedKeyword } : null);
     run.keyword = item.keyword;
-    log(`키워드: ${item.keyword} · 검색어: ${item.q}`);
+    const intent = pickIntent(item);
+    log(`키워드: ${item.keyword} · 검색어: ${item.q} · 노리는 검색어: ${intent.t}`);
     const { products, facts } = MOCK ? { products: await chooseProducts(item.q, item.min), facts: [] } : await enrich(await chooseProducts(item.q, item.min));
     log(`제품 ${products.length}개: ${products.map((p) => p.name.slice(0, 30)).join(' | ')}${facts.length ? ` · 참고 자료 ${facts.length}건` : ''}`);
     const [{ article, model, attempts }, video] = await Promise.all([
-      writeArticle(item.keyword, item.q, item.t, products, facts),
+      writeArticle(item.keyword, item.q, intent.t, intent.hint, products, facts),
       MOCK ? null : findVideo(products[0].name, item.keyword).catch(() => null),
     ]);
     Object.assign(run, { model, attempts: attempts ?? 1 });
@@ -226,6 +236,7 @@ async function runOnce(forcedKeyword, forcedQuery) {
     } else {
       await publish(post, products);
       log(`발행 완료: https://usb.kr/${post.slug} — ${post.title}`);
+      log(`IndexNow: ${JSON.stringify(await indexNow([`/${post.slug}`, '/', '/sitemap.xml']))}`);
       const sns = await announce(articleMessage(post));
       if (Object.values(sns).some((v) => v !== 'skip')) log(`SNS: ${JSON.stringify(sns)}`);
     }
