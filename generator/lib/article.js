@@ -51,7 +51,7 @@ function won(n) {
   return `${Number(n).toLocaleString('ko-KR')}원`;
 }
 
-export function buildPrompt({ keyword, query, intent = '', products, facts = [] }) {
+export function buildPrompt({ keyword, query, intent = '', hint = '', products, facts = [] }) {
   const lines = products.map((p, i) => {
     const ship = p.isRocket ? '로켓배송' : p.isFreeShipping ? '무료배송' : '일반배송';
     const extra = [p.brand && `브랜드: ${p.brand}`, p.maker && p.maker !== p.brand && `제조사: ${p.maker}`, p.naverPrice && `네이버 최저가: ${won(p.naverPrice)}`].filter(Boolean);
@@ -60,7 +60,7 @@ export function buildPrompt({ keyword, query, intent = '', products, facts = [] 
   const factLines = facts.map((f, i) => `${i + 1}. [${{ news: '뉴스', web: '웹문서' }[f.kind] ?? '블로그'}] ${f.title}: ${f.text}`);
   const factBlock = factLines.length ? `\n주인공 제품 참고 자료 (실제 리뷰 발췌 · 여기 있는 사실은 써도 된다):\n${factLines.join('\n')}\n` : '';
   const user = `주제 키워드: ${keyword}
-노리는 검색어 (제목 앞에 넣는다): ${intent || keyword}
+노리는 검색어 (제목 앞에 넣는다): ${intent || keyword}${hint ? `\n검색 의도: ${hint}` : ''}
 검색어: ${query}
 제품 목록 (1번이 주인공):
 ${lines.join('\n')}
