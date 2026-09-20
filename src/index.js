@@ -20,7 +20,7 @@ const IMAGE_HOST_SUFFIXES = ['.coupangcdn.com', '.coupang.com'];
 const IMAGE_HOSTS = ['coupangcdn.com', 'coupang.com'];
 const OUT_HOST_SUFFIXES = ['.coupang.com', 'coupa.ng'];
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
-const BOT_UA = /bot|crawl|spider|slurp|preview|fetch|scrape|headless|phantom|selenium|puppeteer|playwright|curl|wget|python|java\/|go-http|okhttp|axios|node|gptbot|chatgpt|oai-search|claude|anthropic|perplexity|bytespider|ccbot|cohere|diffbot|amazonbot|applebot|petalbot|yandex|semrush|ahrefs|mj12|dotbot|facebookexternalhit|whatsapp|telegram|discord|slack|lighthouse|pagespeed|pingdom|uptime|monitor/i;
+const BOT_UA = /bot|crawl|spider|slurp|preview|fetch|scrape|headless|phantom|selenium|puppeteer|playwright|curl|wget|python|java\/|go-http|okhttp|axios|node|gptbot|chatgpt|oai-search|claude|anthropic|perplexity|bytespider|ccbot|cohere|diffbot|amazonbot|applebot|petalbot|yeti|daumoa|kakaotalk-scrap|yandex|semrush|ahrefs|mj12|dotbot|facebookexternalhit|whatsapp|telegram|discord|slack|lighthouse|pagespeed|pingdom|uptime|monitor/i;
 
 // Link 헤더는 Cloudflare Early Hints(103) 로 나가 HTML 이 도착하기 전에 CSS 와 폰트 연결을 시작한다
 const EARLY_HINTS = [
@@ -170,8 +170,11 @@ function outbound(url, request, env, ctx) {
   const ok = parsed.protocol === 'https:' && OUT_HOST_SUFFIXES.some((s) => parsed.hostname === s.replace(/^\./, '') || parsed.hostname.endsWith(s));
   if (!ok) return new Response('Invalid destination', { status: 400 });
   const slug = url.searchParams.get('s') ?? '';
-  const bot = BOT_UA.test(request.headers.get('user-agent') ?? '') || request.cf?.botManagement?.verifiedBot === true;
-  if (slug && !bot && ctx) ctx.waitUntil(getStore(env).recordClick(slug.slice(0, 80)));
+  const h = (k) => request.headers.get(k) ?? '';
+  const bot = BOT_UA.test(h('user-agent')) || request.cf?.botManagement?.verifiedBot === true;
+  // 사람 클릭만 센다. 링크를 따라다니는 크롤러는 UA 로 다 못 거르므로 사용자 조작으로 시작한 이동(sec-fetch-user) 이거나 우리 페이지에서 온 이동만 인정한다.
+  const human = !bot && (h('sec-fetch-user') === '?1' || (h('sec-fetch-mode') === 'navigate' && /^https:\/\/(www\.)?usb\.kr\//.test(h('referer'))));
+  if (slug && human && ctx) ctx.waitUntil(getStore(env).recordClick(slug.slice(0, 80)));
   return new Response(null, { status: 302, headers: { location: dest, 'cache-control': 'no-store', 'referrer-policy': 'no-referrer' } });
 }
 
@@ -274,8 +277,8 @@ async function route(url, env, request, ctx) {
   const canonical = `${url.origin}${path}`;
 
   if (path === '/') {
-    const [summaries, popular] = await Promise.all([store.summaries(), store.popular(6)]);
-    return page(homePage({ canonical, summaries, popular }));
+    const [summaries, popular, deals] = await Promise.all([store.summaries(), store.popular(6), store.deals()]);
+    return page(homePage({ canonical, summaries, popular, deals }));
   }
 
   if (path === '/reviews') return redirect('/posts');

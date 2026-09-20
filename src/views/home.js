@@ -1,6 +1,6 @@
 import { html } from '../lib/html.js';
 import { layout } from './layout.js';
-import { cardGrid, imgProxy, imgSrc, metaLine, postUrl, priceBadge, sectionHead, won, ICON_ARROW, ICON_ROCKET } from './components.js';
+import { cardGrid, imgProxy, imgSrc, metaLine, outUrl, postUrl, priceBadge, sectionHead, won, ICON_ARROW, ICON_ROCKET } from './components.js';
 import { categories, categoryOfPost } from '../data/categories.js';
 import { excerpt } from '../data/store.js';
 
@@ -69,7 +69,32 @@ function popularRail(list) {
   </section>`;
 }
 
-export function homePage({ canonical, summaries, popular }) {
+/** 오늘의 골드박스 중 할인율 높은 순 6개. 홈이 방문의 대부분이라 여기서 바로 쿠팡으로 보낸다. 클릭은 home 슬러그로 센다. */
+function dealsRail(deals) {
+  const items = (deals?.items ?? []).filter((p) => p?.image && p.price > 0).sort((a, b) => (b.discountRate ?? 0) - (a.discountRate ?? 0)).slice(0, 6);
+  if (!items.length) return '';
+  return html`<section class="hotdeals" aria-labelledby="hotdeals-title">
+    ${sectionHead('%', '오늘의 특가', '쿠팡 골드박스 전자기기', '/deals', '핫딜 전체')}
+    <ol class="deals deals--rail">
+      ${items.map(
+        (p, i) => html`<li class="deal reveal" style="--i:${i}">
+          <a class="deal__media" href="${outUrl(p, 'home')}" target="_blank" rel="nofollow sponsored noopener">
+            <img ${imgSrc(p.image, 300)} alt="${p.name}" loading="lazy" decoding="async" width="300" height="300" />
+            ${p.discountRate ? html`<span class="deal__off">${p.discountRate}%</span>` : p.gold ? html`<span class="deal__off deal__off--gold">골드박스</span>` : ''}
+          </a>
+          <div class="deal__body">
+            <p class="deal__name">${p.name}</p>
+            <p class="deal__price">${p.originalPrice > p.price ? html`<s>${won(p.originalPrice)}</s>` : ''}<b>${won(p.price)}</b></p>
+            <p class="deal__ship">${p.isRocket ? html`<span class="ship ship--rocket">${ICON_ROCKET} 로켓배송</span>` : p.isFreeShipping ? html`<span class="ship">무료배송</span>` : ''}</p>
+            <a class="btn btn--primary btn--sm" href="${outUrl(p, 'home')}" target="_blank" rel="nofollow sponsored noopener">쿠팡에서 보기 ${ICON_ARROW}</a>
+          </div>
+        </li>`,
+      )}
+    </ol>
+  </section>`;
+}
+
+export function homePage({ canonical, summaries, popular, deals = null }) {
   const featured = summaries[0];
   const rest = summaries.slice(1);
   const latest = rest.slice(0, 5);
@@ -82,6 +107,7 @@ export function homePage({ canonical, summaries, popular }) {
   const activeCats = categories.filter((c) => counts.get(c.slug)).sort((a, b) => counts.get(b.slug) - counts.get(a.slug));
 
   const body = html`<div class="shell">
+    ${dealsRail(deals)}
     ${sectionHead('01', '최신 글', '새로 발행한 비교와 리뷰', '/posts')}
     ${cardGrid(latest, { bento: true, numbered: true, eagerFirst: false })}
 
