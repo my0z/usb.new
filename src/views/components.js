@@ -65,7 +65,7 @@ export function postCard(p, { variant = 'default', index = null, eager = false }
   return html`<article class="card card--${variant} reveal" ${index !== null ? html`style="--i:${index}"` : ''}>
     <a class="card__link" href="${postUrl(p)}">
       <div class="card__media card__media--product">
-        <img ${imgSrc(cover, variant === 'compact' ? 300 : eager ? 600 : 320)} alt="" ${eager ? html`fetchpriority="high"` : html`loading="lazy"`} decoding="async" width="600" height="600" />
+        <img ${imgSrc(cover, variant === 'compact' ? 300 : variant === 'lead' || eager ? 600 : 320)} alt="" ${eager ? html`fetchpriority="high"` : html`loading="lazy"`} decoding="async" width="600" height="600" />
         <span class="card__cat">${p.keyword}</span>
         ${first ? priceBadge(first) : ''}
         ${index !== null ? html`<span class="card__num">${String(index + 1).padStart(2, '0')}</span>` : ''}
