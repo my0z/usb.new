@@ -5,7 +5,7 @@ import { postUrl, won } from './components.js';
 const SITE_NAME = 'USB.KR';
 const SITE_TAGLINE = '전자기기 스펙과 가격을 비교한다';
 /** 스타일 변경 시 올려서 브라우저 캐시를 무효화한다. */
-export const ASSET_VERSION = '20260920c';
+export const ASSET_VERSION = '20260920d';
 
 /** GA4 측정 ID (G-XXXX) 와 Cloudflare Web Analytics 토큰. 요청마다 index.js 가 env 에서 넣는다. 비어 있으면 태그를 안 넣는다. */
 export let GA_ID = '';
@@ -51,9 +51,10 @@ function ticker(items) {
 }
 
 /** 폰트 CSS 는 JS 로 붙인다. <link> 로 두면 Cloudflare Fonts 가 인라인 @font-face 로 바꿔 첫 그리기를 폰트 뒤로 미룬다 (모바일 FCP 4.8초).
- *  Noto Serif KR 은 500 · 700 만 받는다 (900 요청은 700 으로 그려진다). Fraunces 이탤릭은 로고 두 글자에 82KB 라 뺀다. */
+ *  Noto Serif KR 은 500 · 700 만 받는다 (900 요청은 700 으로 그려진다). Fraunces 이탤릭은 로고 두 글자에 82KB 라 뺀다.
+ *  display=optional: 한글 세리프 14조각 600KB 가 느린 망에서 5초 뒤 도착하면 제목이 다시 그려져 LCP 가 7초대로 잡힌다. 첫 방문은 기본 글꼴로 그리고 캐시된 다음 방문부터 웹폰트를 쓴다. */
 const FONT_CSS = [
-  'https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700&family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&display=swap',
+  'https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700&family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&display=optional',
   'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css',
 ];
 

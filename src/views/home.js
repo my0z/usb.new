@@ -28,7 +28,7 @@ function hero(p) {
           ${metaLine(p)}
         </div>
       </div>
-      <a class="hero__figure hero__figure--product" href="${postUrl(p)}" aria-label="${p.title} 열기">
+      <a class="hero__figure hero__figure--product" href="${postUrl(p)}">
         <img src="${cover}" alt="${first?.altText || first?.name || p.title}" width="600" height="600" fetchpriority="high" />
         ${first ? html`<span class="hero__pricecard">
           <small>${first.isRocket ? html`${ICON_ROCKET} 로켓배송` : '쿠팡 최저가'}</small>
