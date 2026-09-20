@@ -5,7 +5,7 @@ import { postUrl, won } from './components.js';
 const SITE_NAME = 'USB.KR';
 const SITE_TAGLINE = '전자기기 스펙과 가격을 비교한다';
 /** 스타일 변경 시 올려서 브라우저 캐시를 무효화한다. */
-export const ASSET_VERSION = '20260920q';
+export const ASSET_VERSION = '20260920r';
 
 /** GA4 측정 ID (G-XXXX) 와 Cloudflare Web Analytics 토큰. 요청마다 index.js 가 env 에서 넣는다. 비어 있으면 태그를 안 넣는다. */
 export let GA_ID = '';
@@ -81,6 +81,10 @@ const INLINE_SCRIPT = raw(`
   if(navigator.sendBeacon&&location.pathname!=='/0')navigator.sendBeacon('/hit',location.pathname);
   var sc=d.querySelector('.stickycta');
   if(sc){addEventListener('scroll',function(){sc.classList.toggle('is-on',scrollY>420)},{passive:true})}
+  // 스크롤이 시작되면 로고가 든 상단이 반으로 줄고 맨 위로 오면 돌아온다. 동작 줄이기 설정과 무관하게 돈다 (아래 return 앞)
+  var mh=d.querySelector('.masthead');
+  function compact(){mh.classList.toggle('is-compact',scrollY>0)}
+  addEventListener('scroll',compact,{passive:true});compact();
   if(reduce||!('IntersectionObserver' in window)){d.documentElement.classList.add('no-reveal');return}
   var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{rootMargin:'0px 0px -8% 0px',threshold:0.08});
   // 처음부터 화면에 있는 것은 애니메이션 없이 바로 보인다. 첫 화면이 0.7초 뒤에 나타나면 LCP 와 Speed Index 가 그만큼 밀린다
@@ -90,9 +94,6 @@ const INLINE_SCRIPT = raw(`
   els.forEach(function(el){if(vis.indexOf(el)<0)io.observe(el)});
   var bar=d.querySelector('.progress');
   if(bar){var t;addEventListener('scroll',function(){if(t)return;t=requestAnimationFrame(function(){t=0;var h=d.documentElement;var p=h.scrollTop/(h.scrollHeight-h.clientHeight);bar.style.transform='scaleX('+Math.min(1,Math.max(0,p))+')'})},{passive:true})}
-  var mh=d.querySelector('.masthead');
-  // 스크롤이 시작되면 로고가 든 상단이 반으로 줄고 맨 위로 오면 돌아온다
-  addEventListener('scroll',function(){mh.classList.toggle('is-compact',scrollY>0)},{passive:true});
 })();
 `);
 
