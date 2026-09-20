@@ -16,7 +16,7 @@ import { imgProxy } from './views/components.js';
 const HTML_CACHE = 'public, max-age=0, s-maxage=300, stale-while-revalidate=86400';
 const FEED_CACHE = 'public, max-age=0, s-maxage=1800, stale-while-revalidate=86400';
 const PAGE_SIZE = 30;
-const IMAGE_HOST_SUFFIXES = ['.coupangcdn.com', '.coupang.com'];
+const IMAGE_HOST_SUFFIXES = ['.coupangcdn.com', '.coupang.com', '.ytimg.com'];
 const IMAGE_HOSTS = ['coupangcdn.com', 'coupang.com'];
 const OUT_HOST_SUFFIXES = ['.coupang.com', 'coupa.ng'];
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;

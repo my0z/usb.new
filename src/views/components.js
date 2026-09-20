@@ -109,7 +109,7 @@ export function productBlock(product, slug, { rank = null, top = false } = {}) {
   const drop = product.previousPrice && Number(product.previousPrice) > Number(product.price);
   return html`<div class="pbox ${top ? 'pbox--top' : ''}">
     <a class="pbox__media" href="${outUrl(product, slug)}" target="_blank" rel="nofollow sponsored noopener">
-      <img ${imgSrc(product.image, 440)} alt="${product.altText || product.name}" loading="lazy" decoding="async" width="440" height="440" />
+      <img ${imgSrc(product.image, 200)} alt="${product.altText || product.name}" loading="lazy" decoding="async" width="440" height="440" />
       ${top ? html`<span class="pbox__badge">추천 1위</span>` : rank !== null ? html`<span class="pbox__rank">${String(rank).padStart(2, '0')}</span>` : ''}
     </a>
     <div class="pbox__body">

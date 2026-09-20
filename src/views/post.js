@@ -110,7 +110,7 @@ export function postPage(p, { canonical, related, views, best = null }) {
     ${first
       ? html`<figure class="post__cover post__cover--product reveal">
           <a href="${outUrl(first, p.slug)}" target="_blank" rel="nofollow sponsored noopener">
-            <img src="${cover}" alt="${first.altText || first.name}" width="600" height="600" fetchpriority="high" />
+            <img ${imgSrc(first.image, 440)} alt="${first.altText || first.name}" width="600" height="600" fetchpriority="high" />
           </a>
           <figcaption><span>${first.name}</span><span>${won(first.price)}</span></figcaption>
         </figure>`
@@ -174,7 +174,7 @@ export function postPage(p, { canonical, related, views, best = null }) {
         ${p.video?.id && /^[\w-]{11}$/.test(p.video.id)
           ? html`<figure class="video reveal">
               <button class="video__play" type="button" data-id="${p.video.id}" aria-label="영상 재생: ${p.video.title ?? '제품 영상'}">
-                <img src="https://i.ytimg.com/vi/${p.video.id}/hqdefault.jpg" alt="" loading="lazy" decoding="async" width="480" height="360" />
+                <img ${imgSrc(`https://i.ytimg.com/vi/${p.video.id}/hqdefault.jpg`, 600)} alt="" loading="lazy" decoding="async" width="480" height="360" />
                 <span class="video__btn" aria-hidden="true">▶</span>
               </button>
               <figcaption>
@@ -262,7 +262,7 @@ export function postPage(p, { canonical, related, views, best = null }) {
     body,
     progress: true,
     ogImage: abs(cover),
-    preload: cover,
+    preload: first?.image ? imgSrc(first.image, 440) : cover,
     article: { published: p.createdAt, section: cat?.name ?? p.keyword, keywords: [p.keyword, cat?.name, ...(p.products ?? []).slice(0, 3).map((x) => x.name.split(',')[0])].filter(Boolean).join(', ') },
     jsonLd: [
       {

@@ -5,7 +5,7 @@ import { postUrl, won } from './components.js';
 const SITE_NAME = 'USB.KR';
 const SITE_TAGLINE = '전자기기 스펙과 가격을 비교한다';
 /** 스타일 변경 시 올려서 브라우저 캐시를 무효화한다. */
-export const ASSET_VERSION = '20260920p';
+export const ASSET_VERSION = '20260920q';
 
 /** GA4 측정 ID (G-XXXX) 와 Cloudflare Web Analytics 토큰. 요청마다 index.js 가 env 에서 넣는다. 비어 있으면 태그를 안 넣는다. */
 export let GA_ID = '';
@@ -61,14 +61,14 @@ const FONT_PRETENDARD = 'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3
 const INLINE_SCRIPT = raw(`
 (function(){
   var d=document;
-  // 폰트는 첫 조작(스크롤 · 터치 · 키) 또는 6초 뒤에 붙인다. optional 이라 첫 방문 화면엔 안 보이고 캐시만 데우므로 늦춰도 손해가 없고 측정 구간엔 안 잡힌다. media=print 로 넣어 그리기를 막지 않는다
+  // 폰트는 첫 조작(스크롤 · 터치 · 키) 또는 10초 뒤에 붙인다. optional 이라 첫 방문 화면엔 안 보이고 캐시만 데우므로 늦춰도 손해가 없고 측정 구간엔 안 잡힌다. media=print 로 넣어 그리기를 막지 않는다
   function once(fn,ms){var d0=0;function go(){if(d0)return;d0=1;fn()}['scroll','pointerdown','keydown','touchstart'].forEach(function(e){addEventListener(e,go,{once:true,passive:true})});setTimeout(go,ms)}
   once(function(){
     var l=d.createElement('link');l.rel='stylesheet';l.media='print';l.onload=function(){l.media='all'};l.href='${FONT_GOOGLE}';d.head.appendChild(l);
     fetch('${FONT_PRETENDARD}').then(function(r){return r.text()}).then(function(c){var s=d.createElement('style');
       s.textContent=c.replace(/url\\((['"]?)(?!https?:|data:|\\/\\/)([^)'"]+)/g,function(m,q,u){return 'url('+q+new URL(u,'${FONT_PRETENDARD}').href}).replace(/}/g,';font-display:optional}');
       d.head.appendChild(s)}).catch(function(){});
-  },6000);
+  },10000);
   var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
   d.documentElement.classList.add('js');
   function ld(e){if(e.target.tagName==='IMG')e.target.classList.add('ld')}
@@ -195,7 +195,7 @@ export function layout({ title, description, canonical, active, body, heroSlot =
       </div>
     </footer>
     <script>${INLINE_SCRIPT}</script>
-    ${GA_ID ? html`<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${GA_ID}');(function(){var d=0;function go(){if(d)return;d=1;var s=document.createElement('script');s.src='https://www.googletagmanager.com/gtag/js?id=${GA_ID}';document.head.appendChild(s)}['scroll','pointerdown','keydown','touchstart'].forEach(function(e){addEventListener(e,go,{once:true,passive:true})});setTimeout(go,6000)})()</script>` : ''}
+    ${GA_ID ? html`<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${GA_ID}');(function(){var d=0;function go(){if(d)return;d=1;var s=document.createElement('script');s.src='https://www.googletagmanager.com/gtag/js?id=${GA_ID}';document.head.appendChild(s)}['scroll','pointerdown','keydown','touchstart'].forEach(function(e){addEventListener(e,go,{once:true,passive:true})});setTimeout(go,10000)})()</script>` : ''}
     ${CF_BEACON ? html`<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "${CF_BEACON}"}'></script>` : ''}
   </body>
 </html>`;
