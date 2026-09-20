@@ -390,7 +390,8 @@ h3 {
   position: absolute;
   inset: -10%;
   z-index: -2;
-  filter: blur(46px) saturate(1.5);
+  /* 120px 이미지를 확대해 흐림을 낸다. blur 필터는 첫 그리기에 300ms 를 더 먹어 LCP 를 늦췄다 */
+  filter: saturate(1.5);
   opacity: 0.55;
 }
 .hero__bg img {

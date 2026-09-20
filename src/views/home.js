@@ -13,7 +13,7 @@ function hero(p) {
   const summary = p.tldr || p.metaDescription || excerpt(p.intro, 160);
   return html`<section class="hero" aria-labelledby="hero-title">
     <div class="hero__bg" aria-hidden="true">
-      <img src="${cover}" alt="" width="600" height="600" fetchpriority="high" />
+      <img src="${imgProxy(first?.image || HERO_FALLBACK, { w: 120 })}" alt="" width="600" height="600" decoding="async" />
     </div>
     <div class="hero__inner shell">
       <div class="hero__copy">
