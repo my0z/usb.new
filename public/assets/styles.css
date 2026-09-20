@@ -2223,7 +2223,7 @@ h3 {
   font-weight: 700;
   letter-spacing: 0.08em;
   background: var(--gold);
-  color: #fff;
+  color: #1a1408; /* 금색 위 흰 글자는 대비 3.6 이라 어두운 글자로 (5.0) */
   border-radius: 999px;
   padding: 5px 10px;
 }
