@@ -51,7 +51,7 @@ function compareTable(p) {
     </div>
     <div class="compare__scroll">
       <table>
-        <thead><tr><th>제품</th><th class="num">쿠팡 가격</th>${naver ? html`<th class="num">네이버 최저가</th>` : ''}<th>배송</th><th></th></tr></thead>
+        <thead><tr><th>제품</th><th class="num">쿠팡 가격</th>${naver ? html`<th class="num">네이버 최저가</th>` : ''}<th>배송</th><th><span class="sr-only">구매</span></th></tr></thead>
         <tbody>
           ${products.map(
             (prod, i) => html`<tr class="${i === 0 ? 'is-top' : ''}">
@@ -173,7 +173,10 @@ export function postPage(p, { canonical, related, views, best = null }) {
           : ''}
         ${p.video?.id && /^[\w-]{11}$/.test(p.video.id)
           ? html`<figure class="video reveal">
-              <iframe src="https://www.youtube-nocookie.com/embed/${p.video.id}" title="${p.video.title ?? '제품 영상'}" loading="lazy" allow="accelerometer; encrypted-media; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+              <button class="video__play" type="button" data-id="${p.video.id}" aria-label="영상 재생: ${p.video.title ?? '제품 영상'}">
+                <img src="https://i.ytimg.com/vi/${p.video.id}/hqdefault.jpg" alt="" loading="lazy" decoding="async" width="480" height="360" />
+                <span class="video__btn" aria-hidden="true">▶</span>
+              </button>
               <figcaption>
                 <span>${p.video.match === 'product' ? '' : html`<em class="video__note">참고용 영상 · 이 글의 제품과 다를 수 있다</em>`}${p.video.title ?? ''}${p.video.channel ? html` · ${p.video.channel}` : ''}</span>
                 <a class="video__out" href="https://www.youtube.com/watch?v=${p.video.id}" target="_blank" rel="noopener">유튜브에서 보기 ↗</a>

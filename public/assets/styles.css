@@ -9,7 +9,7 @@
   --ink-3: #6a6555;
   --rule: #ddd5c6;
   --rule-strong: #141311;
-  --accent: #d5321f;
+  --accent: #cc2f1d; /* 종이색 위 대비 4.7:1 (접근성 기준 4.5) */
   --accent-2: #ff6a3d;
   --accent-soft: #fbe6df;
   --gold: #b7791c;
@@ -2467,6 +2467,41 @@ h3 {
   border-radius: var(--radius-lg);
   background: #000;
   box-shadow: var(--shadow-lg);
+}
+/* 유튜브는 눌러야 붙인다. iframe 을 처음부터 넣으면 플레이어 JS 2.7MB 가 본문보다 먼저 내려와 모바일 첫 그리기가 6초로 밀린다 */
+.video__play {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: #000;
+  cursor: pointer;
+}
+.video__play img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.85;
+}
+.video__btn {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 68px;
+  height: 48px;
+  border-radius: 12px;
+  background: #e00;
+  color: #fff;
+  font-size: 22px;
+  display: grid;
+  place-items: center;
+}
+.video__play:hover .video__btn {
+  background: #f00;
 }
 .video figcaption {
   display: flex;
