@@ -150,7 +150,7 @@ async function proxyImage(token, nobg, w) {
     const len = Number(res.headers.get('content-length') ?? 0);
     if (len > MAX_IMAGE_BYTES) return new Response('Image too large', { status: 413 });
     return new Response(res.body, {
-      headers: { 'content-type': type || 'image/webp', 'cache-control': 'public, max-age=604800, immutable' },
+      headers: { 'content-type': type || 'image/webp', 'cache-control': 'public, max-age=604800, immutable', 'cf-resized': res.headers.get('cf-resized') ?? 'none' },
     });
   } catch (e) {
     return new Response(`Image proxy error: ${e.message}`, { status: 502 });
