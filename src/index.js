@@ -137,11 +137,14 @@ async function proxyImage(token, nobg, w) {
   const image = { width, quality: 80, format: 'webp' };
   if (nobg) image.segment = 'foreground';
   try {
-    // 쿠팡 이미지 서버가 간헐적으로 실패한다. 실패는 캐시하지 않고 한 번 더 시도한다 (성공만 7일 캐시)
-    const opts = { headers: { 'user-agent': 'Mozilla/5.0 (compatible; usbkrBot/2.0)' }, cf: { cacheTtlByStatus: { '200-299': 604800, '300-599': 0 }, cacheEverything: true, image } };
-    let res = await fetch(target.toString(), opts);
-    if (!res.ok) res = await fetch(target.toString(), opts);
-    if (!res.ok) return new Response(`Image fetch failed (${res.status})`, { status: 502, headers: { 'cache-control': 'no-store' } });
+    // 쿠팡 이미지 서버가 봇 UA 나 연속 요청에 가끔 HTML 을 준다 (변환기가 415 로 거절). 브라우저 UA 로 부르고 실패는 캐시하지 않는다.
+    // 변환이 두 번 실패하면 변환 없이 원본이라도 낸다. 깨진 그림보다 JPEG 가 낫다.
+    const headers = { 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36', accept: 'image/avif,image/webp,image/*,*/*;q=0.8' };
+    const cache = { cacheTtlByStatus: { '200-299': 604800, '300-599': 0 }, cacheEverything: true };
+    let res = await fetch(target.toString(), { headers, cf: { ...cache, image } });
+    if (!res.ok) res = await fetch(target.toString(), { headers, cf: { ...cache, image } });
+    if (!res.ok) res = await fetch(target.toString(), { headers, cf: cache });
+    if (!res.ok) return new Response(`Image fetch failed (${res.status} ${res.headers.get('cf-resized') ?? ''})`, { status: 502, headers: { 'cache-control': 'no-store' } });
     const type = res.headers.get('content-type') ?? '';
     if (type && !type.startsWith('image/')) return new Response('Not an image', { status: 400 });
     const len = Number(res.headers.get('content-length') ?? 0);
