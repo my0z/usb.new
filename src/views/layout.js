@@ -5,7 +5,7 @@ import { postUrl, won } from './components.js';
 const SITE_NAME = 'USB.KR';
 const SITE_TAGLINE = '전자기기 스펙과 가격을 비교한다';
 /** 스타일 변경 시 올려서 브라우저 캐시를 무효화한다. */
-export const ASSET_VERSION = '20260920s';
+export const ASSET_VERSION = '20260920t';
 
 /** GA4 측정 ID (G-XXXX) 와 Cloudflare Web Analytics 토큰. 요청마다 index.js 가 env 에서 넣는다. 비어 있으면 태그를 안 넣는다. */
 export let GA_ID = '';
@@ -70,10 +70,8 @@ const INLINE_SCRIPT = raw(`
       d.head.appendChild(s)}).catch(function(){});
   },10000);
   var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-  // 위치 측정은 DOM 을 바꾸기 전에 한다. js 클래스를 붙인 뒤에 재면 레이아웃을 강제로 다시 계산한다 (강제 리플로우 190ms)
-  var els=[].slice.call(d.querySelectorAll('.reveal')),vh=innerHeight;
-  var vis=els.filter(function(el){return el.getBoundingClientRect().top<vh});
-  d.documentElement.classList.add('js');
+  // js 클래스는 IntersectionObserver 첫 콜백(첫 그리기 뒤)에서 붙인다. 여기서 붙이거나 위치를 재면 첫 레이아웃을 스크립트 안에서 강제하게 된다
+  var els=[].slice.call(d.querySelectorAll('.reveal'));
   function ld(e){if(e.target.tagName==='IMG')e.target.classList.add('ld')}
   d.addEventListener('load',ld,true);d.addEventListener('error',ld,true);
   d.querySelectorAll('img[loading=lazy]').forEach(function(i){if(i.complete)i.classList.add('ld')});
@@ -87,12 +85,11 @@ const INLINE_SCRIPT = raw(`
   // 스크롤이 시작되면 로고가 든 상단이 반으로 줄고 맨 위로 오면 돌아온다. 동작 줄이기 설정과 무관하게 돈다 (아래 return 앞)
   var mh=d.querySelector('.masthead');
   function compact(){mh.classList.toggle('is-compact',scrollY>0)}
-  addEventListener('scroll',compact,{passive:true});compact();
-  if(reduce||!('IntersectionObserver' in window)){d.documentElement.classList.add('no-reveal');return}
-  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{rootMargin:'0px 0px -8% 0px',threshold:0.08});
-  // 처음부터 화면에 있는 것은 애니메이션 없이 바로 보인다. 첫 화면이 0.7초 뒤에 나타나면 LCP 와 Speed Index 가 그만큼 밀린다
-  vis.forEach(function(el){el.style.transition='none';el.classList.add('in')});
-  els.forEach(function(el){if(vis.indexOf(el)<0)io.observe(el)});
+  addEventListener('scroll',compact,{passive:true});addEventListener('load',compact);
+  if(reduce||!('IntersectionObserver' in window)){d.documentElement.classList.add('js');d.documentElement.classList.add('no-reveal');return}
+  // 첫 콜백은 첫 그리기 뒤에 온다. 그때 화면에 있는 것은 in 을 먼저 붙이고 js 를 붙이므로 처음부터 보이는 요소는 한 번도 안 숨는다. 화면 밖 요소만 숨었다가 스크롤해 오면 나타난다
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}});d.documentElement.classList.add('js')},{rootMargin:'0px 0px -8% 0px',threshold:0.08});
+  els.forEach(function(el){io.observe(el)});
   var bar=d.querySelector('.progress');
   if(bar){var t;addEventListener('scroll',function(){if(t)return;t=requestAnimationFrame(function(){t=0;var h=d.documentElement;var p=h.scrollTop/(h.scrollHeight-h.clientHeight);bar.style.transform='scaleX('+Math.min(1,Math.max(0,p))+')'})},{passive:true})}
 })();
