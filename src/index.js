@@ -121,8 +121,6 @@ function isAllowedImageHost(host) {
   return IMAGE_HOSTS.includes(host) || IMAGE_HOST_SUFFIXES.some((s) => host.endsWith(s));
 }
 
-/** 쿠팡 썸네일 CDN 이 직접 지원하는 크기. 워커 이미지 변환이 꺼져 있어도 이 크기로는 줄여 받는다. */
-const CDN_SIZES = [230, 320, 492];
 let cssLoaded = false;
 
 async function proxyImage(token, nobg, w) {
@@ -136,15 +134,14 @@ async function proxyImage(token, nobg, w) {
     return new Response('Invalid image host', { status: 400 });
   }
   const width = [96, 120, 192, 200, 230, 240, 300, 400, 440, 600].includes(w) ? w : 600;
-  const image = { width, quality: 78, format: 'webp' };
+  const image = { width, quality: 80, format: 'webp' };
   if (nobg) image.segment = 'foreground';
-  const cdn = CDN_SIZES.find((n) => n >= width);
-  const small = cdn && !nobg ? target.toString().replace(/\/remote\/492x492ex\//, `/remote/${cdn}x${cdn}ex/`) : target.toString();
   try {
-    const opts = { headers: { 'user-agent': 'Mozilla/5.0 (compatible; usbkrBot/2.0)' }, cf: { cacheTtl: 604800, cacheEverything: true, image } };
-    let res = await fetch(small, opts);
-    if (!res.ok && small !== target.toString()) res = await fetch(target.toString(), opts);
-    if (!res.ok) return new Response('Image fetch failed', { status: 502 });
+    // 쿠팡 이미지 서버가 간헐적으로 실패한다. 실패는 캐시하지 않고 한 번 더 시도한다 (성공만 7일 캐시)
+    const opts = { headers: { 'user-agent': 'Mozilla/5.0 (compatible; usbkrBot/2.0)' }, cf: { cacheTtlByStatus: { '200-299': 604800, '300-599': 0 }, cacheEverything: true, image } };
+    let res = await fetch(target.toString(), opts);
+    if (!res.ok) res = await fetch(target.toString(), opts);
+    if (!res.ok) return new Response(`Image fetch failed (${res.status})`, { status: 502, headers: { 'cache-control': 'no-store' } });
     const type = res.headers.get('content-type') ?? '';
     if (type && !type.startsWith('image/')) return new Response('Not an image', { status: 400 });
     const len = Number(res.headers.get('content-length') ?? 0);
