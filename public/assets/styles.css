@@ -2660,6 +2660,7 @@ h3 {
     grid-column: 1 / -1;
     justify-content: center;
   }
+}
 /* 핫딜 */
 .deals {
   list-style: none;
@@ -2892,3 +2893,32 @@ h3 {
   font-size: 15px;
   line-height: 1.5;
 }
+
+/* ── 홈 특가 레일 ─────────────────────────── */
+
+.hotdeals {
+  margin-bottom: 56px;
+}
+.deals--rail {
+  grid-template-columns: none;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(180px, 1fr);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 8px;
+  scrollbar-width: thin;
+}
+.deals--rail .deal {
+  scroll-snap-align: start;
+}
+@media (max-width: 640px) {
+  .hotdeals {
+    margin-bottom: 40px;
+  }
+  .deals--rail {
+    grid-auto-columns: 78%;
+    margin-inline: -18px;
+    padding-inline: 18px;
+  }
+}
+
