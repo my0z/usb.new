@@ -5,7 +5,7 @@ import { postUrl, won } from './components.js';
 const SITE_NAME = 'USB.KR';
 const SITE_TAGLINE = '전자기기 스펙과 가격을 비교한다';
 /** 스타일 변경 시 올려서 브라우저 캐시를 무효화한다. */
-export const ASSET_VERSION = '20260920m';
+export const ASSET_VERSION = '20260920n';
 
 /** GA4 측정 ID (G-XXXX) 와 Cloudflare Web Analytics 토큰. 요청마다 index.js 가 env 에서 넣는다. 비어 있으면 태그를 안 넣는다. */
 export let GA_ID = '';
@@ -90,8 +90,8 @@ const INLINE_SCRIPT = raw(`
   var bar=d.querySelector('.progress');
   if(bar){var t;addEventListener('scroll',function(){if(t)return;t=requestAnimationFrame(function(){t=0;var h=d.documentElement;var p=h.scrollTop/(h.scrollHeight-h.clientHeight);bar.style.transform='scaleX('+Math.min(1,Math.max(0,p))+')'})},{passive:true})}
   var mh=d.querySelector('.masthead');
-  var brand=d.querySelector('.brand');
-  addEventListener('scroll',function(){var p=Math.min(1,scrollY/160);mh.classList.toggle('is-compact',scrollY>80);brand.style.setProperty('--brand-s',1-0.7*p)},{passive:true});
+  // 스크롤이 시작되면 로고가 든 상단이 반으로 줄고 맨 위로 오면 돌아온다
+  addEventListener('scroll',function(){mh.classList.toggle('is-compact',scrollY>0)},{passive:true});
 })();
 `);
 

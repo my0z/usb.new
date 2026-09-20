@@ -228,7 +228,7 @@ h3 {
   transition: padding 0.3s var(--ease);
 }
 .masthead.is-compact .masthead__bar {
-  padding-block: 10px 6px;
+  padding-block: 9px 6px;
 }
 
 .brand {
@@ -238,9 +238,12 @@ h3 {
   letter-spacing: -0.05em;
   line-height: 1;
   font-variation-settings: 'opsz' 144;
-  transform: scale(var(--brand-s, 1));
   transform-origin: left center;
-  transition: transform 0.15s linear;
+  transition: transform 0.25s var(--ease);
+}
+/* 스크롤이 시작되면 로고 부분이 50% 로 준다 (is-compact 는 스크립트가 scrollY > 0 에서 붙인다) */
+.masthead.is-compact .brand {
+  transform: scale(0.5);
 }
 .brand__dot {
   color: var(--accent);

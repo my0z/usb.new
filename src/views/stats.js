@@ -126,7 +126,23 @@ function bars(rows, { alt = false, unit = '' } = {}) {
 const panel = (title, body, { note = '', wide = false, sub = '' } = {}) =>
   html`<section class="panel ${wide ? 'panel--wide' : ''}"><h2 class="panel__h">${title}${sub ? html`<small>${sub}</small>` : ''}</h2>${note ? html`<p class="panel__note">${note}</p>` : ''}${body}</section>`;
 
-export function statsPage({ canonical, summaries, visits = null, ga = null, gsc = null, runs = [], clicks = null, queue = [], extraKeywords = [], msg = '', siteUrl = '', psiKey = '' }) {
+/** Vidu 오프피크 창("HH:MM-HH:MM" · UTC+8)을 지금 시각과 견줘 진행 중인지와 남은 시간을 낸다. 페이지를 열 때마다 새로 센다. */
+function viduTile(win) {
+  const m = /^(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})$/.exec(String(win).trim());
+  if (!m) return '';
+  const start = +m[1] * 60 + +m[2];
+  const end = +m[3] * 60 + +m[4];
+  const now = (Math.floor(Date.now() / 60000) + 8 * 60) % 1440; // UTC+8 분
+  const len = (end - start + 1440) % 1440 || 1440;
+  const since = (now - start + 1440) % 1440;
+  const on = since < len;
+  const left = on ? len - since : (start - now + 1440) % 1440;
+  const hm = (mins) => `${Math.floor(mins / 60)}시간 ${mins % 60}분`;
+  const kst = (mins) => { const t = (mins + 60) % 1440; return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`; };
+  return kpi(`Vidu 오프피크 · KST ${kst(start)}–${kst(end)}`, on ? '진행 중' : '대기', on ? `${hm(left)} 남음` : `${hm(left)} 뒤 시작`, on);
+}
+
+export function statsPage({ canonical, summaries, visits = null, ga = null, gsc = null, runs = [], clicks = null, queue = [], extraKeywords = [], msg = '', siteUrl = '', psiKey = '', viduOffpeak = '' }) {
   const byCat = new Map();
   const byDay = new Map();
   let products = 0;
@@ -166,6 +182,7 @@ export function statsPage({ canonical, summaries, visits = null, ga = null, gsc 
     </header>
 
     <div class="adm__kpis">
+      ${viduTile(viduOffpeak)}
       ${gaOk ? kpi('지금 접속 (GA 30분)', num(ga.realtime), '명', true) : ''}
       ${visits ? kpi('오늘 방문', num(visits.today), `재 ${num(visits.todayR)}`) : ''}
       ${visits ? kpi('7일 방문', num(visits.week), `재 ${num(visits.weekR)}`) : ''}

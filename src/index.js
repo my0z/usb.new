@@ -350,7 +350,7 @@ async function route(url, env, request, ctx) {
       store.genQueue(),
       store.keywords(30),
     ]);
-    const res = page(statsPage({ canonical, summaries, visits, ga, gsc, runs, clicks, queue, extraKeywords, msg: url.searchParams.get('msg') ?? '', siteUrl: env?.SITE_URL || url.origin, psiKey: env?.PSI_KEY ?? '' }), { cache: 'no-store', noindex: true });
+    const res = page(statsPage({ canonical, summaries, visits, ga, gsc, runs, clicks, queue, extraKeywords, msg: url.searchParams.get('msg') ?? '', siteUrl: env?.SITE_URL || url.origin, psiKey: env?.PSI_KEY ?? '', viduOffpeak: env?.VIDU_OFFPEAK ?? '' }), { cache: 'no-store', noindex: true });
     if (key) res.headers.set('set-cookie', `adm=${key}; Path=/0; Max-Age=31536000; HttpOnly; Secure; SameSite=Lax`);
     return res;
   }
