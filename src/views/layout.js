@@ -5,7 +5,7 @@ import { postUrl, won } from './components.js';
 const SITE_NAME = 'USB.KR';
 const SITE_TAGLINE = '전자기기 스펙과 가격을 비교한다';
 /** 스타일 변경 시 올려서 브라우저 캐시를 무효화한다. */
-export const ASSET_VERSION = '20260920a';
+export const ASSET_VERSION = '20260920b';
 
 /** GA4 측정 ID (G-XXXX) 와 Cloudflare Web Analytics 토큰. 요청마다 index.js 가 env 에서 넣는다. 비어 있으면 태그를 안 넣는다. */
 export let GA_ID = '';
@@ -50,9 +50,17 @@ function ticker(items) {
   </div>`;
 }
 
+/** 폰트 CSS 는 JS 로 붙인다. <link> 로 두면 Cloudflare Fonts 가 인라인 @font-face 로 바꿔 첫 그리기를 폰트 뒤로 미룬다 (모바일 FCP 4.8초).
+ *  Noto Serif KR 은 500 · 700 만 받는다 (900 요청은 700 으로 그려진다). Fraunces 이탤릭은 로고 두 글자에 82KB 라 뺀다. */
+const FONT_CSS = [
+  'https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700&family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&display=swap',
+  'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css',
+];
+
 const INLINE_SCRIPT = raw(`
 (function(){
   var d=document;
+  ${JSON.stringify(FONT_CSS)}.forEach(function(h){var l=d.createElement('link');l.rel='stylesheet';l.href=h;d.head.appendChild(l)});
   var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
   d.documentElement.classList.add('js');
   function ld(e){if(e.target.tagName==='IMG')e.target.classList.add('ld')}
@@ -104,18 +112,6 @@ export function layout({ title, description, canonical, active, body, heroSlot =
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700;900&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;0,9..144,900;1,9..144,500&display=swap"
-      media="print"
-      onload="this.media='all'"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
-      media="print"
-      onload="this.media='all'"
-    />
     ${INLINE_CSS ? html`<style>${raw(INLINE_CSS)}</style>` : html`<link rel="stylesheet" href="/assets/styles.css?v=${ASSET_VERSION}" />`}
     ${preload ? html`<link rel="preload" as="image" href="${preload}" fetchpriority="high" />` : ''}
     ${jsonLd ? html`<script type="application/ld+json">${raw(JSON.stringify(Array.isArray(jsonLd) ? { '@context': 'https://schema.org', '@graph': jsonLd } : jsonLd))}</script>` : ''}
