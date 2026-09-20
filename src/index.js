@@ -142,6 +142,7 @@ async function proxyImage(token, nobg, w) {
     const headers = { 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36', accept: 'image/avif,image/webp,image/*,*/*;q=0.8' };
     const cache = { cacheTtlByStatus: { '200-299': 604800, '300-599': 0 }, cacheEverything: true };
     let res = await fetch(target.toString(), { headers, cf: { ...cache, image } });
+    const firstErr = res.ok ? '' : `${res.status} ${res.headers.get('cf-resized') ?? ''}`;
     if (!res.ok) res = await fetch(target.toString(), { headers, cf: { ...cache, image } });
     if (!res.ok) res = await fetch(target.toString(), { headers, cf: cache });
     if (!res.ok) return new Response(`Image fetch failed (${res.status} ${res.headers.get('cf-resized') ?? ''})`, { status: 502, headers: { 'cache-control': 'no-store' } });
@@ -150,7 +151,7 @@ async function proxyImage(token, nobg, w) {
     const len = Number(res.headers.get('content-length') ?? 0);
     if (len > MAX_IMAGE_BYTES) return new Response('Image too large', { status: 413 });
     return new Response(res.body, {
-      headers: { 'content-type': type || 'image/webp', 'cache-control': 'public, max-age=604800, immutable', 'cf-resized': res.headers.get('cf-resized') ?? 'none' },
+      headers: { 'content-type': type || 'image/webp', 'cache-control': 'public, max-age=604800, immutable', 'cf-resized': res.headers.get('cf-resized') ?? 'none', ...(firstErr ? { 'x-img-err': firstErr } : {}) },
     });
   } catch (e) {
     return new Response(`Image proxy error: ${e.message}`, { status: 502 });
