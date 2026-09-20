@@ -57,6 +57,27 @@ curl -X POST http://localhost:3000/upload \
 
 `videoUrl` 필드로 로컬 파일 대신 공개 URL을 넘길 수도 있습니다. `.env`에 `API_KEY`를 설정하면 `x-api-key` 헤더가 일치할 때만 요청을 받아들입니다. VM처럼 외부에 열린 서버는 반드시 설정하세요.
 
+## 영상 생성 (Vidu 오프피크)
+
+캐릭터 레퍼런스 이미지로 영상을 생성한 뒤 완료되면 자동으로 6개 채널에 업로드합니다. `off_peak` 모드로 제출해서 크레딧을 절반만 씁니다. 대신 결과가 나올 때까지 최대 48시간 걸릴 수 있어서 비동기로 처리합니다.
+
+```bash
+curl -X POST http://localhost:3000/generate \
+  -H "x-api-key: $API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "referenceImageUrls": ["https://example.com/char1.jpg", "https://example.com/char2.jpg"],
+    "prompt": "캐릭터가 카페에서 커피를 마시는 장면",
+    "title": "영상 제목",
+    "caption": "게시글 본문",
+    "hashtags": "shorts,daily"
+  }'
+```
+
+응답으로 받은 `taskId`는 `GET /jobs`로 상태를 확인할 수 있습니다. 서버가 15분(`VIDU_POLL_INTERVAL_MINUTES`)마다 비두 작업 상태를 확인하다가 완료되면 자동으로 6개 채널에 업로드합니다. 작업 목록은 `VIDU_JOBS_FILE`(기본 `./data/vidu-jobs.json`)에 저장되므로 서버가 재시작돼도 유지됩니다.
+
+비두 API의 정확한 요청 스키마(필드명 등)는 서드파티 문서를 참고해 구성했습니다. 실사용 전 소량 요청으로 한 번 검증하세요.
+
 ## 구조
 
 - `src/platforms/*.ts` - 플랫폼별 업로드 구현
@@ -64,6 +85,9 @@ curl -X POST http://localhost:3000/upload \
 - `src/config.ts` - 환경변수 로딩
 - `src/index.ts` - CLI 진입점
 - `src/server.ts` - 서버 모드 진입점 (`npm start`)
+- `src/videogen/vidu.ts` - 비두 API 클라이언트 (오프피크 제출, 상태 조회)
+- `src/videogen/store.ts` - 생성 작업 상태를 파일에 저장
+- `src/videogen/poller.ts` - 주기적으로 작업 상태를 확인하고 완료되면 자동 업로드
 
 ## 오라클 VM 자동 배포
 

@@ -43,4 +43,13 @@ export const config = {
     appPassword: env("BLUESKY_APP_PASSWORD"),
     serviceUrl: env("BLUESKY_SERVICE_URL") ?? "https://bsky.social",
   },
+
+  vidu: {
+    apiKey: env("VIDU_API_KEY"),
+    model: env("VIDU_MODEL") ?? "viduq3-turbo",
+    resolution: env("VIDU_RESOLUTION") ?? "1280x720",
+    duration: Number(env("VIDU_DURATION") ?? "4"),
+    pollIntervalMinutes: Number(env("VIDU_POLL_INTERVAL_MINUTES") ?? "15"),
+    jobsFile: env("VIDU_JOBS_FILE") ?? "./data/vidu-jobs.json",
+  },
 };
