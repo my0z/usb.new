@@ -5,7 +5,7 @@ import { postUrl, won } from './components.js';
 const SITE_NAME = 'USB.KR';
 const SITE_TAGLINE = '전자기기 스펙과 가격을 비교한다';
 /** 스타일 변경 시 올려서 브라우저 캐시를 무효화한다. */
-export const ASSET_VERSION = '20260920r';
+export const ASSET_VERSION = '20260920s';
 
 /** GA4 측정 ID (G-XXXX) 와 Cloudflare Web Analytics 토큰. 요청마다 index.js 가 env 에서 넣는다. 비어 있으면 태그를 안 넣는다. */
 export let GA_ID = '';
@@ -70,6 +70,9 @@ const INLINE_SCRIPT = raw(`
       d.head.appendChild(s)}).catch(function(){});
   },10000);
   var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // 위치 측정은 DOM 을 바꾸기 전에 한다. js 클래스를 붙인 뒤에 재면 레이아웃을 강제로 다시 계산한다 (강제 리플로우 190ms)
+  var els=[].slice.call(d.querySelectorAll('.reveal')),vh=innerHeight;
+  var vis=els.filter(function(el){return el.getBoundingClientRect().top<vh});
   d.documentElement.classList.add('js');
   function ld(e){if(e.target.tagName==='IMG')e.target.classList.add('ld')}
   d.addEventListener('load',ld,true);d.addEventListener('error',ld,true);
@@ -88,8 +91,6 @@ const INLINE_SCRIPT = raw(`
   if(reduce||!('IntersectionObserver' in window)){d.documentElement.classList.add('no-reveal');return}
   var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{rootMargin:'0px 0px -8% 0px',threshold:0.08});
   // 처음부터 화면에 있는 것은 애니메이션 없이 바로 보인다. 첫 화면이 0.7초 뒤에 나타나면 LCP 와 Speed Index 가 그만큼 밀린다
-  var els=[].slice.call(d.querySelectorAll('.reveal')),vh=innerHeight;
-  var vis=els.filter(function(el){return el.getBoundingClientRect().top<vh});
   vis.forEach(function(el){el.style.transition='none';el.classList.add('in')});
   els.forEach(function(el){if(vis.indexOf(el)<0)io.observe(el)});
   var bar=d.querySelector('.progress');
