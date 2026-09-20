@@ -1,6 +1,6 @@
 import { html, raw, formatDate } from '../lib/html.js';
 import { layout } from './layout.js';
-import { cardGrid, imgProxy, metaLine, outUrl, productBlock, sectionHead, typeLabel, won, ICON_ROCKET, ICON_ARROW } from './components.js';
+import { cardGrid, imgProxy, imgSrc, metaLine, outUrl, productBlock, sectionHead, typeLabel, won, ICON_ROCKET, ICON_ARROW } from './components.js';
 import { categoryOfPost } from '../data/categories.js';
 import { paragraphs, excerpt } from '../data/store.js';
 import { bestUrl } from './best.js';
@@ -121,7 +121,7 @@ export function postPage(p, { canonical, related, views, best = null }) {
         <div class="verdict reveal">
           ${first
             ? html`<div class="verdict__product">
-                <img src="${cover}" alt="" loading="lazy" width="200" height="200" />
+                <img ${imgSrc(first.image, 200)} alt="" loading="lazy" width="200" height="200" />
                 <p class="verdict__pname">${first.name}</p>
                 <p class="verdict__pprice">${won(first.price)}</p>
                 ${first.isRocket ? html`<span class="ship ship--rocket">${ICON_ROCKET} 로켓배송</span>` : first.isFreeShipping ? html`<span class="ship">무료배송</span>` : ''}
@@ -190,7 +190,7 @@ export function postPage(p, { canonical, related, views, best = null }) {
               <div class="alts__grid">
                 ${p.alternatives.map(
                   (a) => html`<a class="alt" href="${outUrl(a, p.slug)}" target="_blank" rel="nofollow sponsored noopener">
-                    <img src="${imgProxy(a.image)}" alt="${a.name}" loading="lazy" width="200" height="200" />
+                    <img ${imgSrc(a.image, 200)} alt="${a.name}" loading="lazy" width="200" height="200" />
                     <span class="alt__name">${a.name}</span>
                     <span class="alt__price">${won(a.price)}</span>
                   </a>`,
@@ -222,7 +222,7 @@ export function postPage(p, { canonical, related, views, best = null }) {
           ? html`<aside class="final reveal" aria-labelledby="final-title">
               <p class="verdict__label" id="final-title">결론</p>
               <div class="final__row">
-                <img src="${cover}" alt="" loading="lazy" width="96" height="96" />
+                <img ${imgSrc(first.image, 96)} alt="" loading="lazy" width="96" height="96" />
                 <div class="final__body">
                   <b class="final__name">${first.name}</b>
                   <span class="final__price">${won(first.price)}${first.isRocket ? html`<span class="ship ship--rocket">${ICON_ROCKET} 로켓배송</span>` : first.isFreeShipping ? html`<span class="ship">무료배송</span>` : ''}</span>
@@ -244,7 +244,7 @@ export function postPage(p, { canonical, related, views, best = null }) {
     ${related.length ? html`<div class="shell">${sectionHead('→', '이어서 읽기', cat ? `${cat.name} 글 더 보기` : '관련 글')} ${cardGrid(related, { variant: 'compact' })}</div>` : ''}
     ${first
       ? html`<div class="stickycta">
-          <img src="${cover}" alt="" loading="lazy" width="44" height="44" />
+          <img ${imgSrc(first.image, 44)} alt="" loading="lazy" width="44" height="44" />
           <span class="stickycta__text"><b>${won(first.price)}</b><small>${first.name}</small></span>
           <a class="btn btn--primary btn--sm" href="${outUrl(first, p.slug)}" target="_blank" rel="nofollow sponsored noopener">최저가 보기 ${ICON_ARROW}</a>
         </div>`
@@ -259,6 +259,7 @@ export function postPage(p, { canonical, related, views, best = null }) {
     body,
     progress: true,
     ogImage: abs(cover),
+    preload: cover,
     article: { published: p.createdAt, section: cat?.name ?? p.keyword, keywords: [p.keyword, cat?.name, ...(p.products ?? []).slice(0, 3).map((x) => x.name.split(',')[0])].filter(Boolean).join(', ') },
     jsonLd: [
       {

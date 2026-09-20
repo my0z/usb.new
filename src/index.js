@@ -6,7 +6,7 @@ import { aboutPage, privacyPage } from './views/about.js';
 import { statsPage } from './views/stats.js';
 import { bestGroups, bestIndexPage, bestPage, bestUrl } from './views/best.js';
 import { dealsPage } from './views/deals.js';
-import { ASSET_VERSION, setTracking } from './views/layout.js';
+import { ASSET_VERSION, setTracking, setInlineCss } from './views/layout.js';
 import { gaReport, gscReport } from './lib/ga.js';
 import { coupangConfigured, deeplink, searchUrl, productCount } from './lib/coupang.js';
 import { categories, getCategory, categoryOfPost } from './data/categories.js';
@@ -24,7 +24,6 @@ const BOT_UA = /bot|crawl|spider|slurp|preview|fetch|scrape|headless|phantom|sel
 
 // Link 헤더는 Cloudflare Early Hints(103) 로 나가 HTML 이 도착하기 전에 CSS 와 폰트 연결을 시작한다
 const EARLY_HINTS = [
-  `</assets/styles.css?v=${ASSET_VERSION}>; rel=preload; as=style`,
   '<https://fonts.googleapis.com>; rel=preconnect',
   '<https://fonts.gstatic.com>; rel=preconnect; crossorigin',
   '<https://cdn.jsdelivr.net>; rel=preconnect; crossorigin',
@@ -122,7 +121,11 @@ function isAllowedImageHost(host) {
   return IMAGE_HOSTS.includes(host) || IMAGE_HOST_SUFFIXES.some((s) => host.endsWith(s));
 }
 
-async function proxyImage(token, nobg) {
+/** 쿠팡 썸네일 CDN 이 직접 지원하는 크기. 워커 이미지 변환이 꺼져 있어도 이 크기로는 줄여 받는다. */
+const CDN_SIZES = [230, 320, 492];
+let cssLoaded = false;
+
+async function proxyImage(token, nobg, w) {
   let target;
   try {
     target = new URL(decodeImgToken(token));
@@ -132,13 +135,15 @@ async function proxyImage(token, nobg) {
   if (target.protocol !== 'https:' || !isAllowedImageHost(target.hostname)) {
     return new Response('Invalid image host', { status: 400 });
   }
-  const image = { width: 600, quality: 78, format: 'webp' };
+  const width = [96, 120, 192, 200, 230, 240, 300, 400, 440, 600].includes(w) ? w : 600;
+  const image = { width, quality: 78, format: 'webp' };
   if (nobg) image.segment = 'foreground';
+  const cdn = CDN_SIZES.find((n) => n >= width);
+  const small = cdn && !nobg ? target.toString().replace(/\/remote\/492x492ex\//, `/remote/${cdn}x${cdn}ex/`) : target.toString();
   try {
-    const res = await fetch(target.toString(), {
-      headers: { 'user-agent': 'Mozilla/5.0 (compatible; usbkrBot/2.0)' },
-      cf: { cacheTtl: 604800, cacheEverything: true, image },
-    });
+    const opts = { headers: { 'user-agent': 'Mozilla/5.0 (compatible; usbkrBot/2.0)' }, cf: { cacheTtl: 604800, cacheEverything: true, image } };
+    let res = await fetch(small, opts);
+    if (!res.ok && small !== target.toString()) res = await fetch(target.toString(), opts);
     if (!res.ok) return new Response('Image fetch failed', { status: 502 });
     const type = res.headers.get('content-type') ?? '';
     if (type && !type.startsWith('image/')) return new Response('Not an image', { status: 400 });
@@ -408,7 +413,7 @@ async function route(url, env, request, ctx) {
     return Response.json({ ok: true, posts: all.length, source: env?.POSTS ? 'kv' : 'fixtures' }, { headers: { 'cache-control': 'no-store' } });
   }
 
-  if (path.startsWith('/img/')) return proxyImage(path.slice(5), url.searchParams.get('nobg') === '1');
+  if (path.startsWith('/img/')) return proxyImage(path.slice(5), url.searchParams.get('nobg') === '1', Number(url.searchParams.get('w')));
   if (path === '/out') return outbound(url, request, env, ctx);
 
   if (path.startsWith('/post/')) return redirect(`/${path.slice(6)}`);
@@ -439,6 +444,11 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     setTracking(env);
+    if (!cssLoaded && env?.ASSETS) {
+      cssLoaded = true; // 실패해도 다시 안 읽는다. 그때는 <link> 로 낸다
+      const css = await env.ASSETS.fetch(new Request(`${url.origin}/assets/styles.css`)).then((r) => (r.ok ? r.text() : '')).catch(() => '');
+      if (css) setInlineCss(css);
+    }
 
     // 정식 주소는 usb.kr 하나. 옛 n.usb.kr 링크와 www 는 같은 경로로 301 해 검색 신뢰를 한곳에 모은다
     if ((url.hostname === 'n.usb.kr' || url.hostname === 'www.usb.kr') && request.method !== 'POST') {
@@ -492,9 +502,10 @@ export default {
     }
 
     // 엣지 캐시: 공개 HTML 은 5분간 KV 를 건너뛴다 (응답의 s-maxage 를 따른다)
-    const cacheable = request.method === 'GET' && !url.search && !['/0', '/search', '/healthz'].includes(url.pathname) && typeof caches !== 'undefined';
-    // 캐시 키에 버전을 넣어 새 배포가 이전 캐시를 자동으로 버리게 한다
-    const cacheKey = cacheable ? new Request(`${url.origin}${url.pathname}?v=${ASSET_VERSION}`) : null;
+    const isImg = url.pathname.startsWith('/img/');
+    const cacheable = request.method === 'GET' && (!url.search || isImg) && !['/0', '/search', '/healthz'].includes(url.pathname) && typeof caches !== 'undefined';
+    // 캐시 키에 버전을 넣어 새 배포가 이전 캐시를 자동으로 버리게 한다. 이미지는 폭(w) 마다 따로 둔다
+    const cacheKey = cacheable ? new Request(`${url.origin}${url.pathname}?${isImg ? `${url.searchParams}&` : ''}v=${ASSET_VERSION}`) : null;
     if (cacheable) {
       const hit = await caches.default.match(cacheKey);
       if (hit) return hit;

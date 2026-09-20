@@ -1,6 +1,6 @@
 import { html } from '../lib/html.js';
 import { layout } from './layout.js';
-import { imgProxy, outUrl, won, ICON_ARROW, ICON_ROCKET } from './components.js';
+import { imgProxy, imgSrc, outUrl, won, ICON_ARROW, ICON_ROCKET } from './components.js';
 
 /** 쿠팡 골드박스 특가. generator/deals.js 가 매일 07:30 에 KV deals:latest 에 넣는다. 클릭은 /out 을 지나 deals 슬러그로 센다. */
 export function dealsPage({ canonical, deals }) {
@@ -22,7 +22,7 @@ export function dealsPage({ canonical, deals }) {
           ${items.map(
             (p, i) => html`<li class="deal reveal" style="--i:${i}">
               <a class="deal__media" href="${outUrl(p, 'deals')}" target="_blank" rel="nofollow sponsored noopener">
-                <img src="${imgProxy(p.image)}" alt="${p.name}" loading="lazy" decoding="async" width="300" height="300" />
+                <img ${imgSrc(p.image, 300)} alt="${p.name}" loading="lazy" decoding="async" width="300" height="300" />
                 ${p.discountRate ? html`<span class="deal__off">${p.discountRate}%</span>` : p.gold ? html`<span class="deal__off deal__off--gold">골드박스</span>` : ''}
               </a>
               <div class="deal__body">

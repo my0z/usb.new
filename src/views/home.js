@@ -1,6 +1,6 @@
 import { html } from '../lib/html.js';
 import { layout } from './layout.js';
-import { cardGrid, imgProxy, metaLine, postUrl, priceBadge, sectionHead, won, ICON_ARROW, ICON_ROCKET } from './components.js';
+import { cardGrid, imgProxy, imgSrc, metaLine, postUrl, priceBadge, sectionHead, won, ICON_ARROW, ICON_ROCKET } from './components.js';
 import { categories, categoryOfPost } from '../data/categories.js';
 import { excerpt } from '../data/store.js';
 
@@ -56,7 +56,7 @@ function popularRail(list) {
         (p, i) => html`<li class="popular__item">
           <a href="${postUrl(p)}">
             <span class="popular__rank">${String(i + 1).padStart(2, '0')}</span>
-            <span class="popular__thumb"><img src="${p.products?.[0]?.image ? imgProxy(p.products[0].image) : HERO_FALLBACK}" alt="" loading="lazy" width="120" height="120" /></span>
+            <span class="popular__thumb"><img ${imgSrc(p.products?.[0]?.image || HERO_FALLBACK, 120)} alt="" loading="lazy" width="120" height="120" /></span>
             <span class="popular__text">
               <b>${p.title}</b>
               <small>${p.keyword} · 조회 ${Number(p.views).toLocaleString('ko-KR')}</small>
@@ -109,6 +109,7 @@ export function homePage({ canonical, summaries, popular }) {
     canonical,
     active: 'home',
     heroSlot: featured ? hero(featured) : null,
+    preload: featured?.products?.[0]?.image ? imgProxy(featured.products[0].image) : null,
     tickerItems: summaries.slice(0, 8),
     body,
     jsonLd: [

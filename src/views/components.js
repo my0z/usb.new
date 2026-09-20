@@ -6,11 +6,19 @@ export const ICON_ARROW = raw('<svg width="14" height="14" viewBox="0 0 24 24" f
 export const ICON_ROCKET = raw('<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2c3.5 2 5.5 6 5.5 10l-2.5 2.5-1.5 4-2-2h-3l-2 2-1.5-4L4.5 12C4.5 8 6.5 4 12 2zm0 6a2 2 0 100 4 2 2 0 000-4z"/></svg>');
 
 /** 쿠팡 CDN 이미지를 워커 프록시 경로로 바꾼다. */
-export function imgProxy(url, { nobg = false } = {}) {
+export function imgProxy(url, { nobg = false, w = 0 } = {}) {
   if (!url) return '';
   if (url.startsWith('/')) return url;
   const b64 = btoa(unescape(encodeURIComponent(url))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-  return `/img/${b64}${nobg ? '?nobg=1' : ''}`;
+  const q = [nobg && 'nobg=1', w && `w=${w}`].filter(Boolean).join('&');
+  return `/img/${b64}${q ? `?${q}` : ''}`;
+}
+
+/** 표시 폭에 맞춘 src 와 2배 srcset. 워커 프록시가 폭대로 줄여 보내므로 작은 썸네일에 600px 을 안 보낸다. */
+export function imgSrc(url, w) {
+  const src = imgProxy(url, { w });
+  if (src.startsWith('/assets/')) return raw(`src="${src}"`);
+  return raw(`src="${src}" srcset="${src} 1x, ${imgProxy(url, { w: w * 2 })} 2x"`);
 }
 
 export function outUrl(product, slug) {
@@ -57,7 +65,7 @@ export function postCard(p, { variant = 'default', index = null, eager = false }
   return html`<article class="card card--${variant} reveal" ${index !== null ? html`style="--i:${index}"` : ''}>
     <a class="card__link" href="${postUrl(p)}">
       <div class="card__media card__media--product">
-        <img src="${cover}" alt="" ${eager ? html`fetchpriority="high"` : html`loading="lazy"`} decoding="async" width="600" height="600" />
+        <img ${imgSrc(cover, variant === 'compact' ? 300 : 600)} alt="" ${eager ? html`fetchpriority="high"` : html`loading="lazy"`} decoding="async" width="600" height="600" />
         <span class="card__cat">${p.keyword}</span>
         ${first ? priceBadge(first) : ''}
         ${index !== null ? html`<span class="card__num">${String(index + 1).padStart(2, '0')}</span>` : ''}
@@ -94,7 +102,7 @@ export function productBlock(product, slug, { rank = null, top = false } = {}) {
   const drop = product.previousPrice && Number(product.previousPrice) > Number(product.price);
   return html`<div class="pbox ${top ? 'pbox--top' : ''}">
     <a class="pbox__media" href="${outUrl(product, slug)}" target="_blank" rel="nofollow sponsored noopener">
-      <img src="${imgProxy(product.image)}" alt="${product.altText || product.name}" loading="lazy" decoding="async" width="440" height="440" />
+      <img ${imgSrc(product.image, 440)} alt="${product.altText || product.name}" loading="lazy" decoding="async" width="440" height="440" />
       ${top ? html`<span class="pbox__badge">추천 1위</span>` : rank !== null ? html`<span class="pbox__rank">${String(rank).padStart(2, '0')}</span>` : ''}
     </a>
     <div class="pbox__body">
