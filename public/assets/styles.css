@@ -84,20 +84,9 @@ img {
   display: block;
 }
 
-/* 느린 이미지 자리에 반짝이는 자리표시. 로드되면 스크립트가 ld 를 붙여 걷는다 */
+/* 느린 이미지 자리의 자리표시. 로드되면 스크립트가 ld 를 붙여 걷는다. 배경 위치 애니메이션은 이미지마다 매 프레임 다시 칠해 모바일 메인 스레드를 먹어 뺐다 */
 .js img[loading='lazy']:not(.ld) {
-  background: linear-gradient(100deg, var(--paper-3) 40%, var(--paper-2) 50%, var(--paper-3) 60%) 0 0 / 300% 100%;
-  animation: shimmer 1.4s linear infinite;
-}
-@keyframes shimmer {
-  to {
-    background-position: -300% 0;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .js img[loading='lazy']:not(.ld) {
-    animation: none;
-  }
+  background: linear-gradient(100deg, var(--paper-3) 40%, var(--paper-2) 50%, var(--paper-3) 60%);
 }
 
 a {
@@ -434,12 +423,21 @@ h3 {
   height: 8px;
   border-radius: 50%;
   background: var(--accent-2);
-  box-shadow: 0 0 0 6px rgba(255, 106, 61, 0.22);
+  position: relative;
+}
+/* 펄스는 transform · opacity 만 움직여 컴포지터에서 돈다 (box-shadow 애니메이션은 매 프레임 다시 칠한다) */
+.hero__eyebrow .dot::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: rgba(255, 106, 61, 0.22);
   animation: pulse 2.4s ease-in-out infinite;
 }
 @keyframes pulse {
   50% {
-    box-shadow: 0 0 0 10px rgba(255, 106, 61, 0);
+    transform: scale(1.5);
+    opacity: 0;
   }
 }
 
