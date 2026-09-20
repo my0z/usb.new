@@ -5,7 +5,7 @@ import { postUrl, won } from './components.js';
 const SITE_NAME = 'USB.KR';
 const SITE_TAGLINE = '전자기기 스펙과 가격을 비교한다';
 /** 스타일 변경 시 올려서 브라우저 캐시를 무효화한다. */
-export const ASSET_VERSION = '20260920j';
+export const ASSET_VERSION = '20260920k';
 
 /** GA4 측정 ID (G-XXXX) 와 Cloudflare Web Analytics 토큰. 요청마다 index.js 가 env 에서 넣는다. 비어 있으면 태그를 안 넣는다. */
 export let GA_ID = '';
@@ -61,12 +61,13 @@ const FONT_PRETENDARD = 'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3
 const INLINE_SCRIPT = raw(`
 (function(){
   var d=document;
-  addEventListener('load',function(){setTimeout(function(){
-    var l=d.createElement('link');l.rel='stylesheet';l.href='${FONT_GOOGLE}';d.head.appendChild(l);
+  // load 0.4초 뒤 · 한 프레임이 그려진 다음에 붙인다. media=print 로 넣고 도착하면 바꿔 그리기를 절대 막지 않는다
+  addEventListener('load',function(){setTimeout(function(){requestAnimationFrame(function(){requestAnimationFrame(function(){
+    var l=d.createElement('link');l.rel='stylesheet';l.media='print';l.onload=function(){l.media='all'};l.href='${FONT_GOOGLE}';d.head.appendChild(l);
     fetch('${FONT_PRETENDARD}').then(function(r){return r.text()}).then(function(c){var s=d.createElement('style');
       s.textContent=c.replace(/url\\((['"]?)(?!https?:|data:|\\/\\/)([^)'"]+)/g,function(m,q,u){return 'url('+q+new URL(u,'${FONT_PRETENDARD}').href}).replace(/}/g,';font-display:optional}');
       d.head.appendChild(s)}).catch(function(){});
-  },400)});
+  })})},400)});
   var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
   d.documentElement.classList.add('js');
   function ld(e){if(e.target.tagName==='IMG')e.target.classList.add('ld')}
