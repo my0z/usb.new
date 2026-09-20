@@ -14,11 +14,18 @@ export function imgProxy(url, { nobg = false, w = 0 } = {}) {
   return `/img/${b64}${q ? `?${q}` : ''}`;
 }
 
+function decodeImg(path) {
+  let b64 = path.slice(5).split('?')[0].replace(/-/g, '+').replace(/_/g, '/');
+  while (b64.length % 4) b64 += '=';
+  return decodeURIComponent(escape(atob(b64)));
+}
+
 /** 표시 폭에 맞춘 src 와 2배 srcset. 워커 프록시가 폭대로 줄여 보내므로 작은 썸네일에 600px 을 안 보낸다. */
 export function imgSrc(url, w) {
+  if (String(url).startsWith('/img/')) url = decodeImg(url); // 이미 프록시 경로면 원본으로 되돌려 폭을 붙인다
   const src = imgProxy(url, { w });
   if (src.startsWith('/assets/')) return raw(`src="${src}"`);
-  return raw(`src="${src}" srcset="${src} 1x, ${imgProxy(url, { w: w * 2 })} 2x"`);
+  return raw(`src="${src}" srcset="${src} 1x, ${imgProxy(url, { w: Math.min(w * 2, 600) })} 2x"`);
 }
 
 export function outUrl(product, slug) {
@@ -65,7 +72,7 @@ export function postCard(p, { variant = 'default', index = null, eager = false }
   return html`<article class="card card--${variant} reveal" ${index !== null ? html`style="--i:${index}"` : ''}>
     <a class="card__link" href="${postUrl(p)}">
       <div class="card__media card__media--product">
-        <img ${imgSrc(cover, variant === 'compact' ? 300 : variant === 'lead' || eager ? 600 : 320)} alt="" ${eager ? html`fetchpriority="high"` : html`loading="lazy"`} decoding="async" width="600" height="600" />
+        <img ${imgSrc(first?.image || '/assets/hero-default.svg', variant === 'compact' ? 300 : variant === 'lead' || eager ? 600 : 320)} alt="" ${eager ? html`fetchpriority="high"` : html`loading="lazy"`} decoding="async" width="600" height="600" />
         <span class="card__cat">${p.keyword}</span>
         ${first ? priceBadge(first) : ''}
         ${index !== null ? html`<span class="card__num">${String(index + 1).padStart(2, '0')}</span>` : ''}

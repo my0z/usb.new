@@ -29,7 +29,7 @@ function hero(p) {
         </div>
       </div>
       <a class="hero__figure hero__figure--product" href="${postUrl(p)}">
-        <img src="${cover}" alt="${first?.altText || first?.name || p.title}" width="600" height="600" fetchpriority="high" />
+        <img ${imgSrc(first?.image || HERO_FALLBACK, 320)} alt="${first?.altText || first?.name || p.title}" width="600" height="600" fetchpriority="high" />
         ${first ? html`<span class="hero__pricecard">
           <small>${first.isRocket ? html`${ICON_ROCKET} 로켓배송` : '쿠팡 최저가'}</small>
           <b>${won(first.price)}</b>
@@ -135,7 +135,7 @@ export function homePage({ canonical, summaries, popular, deals = null }) {
     canonical,
     active: 'home',
     heroSlot: featured ? hero(featured) : null,
-    preload: featured?.products?.[0]?.image ? imgProxy(featured.products[0].image) : null,
+    preload: featured?.products?.[0]?.image ? imgSrc(featured.products[0].image, 320) : null,
     tickerItems: summaries.slice(0, 8),
     body,
     jsonLd: [
