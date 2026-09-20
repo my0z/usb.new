@@ -133,7 +133,7 @@ async function proxyImage(token, nobg, w) {
   if (target.protocol !== 'https:' || !isAllowedImageHost(target.hostname)) {
     return new Response('Invalid image host', { status: 400 });
   }
-  const width = [96, 120, 192, 200, 230, 240, 300, 400, 440, 600].includes(w) ? w : 600;
+  const width = [96, 120, 192, 200, 230, 240, 300, 320, 400, 440, 600].includes(w) ? w : 600;
   const image = { width, quality: 80, format: 'webp' };
   if (nobg) image.segment = 'foreground';
   try {
@@ -151,7 +151,7 @@ async function proxyImage(token, nobg, w) {
     const len = Number(res.headers.get('content-length') ?? 0);
     if (len > MAX_IMAGE_BYTES) return new Response('Image too large', { status: 413 });
     return new Response(res.body, {
-      headers: { 'content-type': type || 'image/webp', 'cache-control': 'public, max-age=604800, immutable', 'cf-resized': res.headers.get('cf-resized') ?? 'none', ...(firstErr ? { 'x-img-err': firstErr } : {}) },
+      headers: { 'content-type': type || 'image/webp', 'cache-control': 'public, max-age=31536000, immutable', 'cf-resized': res.headers.get('cf-resized') ?? 'none', ...(firstErr ? { 'x-img-err': firstErr } : {}) },
     });
   } catch (e) {
     return new Response(`Image proxy error: ${e.message}`, { status: 502 });

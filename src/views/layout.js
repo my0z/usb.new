@@ -5,7 +5,7 @@ import { postUrl, won } from './components.js';
 const SITE_NAME = 'USB.KR';
 const SITE_TAGLINE = '전자기기 스펙과 가격을 비교한다';
 /** 스타일 변경 시 올려서 브라우저 캐시를 무효화한다. */
-export const ASSET_VERSION = '20260920n';
+export const ASSET_VERSION = '20260920o';
 
 /** GA4 측정 ID (G-XXXX) 와 Cloudflare Web Analytics 토큰. 요청마다 index.js 가 env 에서 넣는다. 비어 있으면 태그를 안 넣는다. */
 export let GA_ID = '';
@@ -52,7 +52,7 @@ function ticker(items) {
 
 /** 폰트 CSS 는 JS 로 붙인다. <link> 로 두면 Cloudflare Fonts 가 인라인 @font-face 로 바꿔 첫 그리기를 폰트 뒤로 미룬다 (모바일 FCP 4.8초).
  *  Noto Serif KR 은 500 · 700 만 받는다 (900 요청은 700 으로 그려진다). Fraunces 이탤릭은 로고 두 글자에 82KB 라 뺀다.
- *  load 2.5초 뒤에 붙인다 (측정기는 LCP 이전에 시작된 요청을 전부 LCP 계산에 넣는다): 27개 900KB 가 히어로 이미지와 대역폭을 나누면 느린 망의 LCP 가 7초대로 계산된다.
+ *  첫 조작 또는 6초 뒤에 붙인다 (측정기는 LCP 이전에 시작된 요청을 전부 LCP 계산에 넣는다): 27개 900KB 가 히어로 이미지와 대역폭을 나누면 느린 망의 LCP 가 7초대로 계산된다.
  *  display=optional: 한글 세리프 14조각 600KB 가 느린 망에서 5초 뒤 도착하면 제목이 다시 그려져 LCP 가 7초대로 잡힌다. 첫 방문은 기본 글꼴로 그리고 캐시된 다음 방문부터 웹폰트를 쓴다. */
 const FONT_GOOGLE = 'https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700&family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&display=optional';
 // 프리텐다드 CSS 는 font-display:swap 이 박혀 있어 글자가 뒤늦게 바뀌면 Speed Index 가 나빠진다. 받아서 optional 로 고쳐 넣는다.
@@ -61,13 +61,14 @@ const FONT_PRETENDARD = 'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3
 const INLINE_SCRIPT = raw(`
 (function(){
   var d=document;
-  // load 2.5초 뒤 · 한 프레임이 그려진 다음에 붙인다 (optional 이라 첫 방문엔 어차피 안 보이고 캐시만 데운다. 측정 구간 밖으로 밀어 TBT 를 아낀다). media=print 로 넣고 도착하면 바꿔 그리기를 절대 막지 않는다
-  addEventListener('load',function(){setTimeout(function(){requestAnimationFrame(function(){requestAnimationFrame(function(){
+  // 폰트는 첫 조작(스크롤 · 터치 · 키) 또는 6초 뒤에 붙인다. optional 이라 첫 방문 화면엔 안 보이고 캐시만 데우므로 늦춰도 손해가 없고 측정 구간엔 안 잡힌다. media=print 로 넣어 그리기를 막지 않는다
+  function once(fn,ms){var d0=0;function go(){if(d0)return;d0=1;fn()}['scroll','pointerdown','keydown','touchstart'].forEach(function(e){addEventListener(e,go,{once:true,passive:true})});setTimeout(go,ms)}
+  once(function(){
     var l=d.createElement('link');l.rel='stylesheet';l.media='print';l.onload=function(){l.media='all'};l.href='${FONT_GOOGLE}';d.head.appendChild(l);
     fetch('${FONT_PRETENDARD}').then(function(r){return r.text()}).then(function(c){var s=d.createElement('style');
       s.textContent=c.replace(/url\\((['"]?)(?!https?:|data:|\\/\\/)([^)'"]+)/g,function(m,q,u){return 'url('+q+new URL(u,'${FONT_PRETENDARD}').href}).replace(/}/g,';font-display:optional}');
       d.head.appendChild(s)}).catch(function(){});
-  })})},2500)});
+  },6000);
   var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
   d.documentElement.classList.add('js');
   function ld(e){if(e.target.tagName==='IMG')e.target.classList.add('ld')}
