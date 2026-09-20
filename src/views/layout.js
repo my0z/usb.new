@@ -5,7 +5,7 @@ import { postUrl, won } from './components.js';
 const SITE_NAME = 'USB.KR';
 const SITE_TAGLINE = '전자기기 스펙과 가격을 비교한다';
 /** 스타일 변경 시 올려서 브라우저 캐시를 무효화한다. */
-export const ASSET_VERSION = '20260920f';
+export const ASSET_VERSION = '20260920g';
 
 /** GA4 측정 ID (G-XXXX) 와 Cloudflare Web Analytics 토큰. 요청마다 index.js 가 env 에서 넣는다. 비어 있으면 태그를 안 넣는다. */
 export let GA_ID = '';
@@ -54,15 +54,19 @@ function ticker(items) {
  *  Noto Serif KR 은 500 · 700 만 받는다 (900 요청은 700 으로 그려진다). Fraunces 이탤릭은 로고 두 글자에 82KB 라 뺀다.
  *  load 0.4초 뒤에 붙인다 (측정기는 LCP 이전에 시작된 요청을 전부 LCP 계산에 넣는다): 27개 900KB 가 히어로 이미지와 대역폭을 나누면 느린 망의 LCP 가 7초대로 계산된다.
  *  display=optional: 한글 세리프 14조각 600KB 가 느린 망에서 5초 뒤 도착하면 제목이 다시 그려져 LCP 가 7초대로 잡힌다. 첫 방문은 기본 글꼴로 그리고 캐시된 다음 방문부터 웹폰트를 쓴다. */
-const FONT_CSS = [
-  'https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700&family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&display=optional',
-  'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css',
-];
+const FONT_GOOGLE = 'https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700&family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&display=optional';
+// 프리텐다드 CSS 는 font-display:swap 이 박혀 있어 글자가 뒤늦게 바뀌면 Speed Index 가 나빠진다. 받아서 optional 로 고쳐 넣는다.
+const FONT_PRETENDARD = 'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css';
 
 const INLINE_SCRIPT = raw(`
 (function(){
   var d=document;
-  addEventListener('load',function(){setTimeout(function(){${JSON.stringify(FONT_CSS)}.forEach(function(h){var l=d.createElement('link');l.rel='stylesheet';l.href=h;d.head.appendChild(l)})},400)});
+  addEventListener('load',function(){setTimeout(function(){
+    var l=d.createElement('link');l.rel='stylesheet';l.href='${FONT_GOOGLE}';d.head.appendChild(l);
+    fetch('${FONT_PRETENDARD}').then(function(r){return r.text()}).then(function(c){var s=d.createElement('style');
+      s.textContent=c.replace(/url\\((['"]?)(?!https?:|data:|\\/\\/)([^)'"]+)/g,function(m,q,u){return 'url('+q+new URL(u,'${FONT_PRETENDARD}').href}).replace(/}/g,';font-display:optional}');
+      d.head.appendChild(s)}).catch(function(){});
+  },400)});
   var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
   d.documentElement.classList.add('js');
   function ld(e){if(e.target.tagName==='IMG')e.target.classList.add('ld')}
@@ -76,7 +80,11 @@ const INLINE_SCRIPT = raw(`
   if(sc){addEventListener('scroll',function(){sc.classList.toggle('is-on',scrollY>420)},{passive:true})}
   if(reduce||!('IntersectionObserver' in window)){d.documentElement.classList.add('no-reveal');return}
   var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{rootMargin:'0px 0px -8% 0px',threshold:0.08});
-  d.querySelectorAll('.reveal').forEach(function(el){io.observe(el)});
+  // 처음부터 화면에 있는 것은 애니메이션 없이 바로 보인다. 첫 화면이 0.7초 뒤에 나타나면 LCP 와 Speed Index 가 그만큼 밀린다
+  var els=[].slice.call(d.querySelectorAll('.reveal')),vh=innerHeight;
+  var vis=els.filter(function(el){return el.getBoundingClientRect().top<vh});
+  vis.forEach(function(el){el.style.transition='none';el.classList.add('in')});
+  els.forEach(function(el){if(vis.indexOf(el)<0)io.observe(el)});
   var bar=d.querySelector('.progress');
   if(bar){var t;addEventListener('scroll',function(){if(t)return;t=requestAnimationFrame(function(){t=0;var h=d.documentElement;var p=h.scrollTop/(h.scrollHeight-h.clientHeight);bar.style.transform='scaleX('+Math.min(1,Math.max(0,p))+')'})},{passive:true})}
   var mh=d.querySelector('.masthead');
