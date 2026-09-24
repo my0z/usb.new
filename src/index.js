@@ -6,7 +6,7 @@ import { aboutPage, privacyPage } from './views/about.js';
 import { statsPage } from './views/stats.js';
 import { bestGroups, bestIndexPage, bestPage, bestUrl } from './views/best.js';
 import { dealsPage } from './views/deals.js';
-import { ASSET_VERSION, setTracking } from './views/layout.js';
+import { ASSET_VERSION, setTracking, setInlineCss } from './views/layout.js';
 import { gaReport, gscReport } from './lib/ga.js';
 import { coupangConfigured, deeplink, searchUrl, productCount } from './lib/coupang.js';
 import { categories, getCategory, categoryOfPost } from './data/categories.js';
@@ -16,15 +16,14 @@ import { imgProxy } from './views/components.js';
 const HTML_CACHE = 'public, max-age=0, s-maxage=300, stale-while-revalidate=86400';
 const FEED_CACHE = 'public, max-age=0, s-maxage=1800, stale-while-revalidate=86400';
 const PAGE_SIZE = 30;
-const IMAGE_HOST_SUFFIXES = ['.coupangcdn.com', '.coupang.com'];
+const IMAGE_HOST_SUFFIXES = ['.coupangcdn.com', '.coupang.com', '.ytimg.com'];
 const IMAGE_HOSTS = ['coupangcdn.com', 'coupang.com'];
 const OUT_HOST_SUFFIXES = ['.coupang.com', 'coupa.ng'];
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
-const BOT_UA = /bot|crawl|spider|slurp|preview|fetch|scrape|headless|phantom|selenium|puppeteer|playwright|curl|wget|python|java\/|go-http|okhttp|axios|node|gptbot|chatgpt|oai-search|claude|anthropic|perplexity|bytespider|ccbot|cohere|diffbot|amazonbot|applebot|petalbot|yandex|semrush|ahrefs|mj12|dotbot|facebookexternalhit|whatsapp|telegram|discord|slack|lighthouse|pagespeed|pingdom|uptime|monitor/i;
+const BOT_UA = /bot|crawl|spider|slurp|preview|fetch|scrape|headless|phantom|selenium|puppeteer|playwright|curl|wget|python|java\/|go-http|okhttp|axios|node|gptbot|chatgpt|oai-search|claude|anthropic|perplexity|bytespider|ccbot|cohere|diffbot|amazonbot|applebot|petalbot|yeti|daumoa|kakaotalk-scrap|yandex|semrush|ahrefs|mj12|dotbot|facebookexternalhit|whatsapp|telegram|discord|slack|lighthouse|pagespeed|pingdom|uptime|monitor/i;
 
 // Link 헤더는 Cloudflare Early Hints(103) 로 나가 HTML 이 도착하기 전에 CSS 와 폰트 연결을 시작한다
 const EARLY_HINTS = [
-  `</assets/styles.css?v=${ASSET_VERSION}>; rel=preload; as=style`,
   '<https://fonts.googleapis.com>; rel=preconnect',
   '<https://fonts.gstatic.com>; rel=preconnect; crossorigin',
   '<https://cdn.jsdelivr.net>; rel=preconnect; crossorigin',
@@ -122,7 +121,9 @@ function isAllowedImageHost(host) {
   return IMAGE_HOSTS.includes(host) || IMAGE_HOST_SUFFIXES.some((s) => host.endsWith(s));
 }
 
-async function proxyImage(token, nobg) {
+let cssLoaded = false;
+
+async function proxyImage(token, nobg, w) {
   let target;
   try {
     target = new URL(decodeImgToken(token));
@@ -132,20 +133,25 @@ async function proxyImage(token, nobg) {
   if (target.protocol !== 'https:' || !isAllowedImageHost(target.hostname)) {
     return new Response('Invalid image host', { status: 400 });
   }
-  const image = { width: 600, quality: 78, format: 'webp' };
+  const width = [96, 120, 192, 200, 230, 240, 300, 320, 400, 440, 600].includes(w) ? w : 600;
+  const image = { width, quality: 80, format: 'webp' };
   if (nobg) image.segment = 'foreground';
   try {
-    const res = await fetch(target.toString(), {
-      headers: { 'user-agent': 'Mozilla/5.0 (compatible; usbkrBot/2.0)' },
-      cf: { cacheTtl: 604800, cacheEverything: true, image },
-    });
-    if (!res.ok) return new Response('Image fetch failed', { status: 502 });
+    // 쿠팡 이미지 서버가 봇 UA 나 연속 요청에 가끔 HTML 을 준다 (변환기가 415 로 거절). 브라우저 UA 로 부르고 실패는 캐시하지 않는다.
+    // 변환이 두 번 실패하면 변환 없이 원본이라도 낸다. 깨진 그림보다 JPEG 가 낫다.
+    const headers = { 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36', accept: 'image/avif,image/webp,image/*,*/*;q=0.8' };
+    const cache = { cacheTtlByStatus: { '200-299': 604800, '300-599': 0 }, cacheEverything: true };
+    let res = await fetch(target.toString(), { headers, cf: { ...cache, image } });
+    const firstErr = res.ok ? '' : `${res.status} ${res.headers.get('cf-resized') ?? ''}`;
+    if (!res.ok) res = await fetch(target.toString(), { headers, cf: { ...cache, image } });
+    if (!res.ok) res = await fetch(target.toString(), { headers, cf: cache });
+    if (!res.ok) return new Response(`Image fetch failed (${res.status} ${res.headers.get('cf-resized') ?? ''})`, { status: 502, headers: { 'cache-control': 'no-store' } });
     const type = res.headers.get('content-type') ?? '';
     if (type && !type.startsWith('image/')) return new Response('Not an image', { status: 400 });
     const len = Number(res.headers.get('content-length') ?? 0);
     if (len > MAX_IMAGE_BYTES) return new Response('Image too large', { status: 413 });
     return new Response(res.body, {
-      headers: { 'content-type': type || 'image/webp', 'cache-control': 'public, max-age=604800, immutable' },
+      headers: { 'content-type': type || 'image/webp', 'cache-control': 'public, max-age=31536000, immutable', 'cf-resized': res.headers.get('cf-resized') ?? 'none', ...(firstErr ? { 'x-img-err': firstErr } : {}) },
     });
   } catch (e) {
     return new Response(`Image proxy error: ${e.message}`, { status: 502 });
@@ -164,8 +170,11 @@ function outbound(url, request, env, ctx) {
   const ok = parsed.protocol === 'https:' && OUT_HOST_SUFFIXES.some((s) => parsed.hostname === s.replace(/^\./, '') || parsed.hostname.endsWith(s));
   if (!ok) return new Response('Invalid destination', { status: 400 });
   const slug = url.searchParams.get('s') ?? '';
-  const bot = BOT_UA.test(request.headers.get('user-agent') ?? '') || request.cf?.botManagement?.verifiedBot === true;
-  if (slug && !bot && ctx) ctx.waitUntil(getStore(env).recordClick(slug.slice(0, 80)));
+  const h = (k) => request.headers.get(k) ?? '';
+  const bot = BOT_UA.test(h('user-agent')) || request.cf?.botManagement?.verifiedBot === true;
+  // 사람 클릭만 센다. 링크를 따라다니는 크롤러는 UA 로 다 못 거르므로 사용자 조작으로 시작한 이동(sec-fetch-user) 이거나 우리 페이지에서 온 이동만 인정한다.
+  const human = !bot && (h('sec-fetch-user') === '?1' || (h('sec-fetch-mode') === 'navigate' && /^https:\/\/(www\.)?usb\.kr\//.test(h('referer'))));
+  if (slug && human && ctx) ctx.waitUntil(getStore(env).recordClick(slug.slice(0, 80)));
   return new Response(null, { status: 302, headers: { location: dest, 'cache-control': 'no-store', 'referrer-policy': 'no-referrer' } });
 }
 
@@ -268,8 +277,8 @@ async function route(url, env, request, ctx) {
   const canonical = `${url.origin}${path}`;
 
   if (path === '/') {
-    const [summaries, popular] = await Promise.all([store.summaries(), store.popular(6)]);
-    return page(homePage({ canonical, summaries, popular }));
+    const [summaries, popular, deals] = await Promise.all([store.summaries(), store.popular(6), store.deals()]);
+    return page(homePage({ canonical, summaries, popular, deals }));
   }
 
   if (path === '/reviews') return redirect('/posts');
@@ -341,7 +350,7 @@ async function route(url, env, request, ctx) {
       store.genQueue(),
       store.keywords(30),
     ]);
-    const res = page(statsPage({ canonical, summaries, visits, ga, gsc, runs, clicks, queue, extraKeywords, msg: url.searchParams.get('msg') ?? '', siteUrl: env?.SITE_URL || url.origin, psiKey: env?.PSI_KEY ?? '' }), { cache: 'no-store', noindex: true });
+    const res = page(statsPage({ canonical, summaries, visits, ga, gsc, runs, clicks, queue, extraKeywords, msg: url.searchParams.get('msg') ?? '', siteUrl: env?.SITE_URL || url.origin, psiKey: env?.PSI_KEY ?? '', viduOffpeak: env?.VIDU_OFFPEAK ?? '' }), { cache: 'no-store', noindex: true });
     if (key) res.headers.set('set-cookie', `adm=${key}; Path=/0; Max-Age=31536000; HttpOnly; Secure; SameSite=Lax`);
     return res;
   }
@@ -408,7 +417,7 @@ async function route(url, env, request, ctx) {
     return Response.json({ ok: true, posts: all.length, source: env?.POSTS ? 'kv' : 'fixtures' }, { headers: { 'cache-control': 'no-store' } });
   }
 
-  if (path.startsWith('/img/')) return proxyImage(path.slice(5), url.searchParams.get('nobg') === '1');
+  if (path.startsWith('/img/')) return proxyImage(path.slice(5), url.searchParams.get('nobg') === '1', Number(url.searchParams.get('w')));
   if (path === '/out') return outbound(url, request, env, ctx);
 
   if (path.startsWith('/post/')) return redirect(`/${path.slice(6)}`);
@@ -439,6 +448,11 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     setTracking(env);
+    if (!cssLoaded && env?.ASSETS) {
+      cssLoaded = true; // 실패해도 다시 안 읽는다. 그때는 <link> 로 낸다
+      const css = await env.ASSETS.fetch(new Request(`${url.origin}/assets/styles.css`)).then((r) => (r.ok ? r.text() : '')).catch(() => '');
+      if (css) setInlineCss(css);
+    }
 
     // 정식 주소는 usb.kr 하나. 옛 n.usb.kr 링크와 www 는 같은 경로로 301 해 검색 신뢰를 한곳에 모은다
     if ((url.hostname === 'n.usb.kr' || url.hostname === 'www.usb.kr') && request.method !== 'POST') {
@@ -492,9 +506,10 @@ export default {
     }
 
     // 엣지 캐시: 공개 HTML 은 5분간 KV 를 건너뛴다 (응답의 s-maxage 를 따른다)
-    const cacheable = request.method === 'GET' && !url.search && !['/0', '/search', '/healthz'].includes(url.pathname) && typeof caches !== 'undefined';
-    // 캐시 키에 버전을 넣어 새 배포가 이전 캐시를 자동으로 버리게 한다
-    const cacheKey = cacheable ? new Request(`${url.origin}${url.pathname}?v=${ASSET_VERSION}`) : null;
+    const isImg = url.pathname.startsWith('/img/');
+    const cacheable = request.method === 'GET' && (!url.search || isImg) && !['/0', '/search', '/healthz'].includes(url.pathname) && typeof caches !== 'undefined';
+    // 캐시 키에 버전을 넣어 새 배포가 이전 캐시를 자동으로 버리게 한다. 이미지는 폭(w) 마다 따로 둔다
+    const cacheKey = cacheable ? new Request(`${url.origin}${url.pathname}?${isImg ? `${url.searchParams}&` : ''}v=${ASSET_VERSION}`) : null;
     if (cacheable) {
       const hit = await caches.default.match(cacheKey);
       if (hit) return hit;

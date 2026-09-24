@@ -1,6 +1,6 @@
 import { html, raw, formatDate } from '../lib/html.js';
 import { layout } from './layout.js';
-import { cardGrid, imgProxy, metaLine, outUrl, productBlock, sectionHead, typeLabel, won, ICON_ROCKET, ICON_ARROW } from './components.js';
+import { cardGrid, imgProxy, imgSrc, metaLine, outUrl, productBlock, sectionHead, typeLabel, won, ICON_ROCKET, ICON_ARROW } from './components.js';
 import { categoryOfPost } from '../data/categories.js';
 import { paragraphs, excerpt } from '../data/store.js';
 import { bestUrl } from './best.js';
@@ -51,7 +51,7 @@ function compareTable(p) {
     </div>
     <div class="compare__scroll">
       <table>
-        <thead><tr><th>제품</th><th class="num">쿠팡 가격</th>${naver ? html`<th class="num">네이버 최저가</th>` : ''}<th>배송</th><th></th></tr></thead>
+        <thead><tr><th>제품</th><th class="num">쿠팡 가격</th>${naver ? html`<th class="num">네이버 최저가</th>` : ''}<th>배송</th><th><span class="sr-only">구매</span></th></tr></thead>
         <tbody>
           ${products.map(
             (prod, i) => html`<tr class="${i === 0 ? 'is-top' : ''}">
@@ -110,7 +110,7 @@ export function postPage(p, { canonical, related, views, best = null }) {
     ${first
       ? html`<figure class="post__cover post__cover--product reveal">
           <a href="${outUrl(first, p.slug)}" target="_blank" rel="nofollow sponsored noopener">
-            <img src="${cover}" alt="${first.altText || first.name}" width="600" height="600" fetchpriority="high" />
+            <img ${imgSrc(first.image, 440)} alt="${first.altText || first.name}" width="600" height="600" fetchpriority="high" />
           </a>
           <figcaption><span>${first.name}</span><span>${won(first.price)}</span></figcaption>
         </figure>`
@@ -121,7 +121,7 @@ export function postPage(p, { canonical, related, views, best = null }) {
         <div class="verdict reveal">
           ${first
             ? html`<div class="verdict__product">
-                <img src="${cover}" alt="" loading="lazy" width="200" height="200" />
+                <img ${imgSrc(first.image, 200)} alt="" loading="lazy" width="200" height="200" />
                 <p class="verdict__pname">${first.name}</p>
                 <p class="verdict__pprice">${won(first.price)}</p>
                 ${first.isRocket ? html`<span class="ship ship--rocket">${ICON_ROCKET} 로켓배송</span>` : first.isFreeShipping ? html`<span class="ship">무료배송</span>` : ''}
@@ -173,7 +173,10 @@ export function postPage(p, { canonical, related, views, best = null }) {
           : ''}
         ${p.video?.id && /^[\w-]{11}$/.test(p.video.id)
           ? html`<figure class="video reveal">
-              <iframe src="https://www.youtube-nocookie.com/embed/${p.video.id}" title="${p.video.title ?? '제품 영상'}" loading="lazy" allow="accelerometer; encrypted-media; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+              <button class="video__play" type="button" data-id="${p.video.id}" aria-label="영상 재생: ${p.video.title ?? '제품 영상'}">
+                <img ${imgSrc(`https://i.ytimg.com/vi/${p.video.id}/hqdefault.jpg`, 600)} alt="" loading="lazy" decoding="async" width="480" height="360" />
+                <span class="video__btn" aria-hidden="true">▶</span>
+              </button>
               <figcaption>
                 <span>${p.video.match === 'product' ? '' : html`<em class="video__note">참고용 영상 · 이 글의 제품과 다를 수 있다</em>`}${p.video.title ?? ''}${p.video.channel ? html` · ${p.video.channel}` : ''}</span>
                 <a class="video__out" href="https://www.youtube.com/watch?v=${p.video.id}" target="_blank" rel="noopener">유튜브에서 보기 ↗</a>
@@ -190,7 +193,7 @@ export function postPage(p, { canonical, related, views, best = null }) {
               <div class="alts__grid">
                 ${p.alternatives.map(
                   (a) => html`<a class="alt" href="${outUrl(a, p.slug)}" target="_blank" rel="nofollow sponsored noopener">
-                    <img src="${imgProxy(a.image)}" alt="${a.name}" loading="lazy" width="200" height="200" />
+                    <img ${imgSrc(a.image, 200)} alt="${a.name}" loading="lazy" width="200" height="200" />
                     <span class="alt__name">${a.name}</span>
                     <span class="alt__price">${won(a.price)}</span>
                   </a>`,
@@ -222,7 +225,7 @@ export function postPage(p, { canonical, related, views, best = null }) {
           ? html`<aside class="final reveal" aria-labelledby="final-title">
               <p class="verdict__label" id="final-title">결론</p>
               <div class="final__row">
-                <img src="${cover}" alt="" loading="lazy" width="96" height="96" />
+                <img ${imgSrc(first.image, 96)} alt="" loading="lazy" width="96" height="96" />
                 <div class="final__body">
                   <b class="final__name">${first.name}</b>
                   <span class="final__price">${won(first.price)}${first.isRocket ? html`<span class="ship ship--rocket">${ICON_ROCKET} 로켓배송</span>` : first.isFreeShipping ? html`<span class="ship">무료배송</span>` : ''}</span>
@@ -244,7 +247,7 @@ export function postPage(p, { canonical, related, views, best = null }) {
     ${related.length ? html`<div class="shell">${sectionHead('→', '이어서 읽기', cat ? `${cat.name} 글 더 보기` : '관련 글')} ${cardGrid(related, { variant: 'compact' })}</div>` : ''}
     ${first
       ? html`<div class="stickycta">
-          <img src="${cover}" alt="" loading="lazy" width="44" height="44" />
+          <img ${imgSrc(first.image, 44)} alt="" loading="lazy" width="44" height="44" />
           <span class="stickycta__text"><b>${won(first.price)}</b><small>${first.name}</small></span>
           <a class="btn btn--primary btn--sm" href="${outUrl(first, p.slug)}" target="_blank" rel="nofollow sponsored noopener">최저가 보기 ${ICON_ARROW}</a>
         </div>`
@@ -259,6 +262,7 @@ export function postPage(p, { canonical, related, views, best = null }) {
     body,
     progress: true,
     ogImage: abs(cover),
+    preload: first?.image ? imgSrc(first.image, 440) : cover,
     article: { published: p.createdAt, section: cat?.name ?? p.keyword, keywords: [p.keyword, cat?.name, ...(p.products ?? []).slice(0, 3).map((x) => x.name.split(',')[0])].filter(Boolean).join(', ') },
     jsonLd: [
       {

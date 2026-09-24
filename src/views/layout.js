@@ -5,7 +5,7 @@ import { postUrl, won } from './components.js';
 const SITE_NAME = 'USB.KR';
 const SITE_TAGLINE = '전자기기 스펙과 가격을 비교한다';
 /** 스타일 변경 시 올려서 브라우저 캐시를 무효화한다. */
-export const ASSET_VERSION = '20260918a';
+export const ASSET_VERSION = '20260920t';
 
 /** GA4 측정 ID (G-XXXX) 와 Cloudflare Web Analytics 토큰. 요청마다 index.js 가 env 에서 넣는다. 비어 있으면 태그를 안 넣는다. */
 export let GA_ID = '';
@@ -16,6 +16,16 @@ export const setTracking = (env) => {
   CF_BEACON = String(env?.CF_BEACON_TOKEN ?? '').trim();
   VERIFY = [['naver-site-verification', env?.NAVER_SITE_VERIFICATION], ['google-site-verification', env?.GOOGLE_SITE_VERIFICATION]].filter(([, v]) => String(v ?? '').trim());
 };
+/** styles.css 를 압축해 <head> 에 인라인한다. index.js 가 ASSETS 에서 한 번 읽어 넣는다. 비어 있으면 <link> 로 낸다. */
+let INLINE_CSS = '';
+export const setInlineCss = (css) => {
+  INLINE_CSS = css
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/\s+/g, ' ')
+    .replace(/ ?([{};:,>]) ?/g, '$1')
+    .trim();
+};
+
 const NAV_PRIMARY = ['audio', 'mobile', 'pc', 'display', 'wearable', 'smarthome', 'camera', 'car'];
 
 function issueLabel() {
@@ -40,32 +50,52 @@ function ticker(items) {
   </div>`;
 }
 
+/** 폰트 CSS 는 JS 로 붙인다. <link> 로 두면 Cloudflare Fonts 가 인라인 @font-face 로 바꿔 첫 그리기를 폰트 뒤로 미룬다 (모바일 FCP 4.8초).
+ *  Noto Serif KR 은 500 · 700 만 받는다 (900 요청은 700 으로 그려진다). Fraunces 이탤릭은 로고 두 글자에 82KB 라 뺀다.
+ *  첫 조작 또는 6초 뒤에 붙인다 (측정기는 LCP 이전에 시작된 요청을 전부 LCP 계산에 넣는다): 27개 900KB 가 히어로 이미지와 대역폭을 나누면 느린 망의 LCP 가 7초대로 계산된다.
+ *  display=optional: 한글 세리프 14조각 600KB 가 느린 망에서 5초 뒤 도착하면 제목이 다시 그려져 LCP 가 7초대로 잡힌다. 첫 방문은 기본 글꼴로 그리고 캐시된 다음 방문부터 웹폰트를 쓴다. */
+const FONT_GOOGLE = 'https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700&family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&display=optional';
+// 프리텐다드 CSS 는 font-display:swap 이 박혀 있어 글자가 뒤늦게 바뀌면 Speed Index 가 나빠진다. 받아서 optional 로 고쳐 넣는다.
+const FONT_PRETENDARD = 'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css';
+
 const INLINE_SCRIPT = raw(`
 (function(){
   var d=document;
+  // 폰트는 첫 조작(스크롤 · 터치 · 키) 또는 10초 뒤에 붙인다. optional 이라 첫 방문 화면엔 안 보이고 캐시만 데우므로 늦춰도 손해가 없고 측정 구간엔 안 잡힌다. media=print 로 넣어 그리기를 막지 않는다
+  function once(fn,ms){var d0=0;function go(){if(d0)return;d0=1;fn()}['scroll','pointerdown','keydown','touchstart'].forEach(function(e){addEventListener(e,go,{once:true,passive:true})});setTimeout(go,ms)}
+  once(function(){
+    var l=d.createElement('link');l.rel='stylesheet';l.media='print';l.onload=function(){l.media='all'};l.href='${FONT_GOOGLE}';d.head.appendChild(l);
+    fetch('${FONT_PRETENDARD}').then(function(r){return r.text()}).then(function(c){var s=d.createElement('style');
+      s.textContent=c.replace(/url\\((['"]?)(?!https?:|data:|\\/\\/)([^)'"]+)/g,function(m,q,u){return 'url('+q+new URL(u,'${FONT_PRETENDARD}').href}).replace(/}/g,';font-display:optional}');
+      d.head.appendChild(s)}).catch(function(){});
+  },10000);
   var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-  d.documentElement.classList.add('js');
+  // js 클래스는 IntersectionObserver 첫 콜백(첫 그리기 뒤)에서 붙인다. 여기서 붙이거나 위치를 재면 첫 레이아웃을 스크립트 안에서 강제하게 된다
+  var els=[].slice.call(d.querySelectorAll('.reveal'));
   function ld(e){if(e.target.tagName==='IMG')e.target.classList.add('ld')}
   d.addEventListener('load',ld,true);d.addEventListener('error',ld,true);
   d.querySelectorAll('img[loading=lazy]').forEach(function(i){if(i.complete)i.classList.add('ld')});
   d.querySelectorAll('.share').forEach(function(b){b.addEventListener('click',function(){var s={title:b.getAttribute('data-title')||d.title,url:location.href};
     if(navigator.share){navigator.share(s).catch(function(){})}
     else if(navigator.clipboard){navigator.clipboard.writeText(s.url).then(function(){var t=b.textContent;b.textContent='복사했다';setTimeout(function(){b.textContent=t},1600)})}})});
+  d.querySelectorAll('.video__play').forEach(function(b){b.addEventListener('click',function(){var f=d.createElement('iframe');f.src='https://www.youtube-nocookie.com/embed/'+b.getAttribute('data-id')+'?autoplay=1';f.title=b.getAttribute('aria-label');f.allow='accelerometer; autoplay; encrypted-media; picture-in-picture';f.allowFullscreen=true;f.referrerPolicy='strict-origin-when-cross-origin';b.replaceWith(f)})});
   if(navigator.sendBeacon&&location.pathname!=='/0')navigator.sendBeacon('/hit',location.pathname);
   var sc=d.querySelector('.stickycta');
   if(sc){addEventListener('scroll',function(){sc.classList.toggle('is-on',scrollY>420)},{passive:true})}
-  if(reduce||!('IntersectionObserver' in window)){d.documentElement.classList.add('no-reveal');return}
-  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{rootMargin:'0px 0px -8% 0px',threshold:0.08});
-  d.querySelectorAll('.reveal').forEach(function(el){io.observe(el)});
+  // 스크롤이 시작되면 로고가 든 상단이 반으로 줄고 맨 위로 오면 돌아온다. 동작 줄이기 설정과 무관하게 돈다 (아래 return 앞)
+  var mh=d.querySelector('.masthead');
+  function compact(){mh.classList.toggle('is-compact',scrollY>0)}
+  addEventListener('scroll',compact,{passive:true});addEventListener('load',compact);
+  if(reduce||!('IntersectionObserver' in window)){d.documentElement.classList.add('js');d.documentElement.classList.add('no-reveal');return}
+  // 첫 콜백은 첫 그리기 뒤에 온다. 그때 화면에 있는 것은 in 을 먼저 붙이고 js 를 붙이므로 처음부터 보이는 요소는 한 번도 안 숨는다. 화면 밖 요소만 숨었다가 스크롤해 오면 나타난다
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}});d.documentElement.classList.add('js')},{rootMargin:'0px 0px -8% 0px',threshold:0.08});
+  els.forEach(function(el){io.observe(el)});
   var bar=d.querySelector('.progress');
   if(bar){var t;addEventListener('scroll',function(){if(t)return;t=requestAnimationFrame(function(){t=0;var h=d.documentElement;var p=h.scrollTop/(h.scrollHeight-h.clientHeight);bar.style.transform='scaleX('+Math.min(1,Math.max(0,p))+')'})},{passive:true})}
-  var mh=d.querySelector('.masthead');
-  var brand=d.querySelector('.brand');
-  addEventListener('scroll',function(){var p=Math.min(1,scrollY/160);mh.classList.toggle('is-compact',scrollY>80);brand.style.setProperty('--brand-s',1-0.7*p)},{passive:true});
 })();
 `);
 
-export function layout({ title, description, canonical, active, body, heroSlot = null, jsonLd = null, progress = false, tickerItems = null, ogImage = null, article = null }) {
+export function layout({ title, description, canonical, active, body, heroSlot = null, jsonLd = null, progress = false, tickerItems = null, ogImage = null, article = null, preload = null }) {
   const fullTitle = title ? `${title} · ${SITE_NAME}` : `${SITE_NAME} · ${SITE_TAGLINE}`;
   return html`<html lang="ko">
   <head>
@@ -94,19 +124,8 @@ export function layout({ title, description, canonical, active, body, heroSlot =
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700;900&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;0,9..144,900;1,9..144,500&display=swap"
-      media="print"
-      onload="this.media='all'"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
-      media="print"
-      onload="this.media='all'"
-    />
-    <link rel="stylesheet" href="/assets/styles.css?v=${ASSET_VERSION}" />
+    ${INLINE_CSS ? html`<style>${raw(INLINE_CSS)}</style>` : html`<link rel="stylesheet" href="/assets/styles.css?v=${ASSET_VERSION}" />`}
+    ${preload ? html`<link rel="preload" as="image" ${String(preload).startsWith('src=') ? raw(String(preload).replace(/^src=/, 'href=').replace(' srcset=', ' imagesrcset=')) : html`href="${preload}"`} fetchpriority="high" />` : ''}
     ${jsonLd ? html`<script type="application/ld+json">${raw(JSON.stringify(Array.isArray(jsonLd) ? { '@context': 'https://schema.org', '@graph': jsonLd } : jsonLd))}</script>` : ''}
   </head>
   <body>
@@ -175,7 +194,7 @@ export function layout({ title, description, canonical, active, body, heroSlot =
       </div>
     </footer>
     <script>${INLINE_SCRIPT}</script>
-    ${GA_ID ? html`<script async src="https://www.googletagmanager.com/gtag/js?id=${GA_ID}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${GA_ID}')</script>` : ''}
+    ${GA_ID ? html`<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${GA_ID}');(function(){var d=0;function go(){if(d)return;d=1;var s=document.createElement('script');s.src='https://www.googletagmanager.com/gtag/js?id=${GA_ID}';document.head.appendChild(s)}['scroll','pointerdown','keydown','touchstart'].forEach(function(e){addEventListener(e,go,{once:true,passive:true})});setTimeout(go,10000)})()</script>` : ''}
     ${CF_BEACON ? html`<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "${CF_BEACON}"}'></script>` : ''}
   </body>
 </html>`;

@@ -41,12 +41,13 @@
     "NAVER_SITE_VERIFICATION": "8de2e347621b6bfe27cced02c1224e50dc438605",
     "GOOGLE_SITE_VERIFICATION": "",
     // IndexNow 키. 네이버 · 빙이 새 글을 바로 가져가게 발행기가 알린다. /<키>.txt 로 공개되는 값이라 비밀이 아니다. generator/config.js 와 같아야 한다.
-    "INDEXNOW_KEY": "80bdbe5352244e8cce7a9c5d36560a00"
+    "INDEXNOW_KEY": "80bdbe5352244e8cce7a9c5d36560a00",
+    // Vidu 오프피크(무제한 생성) 시간대. 비두가 쓰는 UTC+8 기준 "HH:MM-HH:MM". 관리자 페이지가 KST 로 바꿔 지금 진행 중인지 보여준다. 비두 앱의 안내와 다르면 여기만 고친다.
+    "VIDU_OFFPEAK": "00:00-08:00"
   },
   // 관리자 페이지의 사진 → 제품명 인식 (Workers AI · 무료 한도 안)
   "ai": { "binding": "AI" },
-  // KV · D1 · 구글 API 를 부르는 워커라 요청이 가까운 곳이 아니라 데이터에 가까운 곳에서 돌게 한다.
-  "placement": { "mode": "smart" },
+  // Smart Placement 는 끈다. 켜면 일부 요청이 존 밖 데이터센터에서 돌아 이미지 변환이 err=9412 로 거절되고 한국 방문자 응답도 느려진다.
   // 새 사이트 전용 저장소. generator/ 만 쓴다.
   "kv_namespaces": [
     { "binding": "POSTS", "id": "6f99a9ebdc554c868fdbcd821390b37c" }
