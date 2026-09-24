@@ -7,7 +7,7 @@ import { statsPage } from './views/stats.js';
 import { bestGroups, bestIndexPage, bestPage, bestUrl } from './views/best.js';
 import { dealsPage } from './views/deals.js';
 import { ASSET_VERSION, setTracking, setInlineCss } from './views/layout.js';
-import { gaReport, gscReport } from './lib/ga.js';
+import { gaReport, gscReport, gscOpportunities } from './lib/ga.js';
 import { coupangConfigured, deeplink, searchUrl, productCount } from './lib/coupang.js';
 import { categories, getCategory, categoryOfPost } from './data/categories.js';
 import { getStore, searchSummaries, excerpt } from './data/store.js';
@@ -331,6 +331,11 @@ async function route(url, env, request, ctx) {
   if (path === '/0/keywords') {
     if (!isAdmin(request, url, env)) return notFound(url);
     return Response.json(await store.keywords(), { headers: { 'cache-control': 'no-store' } });
+  }
+  // 서치콘솔에서 순위 4~30위인 검색어. 발행기가 새 글 키워드와 손볼 글을 고른다
+  if (path === '/0/gsc') {
+    if (!isAdmin(request, url, env)) return notFound(url);
+    return Response.json(await gscOpportunities(env).catch(() => []), { headers: { 'cache-control': 'no-store' } });
   }
   // VM 발행기가 가져가는 대기 목록
   if (path === '/0/queue') {

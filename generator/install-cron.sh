@@ -12,7 +12,9 @@ QUEUE="*/5 * * * * cd $REPO && $NODE generator/queue.js >> $LOG 2>&1"
 PULL="*/10 * * * * cd $REPO && git pull -q --ff-only >> $LOG 2>&1"
 # 골드박스는 매일 07:00 에 바뀐다. 07:30 에 받아 /deals 와 SNS 에 올린다
 DEALS="30 7 * * * cd $REPO && $NODE generator/deals.js >> $LOG 2>&1"
-{ crontab -l 2>/dev/null | grep -v 'generator/run.js' | grep -v 'generator/queue.js' | grep -v 'generator/deals.js' | grep -v 'git pull' || true; echo "$LINE"; echo "$QUEUE"; echo "$PULL"; echo "$DEALS"; } | crontab -
+# 서치콘솔에서 순위 4~30위인 글의 제목을 그 검색어에 맞게 손본다 (하루 최대 3건)
+REFRESH="40 6 * * * cd $REPO && $NODE generator/refresh.js >> $LOG 2>&1"
+{ crontab -l 2>/dev/null | grep -v 'generator/run.js' | grep -v 'generator/queue.js' | grep -v 'generator/deals.js' | grep -v 'generator/refresh.js' | grep -v 'git pull' || true; echo "$LINE"; echo "$QUEUE"; echo "$PULL"; echo "$DEALS"; echo "$REFRESH"; } | crontab -
 echo "등록됨:"
 crontab -l | grep 'generator/'
 echo "로그: $LOG"

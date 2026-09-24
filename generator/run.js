@@ -64,15 +64,29 @@ async function keywordUsedRecently(keyword) {
   return list.some((e) => e.at >= cutoff && e.keyword !== keyword && (e.tokens ?? []).some((t) => mine.includes(t)));
 }
 
-/** 검색창에서 추가된 키워드 (/0/keywords). config 풀에 없는 것만 d=20 으로 합친다. 실패하면 빈 배열. */
+async function admin(path) {
+  const site = (process.env.SITE_URL || 'https://usb.kr').replace(/\/$/, '');
+  const res = await fetch(`${site}${path}?key=${encodeURIComponent(process.env.ADMIN_KEY)}`, { signal: AbortSignal.timeout(8000) });
+  return res.ok ? res.json() : [];
+}
+
+/** 검색어 뒤의 의도 말("추천" "가격" 등)을 뗀 제품 이름. */
+const stripIntent = (q) => String(q).replace(/\s*(추천|가격|비교|단점|후기|순위|가성비|고르는 법|살까 말까|어때|리뷰|신상|신제품)(\s|$)/g, ' ').replace(/\s+/g, ' ').trim();
+
+/** 풀 밖에서 오는 키워드. 검색창 입력(/0/keywords)은 d=20 이고 서치콘솔에서 순위 4~30위인 검색어(/0/gsc)는 노출만큼 앞에 온다. 이미 그 검색어로 뜨는 글이 있으면 refresh.js 가 손보니 뺀다. */
 async function extraKeywords() {
   if (MOCK || !process.env.ADMIN_KEY) return [];
   try {
-    const site = (process.env.SITE_URL || 'https://usb.kr').replace(/\/$/, '');
-    const res = await fetch(`${site}/0/keywords?key=${encodeURIComponent(process.env.ADMIN_KEY)}`, { signal: AbortSignal.timeout(8000) });
-    if (!res.ok) return [];
+    const [typed, gsc] = await Promise.all([admin('/0/keywords'), admin('/0/gsc')]);
     const known = new Set(KEYWORD_POOL.flatMap((k) => [k.keyword, k.q]));
-    return (await res.json()).filter((k) => !known.has(k.keyword) && !known.has(k.q)).map((k) => ({ d: 20, min: 3000, q: k.q, t: k.t, keyword: k.keyword }));
+    const fromTyped = typed.filter((k) => !known.has(k.keyword) && !known.has(k.q)).map((k) => ({ d: 20, min: 3000, q: k.q, t: k.t, keyword: k.keyword }));
+    const seen = new Set();
+    const fromGsc = gsc
+      .filter((r) => !/^\/[a-z0-9]{5}$/.test(r.path))
+      .map((r) => ({ d: Math.min(120, 20 + r.impressions), min: 3000, q: stripIntent(r.q), t: r.q, keyword: stripIntent(r.q) }))
+      .filter((k) => k.keyword.length >= 2 && !known.has(k.keyword) && !seen.has(k.keyword) && seen.add(k.keyword));
+    if (fromGsc.length) log(`서치콘솔 키워드 ${fromGsc.length}개: ${fromGsc.slice(0, 3).map((k) => k.t).join(' | ')}`);
+    return [...fromGsc, ...fromTyped];
   } catch {
     return [];
   }

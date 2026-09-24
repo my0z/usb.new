@@ -8,6 +8,7 @@ const TTL = 10 * 60 * 1000;
 let token = { value: '', exp: 0 };
 let report = { at: 0, data: null };
 let gsc = { at: 0, data: null };
+let opp = { at: 0, data: [] };
 
 const b64url = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 const enc = (obj) => b64url(new TextEncoder().encode(JSON.stringify(obj)));
@@ -132,4 +133,19 @@ async function loadGsc(env) {
     },
   };
   return gsc.data;
+}
+
+/** 순위 4~30위인데 노출은 있는 검색어와 페이지 (28일 · 노출 많은 순). 조금만 밀면 올라가는 자리다. 발행기가 /0/gsc 로 받아 새 글 키워드와 손볼 글을 고른다. */
+export async function gscOpportunities(env) {
+  if (!gscConfigured(env)) return [];
+  if (Date.now() - opp.at < TTL) return opp.data;
+  const rows = await query(env, { dimensions: ['query', 'page'], rowLimit: 250 });
+  opp = {
+    at: Date.now(),
+    data: rows
+      .filter((r) => r.impressions >= 5 && r.position >= 4 && r.position <= 30)
+      .sort((a, b) => b.impressions - a.impressions)
+      .map((r) => ({ q: r.keys[0], path: r.keys[1].replace(/^https?:\/\/[^/]+/, '') || '/', clicks: r.clicks, impressions: r.impressions, position: Math.round(r.position * 10) / 10 })),
+  };
+  return opp.data;
 }
