@@ -29,7 +29,7 @@ const list = (v, n) => (Array.isArray(v) ? v : []).map((s) => String(s ?? '').tr
 export async function think(productLines) {
   const spec = LLM.brainModel;
   if (!spec) return null;
-  const { text, model } = await chatWith(spec, SYSTEM, `${productLines}\n\nJSON 으로만 답하라.`, { temperature: 0.2, maxTokens: 1500 });
+  const { text, model } = await chatWith(spec, SYSTEM, `${productLines}\n\nJSON 으로만 답하라.`, { temperature: 0.2, maxTokens: 4000 }); // gpt-oss 는 추론 토큰이 한도를 같이 먹어 1500 이면 JSON 이 잘린다
   const o = parseJsonLoose(text);
   const brief = { verdict: String(o.verdict ?? '').trim().slice(0, 80), points: list(o.points, 5), numbers: list(o.numbers, 5), criteria: list(o.criteria, 4), checks: list(o.checks, 4), model };
   if (!brief.verdict || brief.points.length + brief.criteria.length < 2) throw new Error('정리된 답이 비었다');
