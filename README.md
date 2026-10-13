@@ -67,6 +67,10 @@ npm run deploy
 
 발행기가 글을 올릴 때마다 IndexNow(`generator/lib/indexnow.js`)로 새 URL 을 알린다. 네이버 서치어드바이저가 IndexNow 를 받으므로 크롤러를 기다리지 않는다. 키는 `wrangler.jsonc` 의 `INDEXNOW_KEY` 와 `generator/config.js` 가 같아야 하고 워커가 `/<키>.txt` 로 공개한다. 서치어드바이저에서 손으로 할 것: 요청 → 사이트맵 제출(`/sitemap.xml`) · RSS 제출(`/rss.xml`) 한 번씩.
 
+### AI 참고 이미지
+
+작성 일시: 2026-10-13 11:09. 쿠팡 사진은 가공하지 않고 그대로 보여 준다. 따로 글 가운데에 AI 가 새로 그린 참고 이미지를 한 장 넣는다. `generator/lib/illustration.js` 가 제품 종류만 영어로 일반화해 Workers AI(flux-1-schnell)로 그리고 KV `genimg:<slug>` 에 저장한다. 워커는 `/gen/<slug>.jpg` 로 읽어 내보낸다. 브랜드와 모델명은 프롬프트에 넣지 않는다. 발행기 토큰에 Workers AI 권한이 있어야 하며 실패하면 이미지 없이 글만 발행한다.
+
 ### 자동 배포
 
 `claude/usb-kr-renewal-site-6725i8` 나 `main` 에 푸시하면 `.github/workflows/deploy.yml` 이 `wrangler deploy` 를 돌린다. 한 번만 준비한다:

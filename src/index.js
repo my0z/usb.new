@@ -422,6 +422,14 @@ async function route(url, env, request, ctx) {
     return Response.json({ ok: true, posts: all.length, source: env?.POSTS ? 'kv' : 'fixtures' }, { headers: { 'cache-control': 'no-store' } });
   }
 
+  // 작성 일시: 2026-10-13 11:08 — 발행기가 KV 에 넣은 AI 참고 이미지 (base64 JPEG). 읽기만 한다.
+  const gen = path.match(/^\/gen\/([a-z0-9]{5})\.jpg$/);
+  if (gen) {
+    const b64 = await env?.POSTS?.get(`genimg:${gen[1]}`);
+    if (!b64) return new Response('Not found', { status: 404 });
+    return new Response(Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)), { headers: { 'content-type': 'image/jpeg', 'cache-control': 'public, max-age=31536000, immutable' } });
+  }
+
   if (path.startsWith('/img/')) return proxyImage(path.slice(5), url.searchParams.get('nobg') === '1', Number(url.searchParams.get('w')));
   if (path === '/out') return outbound(url, request, env, ctx);
 

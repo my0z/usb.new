@@ -17,12 +17,20 @@ function figure(product) {
   return `<p class="pfig"><img src="/img/${imgToken(product.image)}" alt="${alt}" loading="lazy" width="600" height="600"><br><small>${alt}</small></p>`;
 }
 
-/** 첫 섹션 뒤에 주인공 사진을 넣고 마지막 섹션 뒤에 비교 제품 사진을 넣는다. */
-export function embedImages(article, products) {
+// 작성 일시: 2026-10-13 11:08
+// AI 가 새로 그린 참고 이미지. 쿠팡 사진이 아니라서 표기를 붙인다.
+function illustrationFigure(src, keyword) {
+  const alt = `${keyword} 참고 이미지 (AI 생성)`;
+  return `<p class="pfig"><img src="${src}" alt="${alt}" loading="lazy" width="600" height="600"><br><small>${alt} · 실제 제품과 다를 수 있다</small></p>`;
+}
+
+/** 첫 섹션 뒤에 주인공 사진을 넣고 마지막 섹션 뒤에 비교 제품 사진을 넣는다. 참고 이미지가 있으면 가운데 섹션 뒤에 넣는다. */
+export function embedImages(article, products, illustration = null, keyword = '') {
   const sections = article.sections.map((s) => ({ ...s }));
   const picks = products.slice(0, IMAGES_PER_POST);
   if (picks[0] && sections[0]) sections[0].body_html += figure(picks[0]);
   if (picks[1] && sections.length > 1) sections[sections.length - 1].body_html += figure(picks[1]);
+  if (illustration && sections.length) sections[Math.floor(sections.length / 2)].body_html += illustrationFigure(illustration, keyword);
   return { ...article, sections };
 }
 

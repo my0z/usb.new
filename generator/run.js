@@ -22,6 +22,7 @@ import { think, briefBlock } from './lib/brain.js';
 import { buildPost, embedImages, summarize, newSlug } from './lib/post.js';
 import { mockProducts, mockArticleJson } from './lib/mock.js';
 import { findVideo } from './lib/video.js';
+import { makeIllustration } from './lib/illustration.js';
 import { announce, articleMessage } from './lib/social.js';
 import { enrich } from './lib/naver.js';
 import { indexNow } from './lib/indexnow.js';
@@ -242,7 +243,9 @@ async function runOnce(forcedKeyword, forcedQuery) {
     if (video) log(`영상: ${video.title} (${video.channel})`);
     let slug = newSlug();
     while (await kv.get(`post:${slug}`)) slug = newSlug();
-    const post = buildPost({ article: embedImages(article, products), keyword: item.keyword, products, modelUsed: model, slug, video, facts });
+    // 작성 일시: 2026-10-13 11:08 — 참고 이미지는 실패해도 글 발행을 막지 않는다
+    const illustration = DRY || MOCK ? null : await makeIllustration(slug, item.keyword, products[0]).catch((e) => (log(`참고 이미지 건너뜀: ${e.message}`), null));
+    const post = buildPost({ article: embedImages(article, products, illustration, item.keyword), keyword: item.keyword, products, modelUsed: model, slug, video, facts });
     run.slug = post.slug;
     if (DRY || MOCK) {
       console.log(JSON.stringify(post, null, 2));
