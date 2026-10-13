@@ -69,7 +69,7 @@ npm run deploy
 
 ### AI 참고 이미지
 
-작성 일시: 2026-10-13 11:09. 쿠팡 사진은 가공하지 않고 그대로 보여 준다. 따로 글 가운데에 AI 가 새로 그린 참고 이미지를 한 장 넣는다. `generator/lib/illustration.js` 가 제품 종류만 영어로 일반화해 Workers AI(flux-1-schnell)로 그리고 KV `genimg:<slug>` 에 저장한다. 워커는 `/gen/<slug>.jpg` 로 읽어 내보낸다. 브랜드와 모델명은 프롬프트에 넣지 않는다. 발행기 토큰에 Workers AI 권한이 있어야 하며 실패하면 이미지 없이 글만 발행한다.
+작성 일시: 2026-10-13 11:08. 쿠팡 사진은 가공하지 않고 그대로 보여 준다. 따로 글 가운데에 AI 가 새로 그린 참고 이미지를 한 장 넣는다. `generator/lib/illustration.js` 가 제품 종류만 영어로 일반화해 Workers AI(flux-1-schnell)로 그리고 KV `genimg:<slug>` 에 저장한다. 워커는 `/gen/<slug>.jpg` 로 읽어 내보낸다. 브랜드와 모델명은 프롬프트에 넣지 않는다. 발행기 토큰에 Workers AI 권한이 있어야 하며 실패하면 이미지 없이 글만 발행한다.
 
 ### 자동 배포
 
