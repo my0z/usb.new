@@ -129,6 +129,10 @@ class KvStore {
     if (!this.db) return;
     await this.db.prepare('UPDATE gen_queue SET status = ?, done_at = ?, result = ? WHERE id = ?').bind(ok ? '완료' : '실패', new Date().toISOString(), String(result ?? '').slice(0, 200), Number(id)).run();
   }
+  async deleteGen(id) {
+    if (!this.db) return;
+    await this.db.prepare('DELETE FROM gen_queue WHERE id = ?').bind(Number(id)).run();
+  }
 
   /* 검색창에서 들어와 발행할 만하다고 판단한 검색어. 발행기가 /0/keywords 로 받아 풀에 합친다. */
   async ensureKeywords() {
@@ -261,6 +265,7 @@ class FixtureStore {
     return [];
   }
   async finishGen() {}
+  async deleteGen() {}
   async visitStats() {
     return null;
   }

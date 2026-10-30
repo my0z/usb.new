@@ -482,6 +482,15 @@ export default {
       return new Response(null, { status: 204, headers: returning ? {} : { 'set-cookie': 'uv=1; Max-Age=31536000; Path=/; Secure; SameSite=Lax' } });
     }
 
+    // 관리자: 글 생성 요청 지우기 (대기 · 완료 · 실패 상관없이)
+    if (request.method === 'POST' && url.pathname === '/0/gen/delete') {
+      if (!isAdmin(request, url, env)) return notFound(url);
+      const form = await request.formData();
+      const id = form.get('id');
+      if (id) await getStore(env).deleteGen(id);
+      return redirect('/0', 303);
+    }
+
     // 관리자: 글 생성 요청 넣기 (폼) · 결과 적기 (VM 발행기)
     if (request.method === 'POST' && (url.pathname === '/0/gen' || url.pathname === '/0/queue')) {
       if (!isAdmin(request, url, env)) return notFound(url);

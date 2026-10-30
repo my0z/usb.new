@@ -42,6 +42,9 @@ const STYLE = raw(`
 .row__b i.is-2{background:var(--gold)}
 .row__n{font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap;text-align:right}
 .row__n small{font-weight:500;color:var(--ink-3);margin-left:4px}
+.delform{display:inline-flex;vertical-align:middle;margin-left:6px}
+.delbtn{border:0;background:none;cursor:pointer;color:var(--ink-3);font:inherit;font-size:13px;line-height:1;padding:2px 6px;border-radius:999px}
+.delbtn:hover{color:#fff;background:var(--accent)}
 .posts{width:100%;border-collapse:collapse;font-size:14px}
 .posts td{padding:9px 6px;border-bottom:1px solid var(--rule);vertical-align:top}
 .posts tr:last-child td{border-bottom:0}
@@ -212,7 +215,7 @@ export function statsPage({ canonical, summaries, visits = null, ga = null, gsc 
                 (r) => html`<div class="row">
                   <span class="row__l">${r.status === '완료' && r.result ? html`<a href="/${r.result}">${r.q}</a>` : r.q}${r.status === '실패' ? html` <small>${r.result}</small>` : ''}</span>
                   <span class="tag ${r.status === '완료' ? 'tag--gen' : ''}">${r.status}</span>
-                  <span class="row__n"><small>${ago(r.done_at || r.at)}</small></span>
+                  <span class="row__n"><small>${ago(r.done_at || r.at)}</small><form method="post" action="/0/gen/delete" class="delform"><input type="hidden" name="id" value="${r.id}" /><button type="submit" class="delbtn" title="이 요청 삭제" aria-label="삭제">✕</button></form></span>
                 </div>`,
               )
             : html`<p class="panel__note">아직 요청이 없다.</p>`}`,
