@@ -169,6 +169,7 @@ export function statsPage({ canonical, summaries, visits = null, ga = null, gsc 
   const sec = (ms) => `${Math.round(ms / 1000)}초`;
   const pct = (a, b) => (b ? `${((a / b) * 100).toFixed(1)}%` : '-');
   const titleOf = new Map(summaries.map((s) => [s.slug, s.title]));
+  const titleOfPath = (path) => titleOf.get(String(path).replace(/^\//, '')) ?? path;
 
   const body = html`<style>${STYLE}</style>
   <div class="shell adm">
@@ -225,8 +226,8 @@ export function statsPage({ canonical, summaries, visits = null, ga = null, gsc 
         ? panel('일별 방문', bars(visits.days.map((r) => [r.day, r.n, `재 ${num(r.r)}`]), { unit: '회' }), { sub: '14일 · 비콘', note: '자바스크립트를 실행한 브라우저만 세고 재방문은 1년 쿠키로 구분한다. 크롤러와 AI 봇은 빠진다.' })
         : panel('일별 방문', html`<p class="panel__note">D1 이 연결되지 않았다.</p>`)}
       ${gaOk ? panel('GA 일별 사용자', bars(ga.days.map((r) => [r.date, r.users, `조회 ${num(r.views)}`]), { alt: true, unit: '명' }), { sub: '14일' }) : ''}
-      ${visits ? panel('인기 페이지', bars(visits.top.map((r) => [r.path, r.n, '', r.path]), { unit: '회' }), { sub: '7일 · 비콘' }) : ''}
-      ${gaOk ? panel('GA 인기 페이지', bars(ga.pages.map((r) => [r.path, r.views, '', r.path]), { alt: true, unit: '회' }), { sub: '7일' }) : ''}
+      ${visits ? panel('인기 페이지', bars(visits.top.map((r) => [titleOfPath(r.path), r.n, '', r.path]), { unit: '회' }), { sub: '7일 · 비콘' }) : ''}
+      ${gaOk ? panel('GA 인기 페이지', bars(ga.pages.map((r) => [titleOfPath(r.path), r.views, '', r.path]), { alt: true, unit: '회' }), { sub: '7일' }) : ''}
       ${clicks
         ? panel('글별 쿠팡 클릭률', bars(clicks.rows.slice(0, 15).map((r) => [titleOf.get(r.slug) ?? r.slug, r.clicks, `방문 ${num(r.views)} · ${pct(r.clicks, r.views)}`, `/${r.slug}`]), { unit: '클릭' }), { sub: '7일', note: '쿠팡 버튼을 눌러 /out 을 지난 수. 방문 대비 비율이 글의 힘이다. 크롤러는 뺀다.' })
         : ''}
