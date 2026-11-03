@@ -183,18 +183,21 @@ function outbound(url, request, env, ctx) {
 function rssFeed(origin, list) {
   const items = list
     .slice(0, 50)
-    .map(
-      (p) => `    <item>
+    .map((p) => {
+      // 인스타그램 · 스레드 자동 게시 도구(Make · IFTTT 등)가 RSS 로 사진을 받아가게 대표 사진을 넣는다
+      const image = p.products?.[0]?.image;
+      const img = image ? `${origin}${imgProxy(image, { w: 600 })}` : null;
+      return `    <item>
       <title>${escapeHtml(p.title)}</title>
       <link>${postHref(origin, p.slug)}</link>
       <guid isPermaLink="true">${postHref(origin, p.slug)}</guid>
       <pubDate>${new Date(p.createdAt).toUTCString()}</pubDate>
       <category>${escapeHtml(categoryOfPost(p)?.name ?? p.keyword ?? '')}</category>
-      <description>${escapeHtml(p.tldr || p.metaDescription || excerpt(p.intro, 200))}</description>
-    </item>`,
-    )
+      <description>${escapeHtml(p.tldr || p.metaDescription || excerpt(p.intro, 200))}</description>${img ? `\n      <enclosure url="${img}" type="image/webp" length="0" />\n      <media:content url="${img}" medium="image" />\n      <media:thumbnail url="${img}" />` : ''}
+    </item>`;
+    })
     .join('\n');
-  return xml(`<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  return xml(`<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/">
   <channel>
     <title>USB.KR</title>
     <link>${origin}/</link>
