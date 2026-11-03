@@ -40,13 +40,15 @@ export function newSlug() {
   return Array.from({ length: 5 }, () => CHARS[randomInt(CHARS.length)]).join('');
 }
 
-export function buildPost({ article, keyword, products, modelUsed, slug = newSlug(), video = null, facts = [] }) {
+export function buildPost({ article, keyword, products, modelUsed, slug = newSlug(), video = null, facts = [], pinned = false }) {
   const main = products[0];
   return {
     slug,
     title: article.title,
     keyword,
     createdAt: new Date().toISOString(),
+    // 관리자 페이지의 "글 생성 요청"으로 만든 글은 24시간 동안 홈 맨 위에 고정한다 (src/data/store.js orderPinned)
+    pinnedUntil: pinned ? Date.now() + 24 * 60 * 60 * 1000 : 0,
     tldr: article.tldr,
     verdict: article.verdict || '',
     fit: article.fit ?? [],
@@ -92,6 +94,6 @@ export function summarize(p) {
     modelUsed: p.modelUsed || '',
     videoImageToVideo: null,
     videoTextToVideo: null,
-    pinnedUntil: 0,
+    pinnedUntil: p.pinnedUntil || 0,
   };
 }

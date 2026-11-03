@@ -220,7 +220,7 @@ export function statsPage({ canonical, summaries, visits = null, ga = null, gsc 
                 </div>`,
               )
             : html`<p class="panel__note">아직 요청이 없다.</p>`}`,
-        { wide: true, sub: '최근 10건', note: '상품명을 쓰거나 사진을 고르면 된다. 사진은 Workers AI 가 제품명을 읽어 검색어로 쓴다. VM 발행기가 5분마다 가져가 글을 쓴다. 이미 다룬 제품이면 실패로 표시된다.' },
+        { wide: true, sub: '최근 10건', note: '상품명을 쓰거나 사진을 고르면 된다. 사진은 Workers AI 가 제품명을 읽어 검색어로 쓴다. VM 발행기가 5분마다 가져가 글을 쓴다. 이미 다룬 제품이면 실패로 표시된다. 발행되면 홈 맨 위에 24시간 고정된다.' },
       )}
       ${visits
         ? panel('일별 방문', bars(visits.days.map((r) => [r.day, r.n, `재 ${num(r.r)}`]), { unit: '회' }), { sub: '14일 · 비콘', note: '자바스크립트를 실행한 브라우저만 세고 재방문은 1년 쿠키로 구분한다. 크롤러와 AI 봇은 빠진다.' })

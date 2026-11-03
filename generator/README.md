@@ -61,7 +61,7 @@ tail -f ~/usb-generator.log
 
 ## 관리자 페이지에서 글 요청
 
-`/0` 의 "글 생성 요청" 폼에 상품명이나 쿠팡 검색어를 넣으면 워커가 D1 `gen_queue` 에 적고 VM 의 `generator/queue.js` 가 5분마다 가져가 `run.js --keyword … --query …` 로 발행한 뒤 결과(글 링크 또는 실패 사유)를 돌려준다. `.env` 에 `ADMIN_KEY`(워커 시크릿과 같은 값)가 있어야 하고 크론은 `bash generator/install-cron.sh` 로 다시 등록한다. 정기 발행이 도는 동안엔 다음 틱으로 미룬다.
+`/0` 의 "글 생성 요청" 폼에 상품명이나 쿠팡 검색어를 넣으면 워커가 D1 `gen_queue` 에 적고 VM 의 `generator/queue.js` 가 5분마다 가져가 `run.js --keyword … --query …` 로 발행한 뒤 결과(글 링크 또는 실패 사유)를 돌려준다. `.env` 에 `ADMIN_KEY`(워커 시크릿과 같은 값)가 있어야 하고 크론은 `bash generator/install-cron.sh` 로 다시 등록한다. 정기 발행이 도는 동안엔 다음 틱으로 미룬다. `--keyword` 와 `--query` 를 둘 다 받은 발행(이 큐가 시킨 것)은 `post.pinnedUntil` 을 발행 시각 +24시간으로 채워 그동안 홈 맨 위(히어로 · 최신 목록 1순위)에 고정된다 — 정렬은 `src/data/store.js` 의 `orderPinned`.
 
 ## 핫딜과 SNS 알림
 

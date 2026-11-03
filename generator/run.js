@@ -245,7 +245,9 @@ async function runOnce(forcedKeyword, forcedQuery) {
     while (await kv.get(`post:${slug}`)) slug = newSlug();
     // 작성 일시: 2026-10-13 11:08 — 참고 이미지는 실패해도 글 발행을 막지 않는다
     const illustration = DRY || MOCK ? null : await makeIllustration(slug, item.keyword, products[0]).catch((e) => (log(`참고 이미지 건너뜀: ${e.message}`), null));
-    const post = buildPost({ article: embedImages(article, products, illustration, item.keyword), keyword: item.keyword, products, modelUsed: model, slug, video, facts });
+    // --keyword · --query 를 둘 다 받았다는 건 관리자 페이지 "글 생성 요청" 큐(queue.js)가 시킨 것이다. 24시간 상단 고정
+    const pinned = Boolean(forcedKeyword && forcedQuery);
+    const post = buildPost({ article: embedImages(article, products, illustration, item.keyword), keyword: item.keyword, products, modelUsed: model, slug, video, facts, pinned });
     run.slug = post.slug;
     if (DRY || MOCK) {
       console.log(JSON.stringify(post, null, 2));
