@@ -21,7 +21,7 @@ function monthStartISO() {
 async function load(env) {
   const start = monthStartISO();
   // 변수 타입 혼선을 피하려고 값을 그대로 박아 넣는다. accountTag · datetime 둘 다 우리 쪽에서만 만드는 값이라 안전하다.
-  const query = `{ viewer { accounts(filter: { accountTag: "${env.CLOUDFLARE_ACCOUNT_ID}" }) { workersInvocationsAdaptiveGroups(filter: { datetime_geq: "${start}" }, limit: 100) { sum { requests errors subrequests } } } } }`;
+  const query = `{ viewer { accounts(filter: { accountTag: "${env.CLOUDFLARE_ACCOUNT_ID}" }) { workersInvocationsAdaptive(filter: { datetime_geq: "${start}" }, limit: 1000) { sum { requests errors subrequests } } } } }`;
   const res = await fetch('https://api.cloudflare.com/client/v4/graphql', {
     method: 'POST',
     headers: { authorization: `Bearer ${env.CLOUDFLARE_ANALYTICS_TOKEN}`, 'content-type': 'application/json' },
@@ -31,7 +31,7 @@ async function load(env) {
   if (!res.ok) throw new Error(`Cloudflare GraphQL ${res.status}: ${(await res.text()).slice(0, 200)}`);
   const json = await res.json();
   if (json.errors?.length) throw new Error(`Cloudflare GraphQL: ${json.errors[0].message}`);
-  const rows = json.data?.viewer?.accounts?.[0]?.workersInvocationsAdaptiveGroups ?? [];
+  const rows = json.data?.viewer?.accounts?.[0]?.workersInvocationsAdaptive ?? [];
   const requests = rows.reduce((a, r) => a + (r.sum?.requests ?? 0), 0);
   const errors = rows.reduce((a, r) => a + (r.sum?.errors ?? 0), 0);
   const subrequests = rows.reduce((a, r) => a + (r.sum?.subrequests ?? 0), 0);
