@@ -7,6 +7,16 @@ import { categoryOfPost } from '../data/categories.js';
 const KST = { timeZone: 'Asia/Seoul', hour12: false };
 const kst = (iso) => new Date(iso).toLocaleString('ko-KR', { ...KST, month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 const num = (n) => Number(n ?? 0).toLocaleString('ko-KR');
+const won = (n) => `₩${Math.round(n).toLocaleString('ko-KR')}`;
+const usd = (n) => `$${Number(n).toFixed(Number(n) < 10 ? 2 : 1)}`;
+const CF_D = 'https://dash.cloudflare.com/?to=/:account/';
+const CF_LINK = {
+  'Workers 요청': CF_D + 'workers/services/view/new/production/metrics',
+  'D1 읽은 줄': CF_D + 'workers/d1/databases/cc589b56-d347-42d5-81be-264c6bf6c576/metrics',
+  'D1 쓴 줄': CF_D + 'workers/d1/databases/cc589b56-d347-42d5-81be-264c6bf6c576/metrics',
+  'D1 저장': CF_D + 'workers/d1/databases/cc589b56-d347-42d5-81be-264c6bf6c576/metrics',
+  'Workers AI 뉴런': CF_D + 'ai/workers-ai/usage',
+};
 const isGen = (s) => /^[a-z0-9]{5}$/.test(s.slug);
 function ago(iso) {
   const m = Math.max(0, Math.round((Date.now() - new Date(iso)) / 60000));
@@ -262,21 +272,28 @@ export function statsPage({ canonical, summaries, visits = null, ga = null, gsc 
       ${!ga ? panel('구글 애널리틱스', html`<p class="panel__note">GA_PROPERTY_ID 변수와 GA_SA_EMAIL · GA_SA_KEY 시크릿을 넣으면 실시간 접속 · 사용자 · 유입 경로가 여기에 뜬다. README 의 "구글 애널리틱스" 참고.</p>`) : ''}
       ${cf && !cf.error
         ? panel(
-            'Cloudflare 사용량',
+            'Cloudflare 이번 달 예상 청구',
             html`<div class="adm__kpis" style="margin:0 0 10px">
-              ${kpi('이번 달 Workers 요청', num(cf.requests), `${cf.monthStart} 부터`)}
-              ${kpi('무료 한도 초과분', num(cf.overRequests), '건')}
-              ${kpi('요청 기준 최소 예상액', `$${cf.estUsd.toFixed(2)}`, '기본 $5 포함')}
+              ${kpi('이번 달 예상', usd(cf.usd), won(cf.krw), true)}
+              ${kpi('월말 예상', usd(cf.projUsd), won(cf.projKrw))}
+              ${kpi('기본료', usd(cf.base), 'Workers 유료 플랜')}
             </div>
-            <p class="panel__note">${cf.stale ? `방금 갱신에 실패해 이전 값을 보여 준다: ${cf.stale}` : 'KV · D1 · R2 초과 사용분은 빠진 하한선이다. 정확한 결제 예정 금액은 대시보드에서만 보인다.'} <a href="https://dash.cloudflare.com/?to=/:account/billing/overview" target="_blank" rel="noopener">Billing 바로가기</a></p>`,
+            ${cf.items.map(
+              (x) => html`<div class="row">
+                <span class="row__l">${CF_LINK[x.name] ? html`<a href="${CF_LINK[x.name]}" target="_blank" rel="noopener">${x.name} ↗</a>` : x.name}<small>${num(Math.round(x.used * 100) / 100)}${x.unit} / 무료 ${num(Math.round(x.free))}</small></span>
+                <span></span>
+                <span class="row__n">${x.usd > 0 ? usd(x.usd) : '무료'}</span>
+              </div>`,
+            )}
+            <p class="panel__note">${cf.day}일째 / ${cf.days}일 · 월말 예상은 지금까지 쓴 속도로 계산 · 환율 ${cf.rate}원 · 공개 요금표 기준 근사값이라 청구서와 다를 수 있다.${cf.missing?.length ? ` 못 읽은 항목: ${cf.missing.join(' · ')}` : ''}${cf.stale ? ` 방금 갱신에 실패해 이전 값을 보여 준다: ${cf.stale}` : ''} <a href="https://dash.cloudflare.com/?to=/:account/billing/overview" target="_blank" rel="noopener">Billing 바로가기</a></p>`,
             { sub: '30분 캐시' },
           )
         : ''}
-      ${cf?.error ? panel('Cloudflare 사용량', html`<p class="panel__note">불러오기 실패: ${cf.error}</p>`) : ''}
+      ${cf?.error ? panel('Cloudflare 이번 달 예상 청구', html`<p class="panel__note">불러오기 실패: ${cf.error}</p>`) : ''}
       ${!cf
         ? panel(
-            'Cloudflare 사용량',
-            html`<p class="panel__note">변수 CLOUDFLARE_ACCOUNT_ID(이미 들어있음)와 시크릿 CLOUDFLARE_ANALYTICS_TOKEN 을 넣으면 이번 달 요청 수와 최소 예상 비용이 여기 뜬다. dash.cloudflare.com → 오른쪽 위 프로필 → <b>API 토큰</b> → <b>토큰 만들기</b> → 사용자 지정 토큰 → 권한 "Account · Account Analytics · Read" 선택 → 계정은 이 사이트 계정으로 한정 → 만들어진 값을 <code>npx wrangler secret put CLOUDFLARE_ANALYTICS_TOKEN</code> 으로 넣는다.</p>`,
+            'Cloudflare 이번 달 예상 청구',
+            html`<p class="panel__note">변수 CLOUDFLARE_ACCOUNT_ID(이미 들어있음)와 시크릿 CLOUDFLARE_ANALYTICS_TOKEN 을 넣으면 이번 달 사용량과 공개 요금표 기준 예상 청구가 여기 뜬다. dash.cloudflare.com → 오른쪽 위 프로필 → <b>API 토큰</b> → <b>토큰 만들기</b> → 사용자 지정 토큰 → 권한 "Account · Account Analytics · Read" 선택 → 계정은 이 사이트 계정으로 한정 → 만들어진 값을 <code>npx wrangler secret put CLOUDFLARE_ANALYTICS_TOKEN</code> 으로 넣는다.</p>`,
           )
         : ''}
       ${panel('발행 추이', bars(days.map(([d, n]) => [d, n]), { unit: '건' }), { sub: '14일' })}
