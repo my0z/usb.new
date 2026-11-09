@@ -8,6 +8,7 @@ import { bestGroups, bestIndexPage, bestPage, bestUrl } from './views/best.js';
 import { dealsPage } from './views/deals.js';
 import { ASSET_VERSION, setTracking, setInlineCss } from './views/layout.js';
 import { gaReport, gscReport, gscOpportunities } from './lib/ga.js';
+import { cfUsage } from './lib/cloudflare.js';
 import { coupangConfigured, deeplink, searchUrl, productCount } from './lib/coupang.js';
 import { categories, getCategory, categoryOfPost } from './data/categories.js';
 import { getStore, searchSummaries, excerpt } from './data/store.js';
@@ -348,7 +349,7 @@ async function route(url, env, request, ctx) {
   if (path === '/0') {
     const key = env?.ADMIN_KEY;
     if (!isAdmin(request, url, env)) return notFound(url);
-    const [summaries, visits, ga, gsc, runs, clicks, queue, extraKeywords] = await Promise.all([
+    const [summaries, visits, ga, gsc, runs, clicks, queue, extraKeywords, cf] = await Promise.all([
       store.summaries(),
       store.visitStats(),
       gaReport(env).catch((e) => ({ error: e.message })),
@@ -357,8 +358,9 @@ async function route(url, env, request, ctx) {
       store.clickStats(),
       store.genQueue(),
       store.keywords(30),
+      cfUsage(env).catch((e) => ({ error: e.message })),
     ]);
-    const res = page(statsPage({ canonical, summaries, visits, ga, gsc, runs, clicks, queue, extraKeywords, msg: url.searchParams.get('msg') ?? '', siteUrl: env?.SITE_URL || url.origin, psiKey: env?.PSI_KEY ?? '', viduOffpeak: env?.VIDU_OFFPEAK ?? '' }), { cache: 'no-store', noindex: true });
+    const res = page(statsPage({ canonical, summaries, visits, ga, gsc, runs, clicks, queue, extraKeywords, cf, msg: url.searchParams.get('msg') ?? '', siteUrl: env?.SITE_URL || url.origin, psiKey: env?.PSI_KEY ?? '', viduOffpeak: env?.VIDU_OFFPEAK ?? '' }), { cache: 'no-store', noindex: true });
     if (key) res.headers.set('set-cookie', `adm=${key}; Path=/0; Max-Age=31536000; HttpOnly; Secure; SameSite=Lax`);
     return res;
   }

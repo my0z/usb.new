@@ -145,7 +145,7 @@ function viduTile(win) {
   return kpi(`Vidu 오프피크 · KST ${kst(start)}–${kst(end)}`, on ? '진행 중' : '대기', on ? `${hm(left)} 남음` : `${hm(left)} 뒤 시작`, on);
 }
 
-export function statsPage({ canonical, summaries, visits = null, ga = null, gsc = null, runs = [], clicks = null, queue = [], extraKeywords = [], msg = '', siteUrl = '', psiKey = '', viduOffpeak = '' }) {
+export function statsPage({ canonical, summaries, visits = null, ga = null, gsc = null, runs = [], clicks = null, queue = [], extraKeywords = [], cf = null, msg = '', siteUrl = '', psiKey = '', viduOffpeak = '' }) {
   const byCat = new Map();
   const byDay = new Map();
   let products = 0;
@@ -260,6 +260,25 @@ export function statsPage({ canonical, summaries, visits = null, ga = null, gsc 
       )}
       ${panel('페이지 속도', html`<div id="psi" data-url="${siteUrl || canonical.replace(/\/0$/, '/')}" data-key="${psiKey}"><p class="panel__note">PageSpeed Insights 모바일 측정 중… 20초쯤 걸린다.</p></div>`, { sub: 'PageSpeed · 1시간 캐시' })}
       ${!ga ? panel('구글 애널리틱스', html`<p class="panel__note">GA_PROPERTY_ID 변수와 GA_SA_EMAIL · GA_SA_KEY 시크릿을 넣으면 실시간 접속 · 사용자 · 유입 경로가 여기에 뜬다. README 의 "구글 애널리틱스" 참고.</p>`) : ''}
+      ${cf && !cf.error
+        ? panel(
+            'Cloudflare 사용량',
+            html`<div class="adm__kpis" style="margin:0 0 10px">
+              ${kpi('이번 달 Workers 요청', num(cf.requests), `${cf.monthStart} 부터`)}
+              ${kpi('무료 한도 초과분', num(cf.overRequests), '건')}
+              ${kpi('요청 기준 최소 예상액', `$${cf.estUsd.toFixed(2)}`, '기본 $5 포함')}
+            </div>
+            <p class="panel__note">${cf.stale ? `방금 갱신에 실패해 이전 값을 보여 준다: ${cf.stale}` : 'KV · D1 · R2 초과 사용분은 빠진 하한선이다. 정확한 결제 예정 금액은 대시보드에서만 보인다.'} <a href="https://dash.cloudflare.com/?to=/:account/billing/overview" target="_blank" rel="noopener">Billing 바로가기</a></p>`,
+            { sub: '30분 캐시' },
+          )
+        : ''}
+      ${cf?.error ? panel('Cloudflare 사용량', html`<p class="panel__note">불러오기 실패: ${cf.error}</p>`) : ''}
+      ${!cf
+        ? panel(
+            'Cloudflare 사용량',
+            html`<p class="panel__note">변수 CLOUDFLARE_ACCOUNT_ID(이미 들어있음)와 시크릿 CLOUDFLARE_ANALYTICS_TOKEN 을 넣으면 이번 달 요청 수와 최소 예상 비용이 여기 뜬다. dash.cloudflare.com → 오른쪽 위 프로필 → <b>API 토큰</b> → <b>토큰 만들기</b> → 사용자 지정 토큰 → 권한 "Account · Account Analytics · Read" 선택 → 계정은 이 사이트 계정으로 한정 → 만들어진 값을 <code>npx wrangler secret put CLOUDFLARE_ANALYTICS_TOKEN</code> 으로 넣는다.</p>`,
+          )
+        : ''}
       ${panel('발행 추이', bars(days.map(([d, n]) => [d, n]), { unit: '건' }), { sub: '14일' })}
       ${panel('카테고리별', bars(cats.map(([c, n]) => [c, n]), { unit: '건' }), { sub: `${cats.length}개` })}
       ${panel(

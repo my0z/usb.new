@@ -43,7 +43,10 @@
     // IndexNow 키. 네이버 · 빙이 새 글을 바로 가져가게 발행기가 알린다. /<키>.txt 로 공개되는 값이라 비밀이 아니다. generator/config.js 와 같아야 한다.
     "INDEXNOW_KEY": "80bdbe5352244e8cce7a9c5d36560a00",
     // Vidu 오프피크(무제한 생성) 시간대. 비두가 쓰는 UTC+8 기준 "HH:MM-HH:MM". 관리자 페이지가 KST 로 바꿔 지금 진행 중인지 보여준다. 비두 앱의 안내와 다르면 여기만 고친다.
-    "VIDU_OFFPEAK": "00:00-08:00"
+    "VIDU_OFFPEAK": "00:00-08:00",
+    // 관리자 페이지의 Cloudflare 사용량 칸에 쓴다. deploy.yml 의 CLOUDFLARE_ACCOUNT_ID 와 같은 값이라 비밀이 아니다.
+    // 시크릿 CLOUDFLARE_ANALYTICS_TOKEN(Account Analytics Read 권한)도 같이 있어야 뜬다.
+    "CLOUDFLARE_ACCOUNT_ID": "709dcc6af36c8ee7b6d3d99e7a9fe422"
   },
   // 관리자 페이지의 사진 → 제품명 인식 (Workers AI · 무료 한도 안)
   "ai": { "binding": "AI" },

@@ -25,7 +25,7 @@ usb.kr 리뉴얼 사이트. USB 주변기기를 다루는 매거진 · 리뷰형
 | `/rss.xml` `/feed.xml` `/sitemap.xml` `/llms.txt` `/robots.txt` | 피드와 색인용 |
 | `/healthz` | 상태 확인 JSON (`source` 가 `kv` 면 실데이터) |
 | `/search?q=` | 검색창. 키워드의 쿠팡 검색 결과를 파트너스 딥링크로 바꿔 보낸다 (워커 시크릿 `COUPANG_ACCESS_KEY` · `COUPANG_SECRET_KEY`). 키가 없으면 사이트 안 글 검색 |
-| `/0` | 관리자 통계. 방문(사람만 · 재방문 구분) · 글별 쿠팡 클릭률 · 발행 현황 · 발행기 성공률과 소요 시간 · 구글 애널리틱스 · 서치콘솔 검색 유입 · PageSpeed 점수 |
+| `/0` | 관리자 통계. 방문(사람만 · 재방문 구분) · 글별 쿠팡 클릭률 · 발행 현황 · 발행기 성공률과 소요 시간 · 구글 애널리틱스 · 서치콘솔 검색 유입 · PageSpeed 점수 · Cloudflare 이번 달 사용량 |
 
 ### 구글 애널리틱스
 
@@ -62,6 +62,23 @@ npm run deploy
 ### 발행기 기록 · 페이지 속도
 
 `generator/run.js` 는 실행마다 KV `gen:runs` 에 성공 여부 · 시도 횟수 · 소요 시간 · 오류를 남기고 `/0` 가 30일 성공률로 보여 준다. 페이지 속도는 `/0` 를 연 브라우저가 PageSpeed Insights API 를 직접 불러 모바일 점수와 LCP · CLS · TBT 를 그린다 (1시간 localStorage 캐시). 키 없이 쓰면 공용 한도라 가끔 429 가 나는데 30초 뒤 한 번 다시 재고 그래도 안 되면 PageSpeed 사이트 링크를 준다. 구글 클라우드에서 PageSpeed Insights API 를 켜고 API 키를 만들어 시크릿으로 넣으면(`echo 키 | npx wrangler secret put PSI_KEY`) 한도가 따로 잡혀 사라진다. 키는 관리자 페이지 HTML 에 실리니 구글 콘솔에서 웹사이트 `https://usb.kr/*` 로 제한한다.
+
+### Cloudflare 사용량
+
+`/0` 에 이번 달 Workers 요청 수와 요청 기준 최소 예상 비용(기본 $5 + 무료 한도 1천만 건 초과분 × $0.30/백만)을 띄운다. Cloudflare 가 정확한 "결제 예정 금액"은 API 로 안 주기 때문에 하한선일 뿐이고 KV · D1 · R2 초과 사용분은 안 들어간다. 정확한 금액은 패널의 링크로 Billing 화면에서 본다.
+
+`wrangler.jsonc` 의 `CLOUDFLARE_ACCOUNT_ID` 는 이미 채워져 있다 (`deploy.yml` 과 같은 값이라 비밀이 아니다). 시크릿 하나만 더 넣으면 된다.
+
+1. dash.cloudflare.com → 오른쪽 위 프로필 → **API 토큰** → **토큰 만들기** → 사용자 지정 토큰
+2. 권한에 **Account · Account Analytics · Read** 추가. 계정 리소스는 이 사이트 계정으로 한정
+3. 생성된 토큰을 VM 에서 시크릿으로 등록
+
+```sh
+cd ~/usb.new
+echo 토큰값 | npx wrangler secret put CLOUDFLARE_ANALYTICS_TOKEN
+```
+
+결과는 워커 안에서 30분 캐시한다.
 
 ### 네이버 · 빙 색인
 
