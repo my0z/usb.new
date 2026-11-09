@@ -1,5 +1,6 @@
 /**
- * 텔레그램 · 스레드 · X 에 글을 올린다. 키가 없는 곳은 건너뛴다.
+ * 작성: 2026-11-04 09:59 (텔레그램 발송 중단 반영)
+ * 스레드 · X 에 글을 올린다. 텔레그램은 발송을 중단해서 항상 건너뛴다. 키가 없는 곳도 건너뛴다.
  * .env: TELEGRAM_BOT_TOKEN · TELEGRAM_CHAT_ID(@채널명 또는 숫자) · THREADS_USER_ID · THREADS_TOKEN
  *       X_API_KEY · X_API_SECRET · X_ACCESS_TOKEN · X_ACCESS_SECRET
  */
@@ -9,7 +10,11 @@ const env = (k) => process.env[k] || '';
 const timeout = () => AbortSignal.timeout(20000);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// ---------- 텔레그램 (발송 중단) — 작업: 2026-11-04 09:59 ----------
+// 작성: 2026-11-04 09:59 — 요청으로 텔레그램 발송을 끈다. 항상 'skip' 을 돌려주고 아무것도 보내지 않는다.
+// 다시 켜려면 TELEGRAM_ENABLED=1 을 환경에 넣는다.
 async function telegram({ text, imageUrl }) {
+  if (env('TELEGRAM_ENABLED') !== '1') return 'skip';
   const token = env('TELEGRAM_BOT_TOKEN');
   const chat = env('TELEGRAM_CHAT_ID');
   if (!token || !chat) return 'skip';
