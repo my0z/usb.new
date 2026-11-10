@@ -339,7 +339,7 @@ async function route(url, env, request, ctx) {
   // 서치콘솔에서 순위 4~30위인 검색어. 발행기가 새 글 키워드와 손볼 글을 고른다
   if (path === '/0/gsc') {
     if (!isAdmin(request, url, env)) return notFound(url);
-    return Response.json(await gscOpportunities(env).catch(() => []), { headers: { 'cache-control': 'no-store' } });
+    return Response.json(await gscOpportunities(env, ctx).catch(() => []), { headers: { 'cache-control': 'no-store' } });
   }
   // VM 발행기가 가져가는 대기 목록
   if (path === '/0/queue') {
@@ -352,13 +352,13 @@ async function route(url, env, request, ctx) {
     const [summaries, visits, ga, gsc, runs, clicks, queue, extraKeywords, cf] = await Promise.all([
       store.summaries(),
       store.visitStats(),
-      gaReport(env).catch((e) => ({ error: e.message })),
-      gscReport(env).catch((e) => ({ error: e.message })),
+      gaReport(env, ctx).catch((e) => ({ error: e.message })),
+      gscReport(env, ctx).catch((e) => ({ error: e.message })),
       store.genRuns(),
       store.clickStats(),
       store.genQueue(),
       store.keywords(30),
-      cfUsage(env).catch((e) => ({ error: e.message })),
+      cfUsage(env, ctx).catch((e) => ({ error: e.message })),
     ]);
     const res = page(statsPage({ canonical, summaries, visits, ga, gsc, runs, clicks, queue, extraKeywords, cf, msg: url.searchParams.get('msg') ?? '', siteUrl: env?.SITE_URL || url.origin, psiKey: env?.PSI_KEY ?? '', viduOffpeak: env?.VIDU_OFFPEAK ?? '' }), { cache: 'no-store', noindex: true });
     if (key) res.headers.set('set-cookie', `adm=${key}; Path=/0; Max-Age=31536000; HttpOnly; Secure; SameSite=Lax`);

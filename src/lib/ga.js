@@ -1,8 +1,10 @@
 /**
  * GA4 Data API 와 Search Console API. 같은 서비스 계정 키로 JWT 를 만들어 액세스 토큰 하나를 받아 둘 다 부른다.
  * 필요한 설정: GA_PROPERTY_ID · GSC_SITE(변수) · GA_SA_EMAIL · GA_SA_KEY(시크릿 · PEM).
- * 결과는 아이솔레이트 안에서 10분 캐시한다 (관리자 페이지 하나가 쓰므로 충분하다).
+ * 결과는 아이솔레이트 안에서 10분 캐시하고 콜로 캐시에도 같은 시간 얹어 둔다
+ * (관리자 페이지라 아이솔레이트가 자주 새로 떠서 메모리 캐시만으로는 거의 매번 다시 부른다).
  */
+import { edgeCached } from './edgecache.js';
 const SCOPE = 'https://www.googleapis.com/auth/analytics.readonly https://www.googleapis.com/auth/webmasters.readonly';
 const TTL = 10 * 60 * 1000;
 let token = { value: '', exp: 0 };
@@ -34,7 +36,7 @@ async function accessToken(env) {
 /** 엣지에서 구글로 가다 5xx 가 나면 한 번 더 간다 (Cloudflare "error code: 502" 는 대개 일시적이다). */
 async function post(url, token, body, label) {
   for (let i = 0; ; i += 1) {
-    const res = await fetch(url, { method: 'POST', headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' }, body: JSON.stringify(body) });
+    const res = await fetch(url, { method: 'POST', headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' }, body: JSON.stringify(body), signal: AbortSignal.timeout(8000) });
     if (res.ok) return res.json();
     const text = (await res.text()).slice(0, 200);
     if (res.status < 500 || i) throw new Error(`${label} ${res.status}: ${text}`);
@@ -52,12 +54,14 @@ const top = (metricName) => ({ orderBys: [{ metric: { metricName }, desc: true }
 
 export const gaConfigured = (env) => Boolean(env?.GA_PROPERTY_ID && env?.GA_SA_EMAIL && env?.GA_SA_KEY);
 
-/** 관리자 페이지용 요약. 설정이 없으면 null. */
-export async function gaReport(env) {
+/** 관리자 페이지용 요약. 설정이 없으면 null. ctx 를 주면 콜로 캐시도 같이 쓴다. */
+export async function gaReport(env, ctx) {
   if (!gaConfigured(env)) return null;
   if (Date.now() - report.at < TTL) return report.data;
   try {
-    return await loadGa(env);
+    const data = await edgeCached(ctx, 'ga-report', TTL / 1000, () => loadGa(env));
+    report = { at: Date.now(), data };
+    return data;
   } catch (e) {
     // 실패하면 최근 값을 그대로 보여 주고 10분 뒤 다시 시도한다
     if (report.data) return { ...report.data, stale: e.message };
@@ -76,19 +80,15 @@ async function loadGa(env) {
   ]);
   const zero = { users: 0, views: 0, sessions: 0 };
   const byRange = Object.fromEntries(rows(ranges).map((r) => [r.d[0] ?? 'date_range_0', { users: r.m[0], views: r.m[1], sessions: r.m[2] }]));
-  report = {
-    at: Date.now(),
-    data: {
-      realtime: rows(realtime)[0]?.m[0] ?? 0,
-      today: byRange.date_range_0 ?? zero,
-      week: byRange.date_range_1 ?? zero,
-      month: byRange.date_range_2 ?? zero,
-      pages: rows(pages).map((r) => ({ path: r.d[0], views: r.m[0] })),
-      sources: rows(sources).map((r) => ({ source: r.d[0], sessions: r.m[0] })),
-      days: rows(daily).map((r) => ({ date: r.d[0].replace(/^(\d{4})(\d{2})(\d{2})$/, '$1-$2-$3'), users: r.m[0], views: r.m[1] })),
-    },
+  return {
+    realtime: rows(realtime)[0]?.m[0] ?? 0,
+    today: byRange.date_range_0 ?? zero,
+    week: byRange.date_range_1 ?? zero,
+    month: byRange.date_range_2 ?? zero,
+    pages: rows(pages).map((r) => ({ path: r.d[0], views: r.m[0] })),
+    sources: rows(sources).map((r) => ({ source: r.d[0], sessions: r.m[0] })),
+    days: rows(daily).map((r) => ({ date: r.d[0].replace(/^(\d{4})(\d{2})(\d{2})$/, '$1-$2-$3'), users: r.m[0], views: r.m[1] })),
   };
-  return report.data;
 }
 
 const ymd = (daysAgo) => new Date(Date.now() - daysAgo * 864e5).toISOString().slice(0, 10);
@@ -100,12 +100,14 @@ async function query(env, body) {
 
 export const gscConfigured = (env) => Boolean(env?.GSC_SITE && env?.GA_SA_EMAIL && env?.GA_SA_KEY);
 
-/** 서치콘솔 28일 요약. 검색 데이터는 이틀쯤 늦게 들어온다. 설정이 없으면 null. */
-export async function gscReport(env) {
+/** 서치콘솔 28일 요약. 검색 데이터는 이틀쯤 늦게 들어온다. 설정이 없으면 null. ctx 를 주면 콜로 캐시도 같이 쓴다. */
+export async function gscReport(env, ctx) {
   if (!gscConfigured(env)) return null;
   if (Date.now() - gsc.at < TTL) return gsc.data;
   try {
-    return await loadGsc(env);
+    const data = await edgeCached(ctx, 'gsc-report', TTL / 1000, () => loadGsc(env));
+    gsc = { at: Date.now(), data };
+    return data;
   } catch (e) {
     if (gsc.data) return { ...gsc.data, stale: e.message };
     throw e;
@@ -120,32 +122,28 @@ async function loadGsc(env) {
     query(env, { dimensions: ['page'], rowLimit: 10 }),
   ]);
   const t = total[0] ?? { clicks: 0, impressions: 0, ctr: 0, position: 0 };
-  gsc = {
-    at: Date.now(),
-    data: {
-      clicks: t.clicks,
-      impressions: t.impressions,
-      ctr: t.ctr,
-      position: t.position,
-      days: days.map((r) => ({ date: r.keys[0], clicks: r.clicks, impressions: r.impressions })).reverse().slice(0, 14),
-      queries: queries.map((r) => ({ q: r.keys[0], clicks: r.clicks, impressions: r.impressions, position: r.position })),
-      pages: pages.map((r) => ({ path: r.keys[0].replace(/^https?:\/\/[^/]+/, '') || '/', clicks: r.clicks, impressions: r.impressions })),
-    },
+  return {
+    clicks: t.clicks,
+    impressions: t.impressions,
+    ctr: t.ctr,
+    position: t.position,
+    days: days.map((r) => ({ date: r.keys[0], clicks: r.clicks, impressions: r.impressions })).reverse().slice(0, 14),
+    queries: queries.map((r) => ({ q: r.keys[0], clicks: r.clicks, impressions: r.impressions, position: r.position })),
+    pages: pages.map((r) => ({ path: r.keys[0].replace(/^https?:\/\/[^/]+/, '') || '/', clicks: r.clicks, impressions: r.impressions })),
   };
-  return gsc.data;
 }
 
 /** 순위 4~30위인데 노출은 있는 검색어와 페이지 (28일 · 노출 많은 순). 조금만 밀면 올라가는 자리다. 발행기가 /0/gsc 로 받아 새 글 키워드와 손볼 글을 고른다. */
-export async function gscOpportunities(env) {
+export async function gscOpportunities(env, ctx) {
   if (!gscConfigured(env)) return [];
   if (Date.now() - opp.at < TTL) return opp.data;
-  const rows = await query(env, { dimensions: ['query', 'page'], rowLimit: 250 });
-  opp = {
-    at: Date.now(),
-    data: rows
+  const data = await edgeCached(ctx, 'gsc-opportunities', TTL / 1000, async () => {
+    const rows = await query(env, { dimensions: ['query', 'page'], rowLimit: 250 });
+    return rows
       .filter((r) => r.impressions >= 5 && r.position >= 4 && r.position <= 30)
       .sort((a, b) => b.impressions - a.impressions)
-      .map((r) => ({ q: r.keys[0], path: r.keys[1].replace(/^https?:\/\/[^/]+/, '') || '/', clicks: r.clicks, impressions: r.impressions, position: Math.round(r.position * 10) / 10 })),
-  };
-  return opp.data;
+      .map((r) => ({ q: r.keys[0], path: r.keys[1].replace(/^https?:\/\/[^/]+/, '') || '/', clicks: r.clicks, impressions: r.impressions, position: Math.round(r.position * 10) / 10 }));
+  });
+  opp = { at: Date.now(), data };
+  return data;
 }

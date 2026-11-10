@@ -3,8 +3,10 @@
  * 이 사이트가 쓰는 항목(Workers 요청 · D1 · Workers AI)만 남겼다. R2 는 안 쓰니 뺐다.
  * 공개 요금표 기준 근사값이라 청구서와 몇 % 다를 수 있다. 정확한 금액은 대시보드 Billing 에서 본다.
  * 필요한 설정: CLOUDFLARE_ACCOUNT_ID(변수) · CLOUDFLARE_ANALYTICS_TOKEN(시크릿 · Account Analytics Read).
- * 결과는 아이솔레이트 안에서 30분 캐시한다.
+ * 결과는 아이솔레이트 안에서 30분 캐시하고 콜로 캐시에도 같은 시간 얹어 둔다
+ * (관리자 페이지라 아이솔레이트가 자주 새로 떠서 메모리 캐시만으로는 거의 매번 다시 부른다).
  */
+import { edgeCached } from './edgecache.js';
 const TTL = 30 * 60 * 1000;
 const P = {
   paidBase: 5, // Workers 유료 플랜 월 기본료 ($)
@@ -78,31 +80,29 @@ async function load(env) {
   const usage = items.reduce((n, x) => n + x.usd, 0);
   const projUsage = items.reduce((n, x) => n + (x.scale ? (x.usd * daysInMonth) / Math.max(day, 0.5) : x.usd), 0);
   const rate = Number(env.USD_KRW) || 1400;
-  cache = {
-    at: Date.now(),
-    data: {
-      usd: P.paidBase + usage,
-      projUsd: P.paidBase + projUsage,
-      krw: Math.round((P.paidBase + usage) * rate),
-      projKrw: Math.round((P.paidBase + projUsage) * rate),
-      base: P.paidBase,
-      rate,
-      items,
-      missing,
-      day: Math.floor(day),
-      days: daysInMonth,
-      monthStart: vars.f,
-    },
+  return {
+    usd: P.paidBase + usage,
+    projUsd: P.paidBase + projUsage,
+    krw: Math.round((P.paidBase + usage) * rate),
+    projKrw: Math.round((P.paidBase + projUsage) * rate),
+    base: P.paidBase,
+    rate,
+    items,
+    missing,
+    day: Math.floor(day),
+    days: daysInMonth,
+    monthStart: vars.f,
   };
-  return cache.data;
 }
 
-/** 이번 달 Workers · D1 · Workers AI 사용량과 공개 요금 기준 예상 청구(기본료 포함). 설정이 없으면 null. */
-export async function cfUsage(env) {
+/** 이번 달 Workers · D1 · Workers AI 사용량과 공개 요금 기준 예상 청구(기본료 포함). 설정이 없으면 null. ctx 를 주면 콜로 캐시도 같이 쓴다. */
+export async function cfUsage(env, ctx) {
   if (!cfConfigured(env)) return null;
   if (Date.now() - cache.at < TTL) return cache.data;
   try {
-    return await load(env);
+    const data = await edgeCached(ctx, 'cf-usage', TTL / 1000, () => load(env));
+    cache = { at: Date.now(), data };
+    return data;
   } catch (e) {
     if (cache.data) return { ...cache.data, stale: e.message };
     throw e;
