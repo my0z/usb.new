@@ -1,10 +1,13 @@
 import { html } from '../lib/html.js';
 import { layout } from './layout.js';
-import { cardGrid, postUrl } from './components.js';
+import { cardGrid, imgSrc, postUrl } from './components.js';
 import { categories } from '../data/categories.js';
 import { bestUrl } from './best.js';
 
 export function listPage({ eyebrow, title, description, items, canonical, active, empty = '아직 등록된 글이 없다.', total = null, best = [] }) {
+  // cardGrid 가 맨 앞 카드를 fetchpriority=high · 600px 으로 eager 로드한다 (eagerFirst 기본값).
+  // <head> 에서 미리 받아 두면 본문 파서가 그 지점까지 오기 전에 이미지 요청이 시작된다.
+  const firstImage = items[0]?.products?.[0]?.image;
   const count = total ?? items.length;
   const body = html`<div class="shell">
     <header class="page-head reveal">
@@ -29,7 +32,7 @@ export function listPage({ eyebrow, title, description, items, canonical, active
     },
     { '@type': 'BreadcrumbList', itemListElement: [{ '@type': 'ListItem', position: 1, name: '홈', item: `${origin}/` }, { '@type': 'ListItem', position: 2, name: title, item: canonical }] },
   ];
-  return layout({ title, description, canonical, active, body, jsonLd });
+  return layout({ title, description, canonical, active, body, jsonLd, preload: firstImage ? imgSrc(firstImage, 600) : null });
 }
 
 export function categoriesPage({ canonical, counts }) {
