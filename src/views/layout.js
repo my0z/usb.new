@@ -5,7 +5,7 @@ import { postUrl, won } from './components.js';
 const SITE_NAME = 'USB.KR';
 const SITE_TAGLINE = '전자기기 스펙과 가격을 비교한다';
 /** 스타일 변경 시 올려서 브라우저 캐시를 무효화한다. */
-export const ASSET_VERSION = '20261116a';
+export const ASSET_VERSION = '20261116b';
 
 /** GA4 측정 ID (G-XXXX) 와 Cloudflare Web Analytics 토큰. 요청마다 index.js 가 env 에서 넣는다. 비어 있으면 태그를 안 넣는다. */
 export let GA_ID = '';
@@ -26,18 +26,18 @@ export const setInlineCss = (css) => {
     .trim();
 };
 
-/** 자매 사이트 홍보배너. 9개 중 내 사이트를 뺀 6개에서 하나를 무작위로 보여준다 (bodcar.com 쁘띠.끄 USB.KR 각 3개). */
+/** 자매 사이트 홍보배너. 내 사이트를 뺀 6개 중 하나를 무작위로 보여준다 (bodcar.com 쁘띠.끄 각 3개). */
 const PROMO = raw(`
 (function(){var B=[
-['b1','🚗','자동차용품 인기 랭킹 한눈에','세차 블랙박스 엔진오일 베스트를 매일 자동 업데이트','BODCAR 가기','https://bodcar.com/','#0b5fff','#00b3ff'],
-['b2','⛺','차박 준비물 베스트 모아보기','에어매트 냉온장고 햇빛 가림막까지','차박캠핑 보기','https://bodcar.com/c/%EC%B0%A8%EB%B0%95%EC%BA%A0%ED%95%91','#0f766e','#00b3ff'],
-['b3','📹','블랙박스와 엔진오일 인기템','지금 많이 찾는 차량용품 TOP 랭킹','랭킹 보기','https://bodcar.com/c/%EB%B8%94%EB%9E%99%EB%B0%95%EC%8A%A4','#1e293b','#0b5fff'],
-['v1','🌸','쁘띠.끄 뷰티 인기템 랭킹','스킨케어 선케어 클렌징을 매일 자동 업데이트','쁘띠.끄 가기','https://vuty.kr/','#ff4d8d','#ff8a5c'],
-['v2','☀️','선케어 모아보기','자외선 차단 인기템을 한곳에서','선케어 보기','https://vuty.kr/c/%EC%84%A0%EC%BC%80%EC%96%B4','#ff8a5c','#f5b83d'],
-['v3','💧','스킨케어 베스트 랭킹','토너 에센스 크림 인기 상품 TOP','랭킹 보기','https://vuty.kr/c/%EC%8A%A4%ED%82%A8%EC%BC%80%EC%96%B4','#8b5cf6','#ff4d8d']];
+['b1','자동차용품 인기 랭킹 한눈에','https://bodcar.com/'],
+['b2','차박 준비물 베스트 모아보기','https://bodcar.com/c/%EC%B0%A8%EB%B0%95%EC%BA%A0%ED%95%91'],
+['b3','블랙박스와 엔진오일 인기템','https://bodcar.com/c/%EB%B8%94%EB%9E%99%EB%B0%95%EC%8A%A4'],
+['v1','쁘띠.끄 뷰티 인기템 랭킹','https://vuty.kr/'],
+['v2','선케어 모아보기','https://vuty.kr/c/%EC%84%A0%EC%BC%80%EC%96%B4'],
+['v3','스킨케어 베스트 랭킹','https://vuty.kr/c/%EC%8A%A4%ED%82%A8%EC%BC%80%EC%96%B4']];
 var e=document.getElementById('promo'),b=B[Math.floor(Math.random()*B.length)];
 if(!e||!b)return;
-e.innerHTML='<a class="pb" href="'+b[5]+'?utm_source=usb.kr&utm_medium=banner&utm_campaign='+b[0]+'" target="_blank" rel="noopener" style="background:linear-gradient(100deg,'+b[6]+','+b[7]+')"><i>'+b[1]+'</i><b>'+b[2]+'</b><span>'+b[3]+'</span><em>'+b[4]+' →</em></a>'})();
+e.innerHTML='<a class="pb" href="'+b[2]+'?utm_source=usb.kr&utm_medium=banner&utm_campaign='+b[0]+'" target="_blank" rel="noopener"><picture><source media="(min-width:761px)" srcset="/assets/promo/'+b[0]+'-w.webp"><img src="/assets/promo/'+b[0]+'-n.webp" width="960" height="300" alt="'+b[1]+'" fetchpriority="low" decoding="async"></picture></a>'})();
 `);
 
 const NAV_PRIMARY = ['audio', 'mobile', 'pc', 'display', 'wearable', 'smarthome', 'camera', 'car'];
