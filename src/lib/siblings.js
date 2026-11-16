@@ -39,7 +39,7 @@ export async function siblingStats(env, ctx) {
   const sites = SITES.filter((s) => env?.[s.env]);
   if (!sites.length) return [];
   if (Date.now() - cache.at < TTL) return cache.data;
-  const data = await edgeCached(ctx, 'sibling-stats', TTL / 1000, async () =>
+  const data = await edgeCached(ctx, 'sibling-stats-v2', TTL / 1000, async () =>
     Promise.all(
       sites.map((s) =>
         loadOne(s, env)
