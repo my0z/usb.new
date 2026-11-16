@@ -298,12 +298,11 @@ export function statsPage({ canonical, summaries, visits = null, ga = null, gsc 
         : ''}
       ${siblings.map((s) =>
         panel(
-          s.name,
+          html`<a href="${s.path}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">${s.name} ↗</a>`,
           s.error
-            ? html`<p class="panel__note">불러오기 실패: ${s.error} <a href="${s.url}" target="_blank" rel="noopener">직접 열기 ↗</a></p>`
-            : html`<div class="adm__kpis" style="margin:0 0 10px">${s.kpis.slice(0, 4).map((k) => kpi(k.label, k.value))}</div>
-              <p class="panel__note"><a href="${s.url}" target="_blank" rel="noopener">${s.name} 통계 전체 보기 ↗</a></p>`,
-          { sub: '10분 캐시' },
+            ? html`<p class="panel__note">불러오기 실패: ${s.error}</p>`
+            : html`<div class="adm__kpis" style="margin:0 0 10px">${s.kpis.slice(0, 4).map((k) => kpi(k.label, k.value))}</div>`,
+          { sub: '10분 캐시 · 클릭하면 비번 없이 전체 통계로' },
         ),
       )}
       ${!siblings.length
