@@ -226,7 +226,7 @@ export function statsPage({ canonical, summaries, visits = null, ga = null, gsc 
                 (r) => html`<div class="row">
                   <span class="row__l">${r.status === '완료' && r.result ? html`<a href="/${r.result}">${r.q}</a>` : r.q}${r.status === '실패' ? html` <small>${r.result}</small>` : ''}</span>
                   <span class="tag ${r.status === '완료' ? 'tag--gen' : ''}">${r.status}</span>
-                  <span class="row__n"><small>${ago(r.done_at || r.at)}</small><form method="post" action="/0/gen/delete" class="delform"><input type="hidden" name="id" value="${r.id}" /><button type="submit" class="delbtn" title="이 요청 삭제" aria-label="삭제">✕</button></form></span>
+                  <span class="row__n"><small>${ago(r.done_at || r.at)}</small>${r.status === '완료' && r.result ? html`<a class="delbtn" style="margin-left:6px" href="https://www.threads.net/intent/post?text=${encodeURIComponent(`${r.q} ${siteUrl}/${r.result}`)}" target="_blank" rel="noopener" title="스레드에 올리기" aria-label="스레드에 올리기">🧵</a>` : ''}<form method="post" action="/0/gen/delete" class="delform"><input type="hidden" name="id" value="${r.id}" /><button type="submit" class="delbtn" title="이 요청 삭제" aria-label="삭제">✕</button></form></span>
                 </div>`,
               )
             : html`<p class="panel__note">아직 요청이 없다.</p>`}`,
