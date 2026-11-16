@@ -155,7 +155,7 @@ function viduTile(win) {
   return kpi(`Vidu 오프피크 · KST ${kst(start)}–${kst(end)}`, on ? '진행 중' : '대기', on ? `${hm(left)} 남음` : `${hm(left)} 뒤 시작`, on);
 }
 
-export function statsPage({ canonical, summaries, visits = null, ga = null, gsc = null, runs = [], clicks = null, queue = [], extraKeywords = [], cf = null, msg = '', siteUrl = '', psiKey = '', viduOffpeak = '' }) {
+export function statsPage({ canonical, summaries, visits = null, ga = null, gsc = null, runs = [], clicks = null, queue = [], extraKeywords = [], cf = null, siblings = [], msg = '', siteUrl = '', psiKey = '', viduOffpeak = '' }) {
   const byCat = new Map();
   const byDay = new Map();
   let products = 0;
@@ -294,6 +294,22 @@ export function statsPage({ canonical, summaries, visits = null, ga = null, gsc 
         ? panel(
             'Cloudflare 이번 달 예상 청구',
             html`<p class="panel__note">변수 CLOUDFLARE_ACCOUNT_ID(이미 들어있음)와 시크릿 CLOUDFLARE_ANALYTICS_TOKEN 을 넣으면 이번 달 사용량과 공개 요금표 기준 예상 청구가 여기 뜬다. dash.cloudflare.com → 오른쪽 위 프로필 → <b>API 토큰</b> → <b>토큰 만들기</b> → 사용자 지정 토큰 → 권한 "Account · Account Analytics · Read" 선택 → 계정은 이 사이트 계정으로 한정 → 만들어진 값을 <code>npx wrangler secret put CLOUDFLARE_ANALYTICS_TOKEN</code> 으로 넣는다.</p>`,
+          )
+        : ''}
+      ${siblings.map((s) =>
+        panel(
+          s.name,
+          s.error
+            ? html`<p class="panel__note">불러오기 실패: ${s.error} <a href="${s.url}" target="_blank" rel="noopener">직접 열기 ↗</a></p>`
+            : html`<div class="adm__kpis" style="margin:0 0 10px">${s.kpis.slice(0, 4).map((k) => kpi(k.label, k.value))}</div>
+              <p class="panel__note"><a href="${s.url}" target="_blank" rel="noopener">${s.name} 통계 전체 보기 ↗</a></p>`,
+          { sub: '10분 캐시' },
+        ),
+      )}
+      ${!siblings.length
+        ? panel(
+            '그룹 사이트',
+            html`<p class="panel__note">시크릿 BODCAR_ADMIN_PASSWORD · VUTY_ADMIN_PASSWORD 를 각 사이트의 ADMIN_PASSWORD 와 같은 값으로 넣으면 bodcar.com · vuty.kr 의 방문·클릭 요약이 여기 usb.kr/0 에 같이 뜬다. <code>npx wrangler secret put BODCAR_ADMIN_PASSWORD --env=""</code> 식으로 넣는다.</p>`,
           )
         : ''}
       ${panel('발행 추이', bars(days.map(([d, n]) => [d, n]), { unit: '건' }), { sub: '14일' })}

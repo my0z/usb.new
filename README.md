@@ -80,6 +80,20 @@ echo 토큰값 | npx wrangler secret put CLOUDFLARE_ANALYTICS_TOKEN
 
 결과는 워커 안에서 30분 캐시한다.
 
+### 그룹 사이트 (bodcar.com · vuty.kr)
+
+같은 사람이 운영하는 쿠팡 파트너스 사이트 bodcar.com · vuty.kr 의 `/0` 통계 핵심 숫자(방문·방문자·클릭·클릭률)를 usb.kr/0 에서 같이 본다. 메인은 usb.kr 이고 저 둘은 요약만 가져온다. 그쪽 코드는 손대지 않고 이미 Basic 인증으로 떠 있는 `/0` HTML 에서 숫자만 긁어온다 (`src/lib/siblings.js`).
+
+그 사이트들의 `/0` 은 Basic 인증이라 각 사이트의 `ADMIN_PASSWORD` 와 같은 값을 usb.kr 의 시크릿으로 넣어야 뜬다.
+
+```sh
+cd ~/usb.new
+echo bodcar의ADMIN_PASSWORD값 | npx wrangler secret put BODCAR_ADMIN_PASSWORD --env=""
+echo vuty의ADMIN_PASSWORD값 | npx wrangler secret put VUTY_ADMIN_PASSWORD --env=""
+```
+
+결과는 10분 캐시한다. 둘 중 하나만 넣어도 그 사이트만 뜬다.
+
 ### 네이버 · 빙 색인
 
 발행기가 글을 올릴 때마다 IndexNow(`generator/lib/indexnow.js`)로 새 URL 을 알린다. 네이버 서치어드바이저가 IndexNow 를 받으므로 크롤러를 기다리지 않는다. 키는 `wrangler.jsonc` 의 `INDEXNOW_KEY` 와 `generator/config.js` 가 같아야 하고 워커가 `/<키>.txt` 로 공개한다. 서치어드바이저에서 손으로 할 것: 요청 → 사이트맵 제출(`/sitemap.xml`) · RSS 제출(`/rss.xml`) 한 번씩.
