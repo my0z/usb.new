@@ -308,7 +308,7 @@ export function statsPage({ canonical, summaries, visits = null, ga = null, gsc 
       ${!siblings.length
         ? panel(
             '그룹 사이트',
-            html`<p class="panel__note">시크릿 BODCAR_ADMIN_PASSWORD · VUTY_ADMIN_PASSWORD 를 각 사이트의 ADMIN_PASSWORD 와 같은 값으로 넣으면 bodcar.com · vuty.kr 의 방문·클릭 요약이 여기 usb.kr/0 에 같이 뜬다. <code>npx wrangler secret put BODCAR_ADMIN_PASSWORD --env=""</code> 식으로 넣는다.</p>`,
+            html`<p class="panel__note">시크릿 BODCAR_ADMIN_PASSWORD · VUTY_ADMIN_PASSWORD · SEAREAL_ADMIN_PASSWORD 를 각 사이트의 ADMIN_PASSWORD 와 같은 값으로 넣으면 bodcar.com · vuty.kr · seareal.kr 의 방문·클릭 요약이 여기 usb.kr/0 에 같이 뜬다. <code>npx wrangler secret put BODCAR_ADMIN_PASSWORD --env=""</code> 식으로 넣는다.</p>`,
           )
         : ''}
       ${panel('발행 추이', bars(days.map(([d, n]) => [d, n]), { unit: '건' }), { sub: '14일' })}
