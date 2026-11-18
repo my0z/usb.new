@@ -1,7 +1,7 @@
 /**
- * 같은 사람이 운영하는 쿠팡 파트너스 사이트(bodcar.com · vuty.kr · seareal.kr)의 /0 통계를 usb.kr/0 에서 같이 본다. — 작업: 2026-11-17 15:21
+ * 같은 사람이 운영하는 쿠팡 파트너스 사이트(bodcar.com · vuty.kr · seareal.kr · zakgong.com)의 /0 통계를 usb.kr/0 에서 같이 본다. — 작업: 2026-11-17 15:21
  * 메인은 usb.kr 이고 이 둘은 요약만 가져와 붙인다. 각 사이트의 /0 은 Basic 인증이라
- * 그 사이트의 ADMIN_PASSWORD 와 같은 값을 이 워커의 시크릿(BODCAR_ADMIN_PASSWORD · VUTY_ADMIN_PASSWORD · SEAREAL_ADMIN_PASSWORD)으로 넣어야 뜬다.
+ * 그 사이트의 ADMIN_PASSWORD 와 같은 값을 이 워커의 시크릿(BODCAR_ADMIN_PASSWORD · VUTY_ADMIN_PASSWORD · SEAREAL_ADMIN_PASSWORD · ZAKGONG_ADMIN_PASSWORD)으로 넣어야 뜬다.
  * 그쪽 코드는 손대지 않고 이미 있는 /0 HTML 에서 KPI 카드만 긁어온다.
  */
 import { edgeCached } from './edgecache.js';
@@ -14,6 +14,7 @@ const SITES = [
   { key: 'bodcar', name: 'bodcar.com', url: 'https://bodcar.com/0', env: 'BODCAR_ADMIN_PASSWORD' },
   { key: 'vuty', name: 'vuty.kr', url: 'https://vuty.kr/0', env: 'VUTY_ADMIN_PASSWORD' },
   { key: 'seareal', name: 'seareal.kr', url: 'https://seareal.kr/0', env: 'SEAREAL_ADMIN_PASSWORD' },
+  { key: 'zakgong', name: 'zakgong.com', url: 'https://zakgong.com/0', env: 'ZAKGONG_ADMIN_PASSWORD' },
 ];
 
 function parseKpis(html) {
