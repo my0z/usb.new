@@ -213,6 +213,21 @@ export function statsPage({ canonical, summaries, visits = null, ga = null, gsc 
     </div>
 
     <div class="adm__grid">
+      ${siblings.map((s) =>
+        panel(
+          html`<a href="${s.path}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">${s.name} ↗</a>`,
+          s.error
+            ? html`<p class="panel__note">불러오기 실패: ${s.error}</p>`
+            : html`<div class="adm__kpis" style="margin:0 0 10px">${s.kpis.slice(0, 4).map((k) => kpi(k.label, k.value))}</div>`,
+          { sub: '10분 캐시 · 클릭하면 비번 없이 전체 통계로' },
+        ),
+      )}
+      ${!siblings.length
+        ? panel(
+            '그룹 사이트',
+            html`<p class="panel__note">시크릿 BODCAR_ADMIN_PASSWORD · VUTY_ADMIN_PASSWORD · SEAREAL_ADMIN_PASSWORD 를 각 사이트의 ADMIN_PASSWORD 와 같은 값으로 넣으면 bodcar.com · vuty.kr · seareal.kr 의 방문·클릭 요약이 여기 usb.kr/0 에 같이 뜬다. <code>npx wrangler secret put BODCAR_ADMIN_PASSWORD --env=""</code> 식으로 넣는다.</p>`,
+          )
+        : ''}
       ${panel(
         '글 생성 요청',
         html`${msg ? html`<p class="panel__note genmsg">${msg}</p>` : ''}
@@ -295,21 +310,6 @@ export function statsPage({ canonical, summaries, visits = null, ga = null, gsc 
         ? panel(
             'Cloudflare 이번 달 예상 청구',
             html`<p class="panel__note">변수 CLOUDFLARE_ACCOUNT_ID(이미 들어있음)와 시크릿 CLOUDFLARE_ANALYTICS_TOKEN 을 넣으면 이번 달 사용량과 공개 요금표 기준 예상 청구가 여기 뜬다. dash.cloudflare.com → 오른쪽 위 프로필 → <b>API 토큰</b> → <b>토큰 만들기</b> → 사용자 지정 토큰 → 권한 "Account · Account Analytics · Read" 선택 → 계정은 이 사이트 계정으로 한정 → 만들어진 값을 <code>npx wrangler secret put CLOUDFLARE_ANALYTICS_TOKEN</code> 으로 넣는다.</p>`,
-          )
-        : ''}
-      ${siblings.map((s) =>
-        panel(
-          html`<a href="${s.path}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">${s.name} ↗</a>`,
-          s.error
-            ? html`<p class="panel__note">불러오기 실패: ${s.error}</p>`
-            : html`<div class="adm__kpis" style="margin:0 0 10px">${s.kpis.slice(0, 4).map((k) => kpi(k.label, k.value))}</div>`,
-          { sub: '10분 캐시 · 클릭하면 비번 없이 전체 통계로' },
-        ),
-      )}
-      ${!siblings.length
-        ? panel(
-            '그룹 사이트',
-            html`<p class="panel__note">시크릿 BODCAR_ADMIN_PASSWORD · VUTY_ADMIN_PASSWORD · SEAREAL_ADMIN_PASSWORD 를 각 사이트의 ADMIN_PASSWORD 와 같은 값으로 넣으면 bodcar.com · vuty.kr · seareal.kr 의 방문·클릭 요약이 여기 usb.kr/0 에 같이 뜬다. <code>npx wrangler secret put BODCAR_ADMIN_PASSWORD --env=""</code> 식으로 넣는다.</p>`,
           )
         : ''}
       ${panel('발행 추이', bars(days.map(([d, n]) => [d, n]), { unit: '건' }), { sub: '14일' })}
