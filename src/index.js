@@ -6,6 +6,7 @@ import { aboutPage, privacyPage } from './views/about.js';
 import { statsPage } from './views/stats.js';
 import { bestGroups, bestIndexPage, bestPage, bestUrl } from './views/best.js';
 import { dealsPage } from './views/deals.js';
+import { goPage } from './views/go.js';
 import { ASSET_VERSION, setTracking, setInlineCss } from './views/layout.js';
 import { gaReport, gscReport, gscOpportunities } from './lib/ga.js';
 import { cfUsage } from './lib/cloudflare.js';
@@ -176,8 +177,13 @@ function outbound(url, request, env, ctx) {
   const bot = BOT_UA.test(h('user-agent')) || request.cf?.botManagement?.verifiedBot === true;
   // 사람 클릭만 센다. 링크를 따라다니는 크롤러는 UA 로 다 못 거르므로 사용자 조작으로 시작한 이동(sec-fetch-user) 이거나 우리 페이지에서 온 이동만 인정한다.
   const human = !bot && (h('sec-fetch-user') === '?1' || (h('sec-fetch-mode') === 'navigate' && /^https:\/\/(www\.)?usb\.kr\//.test(h('referer'))));
+  const direct = () => new Response(null, { status: 302, headers: { location: dest, 'cache-control': 'no-store', 'referrer-policy': 'no-referrer' } });
+  if (url.searchParams.get('go')) return direct(); // 안내 페이지에서 넘어온 요청은 이미 센 클릭이라 다시 세지 않고 바로 보낸다
   if (slug && human && ctx) ctx.waitUntil(getStore(env).recordClick(slug.slice(0, 80)));
-  return new Response(null, { status: 302, headers: { location: dest, 'cache-control': 'no-store', 'referrer-policy': 'no-referrer' } });
+  if (bot) return direct(); // 검색 로봇과 링크 검사기는 바로 보낸다
+  const next = new URL(url);
+  next.searchParams.set('go', '1');
+  return goPage(next.pathname + next.search);
 }
 
 /* ── 피드 · 사이트맵 ───────────────────────────────────────── */
