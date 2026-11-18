@@ -26,7 +26,7 @@ export const setInlineCss = (css) => {
     .trim();
 };
 
-/** 자매 사이트 홍보배너. 내 사이트를 뺀 9개 중 하나를 무작위로 보여준다 (bodcar.com 쁘띠.끄 seareal.kr 각 3개). 시리얼 배너 추가 및 인물 사진 배경 배너로 교체 (캐시 갱신 ?v=5) — 작업: 2026-11-17 18:09 */
+/** 자매 사이트 홍보배너. 내 사이트를 뺀 13개 중 하나를 무작위로 보여준다 (bodcar.com 쁘띠.끄 seareal.kr 각 3개 zakgong.com 4개). 시리얼 배너 추가 및 인물 사진 배경 배너로 교체 (캐시 갱신 ?v=5) — 작업: 2026-11-17 18:09 */
 const PROMO = raw(`
 (function(){var B=[
 ['b1','자동차용품 인기 랭킹 한눈에','https://bodcar.com/'],
@@ -37,7 +37,11 @@ const PROMO = raw(`
 ['v3','스킨케어 베스트 랭킹','https://vuty.kr/c/%EC%8A%A4%ED%82%A8%EC%BC%80%EC%96%B4'],
 ['s1','바다의 모든 것 인기 랭킹','https://seareal.kr/'],
 ['s2','바다낚시 용품 모아보기','https://seareal.kr/c/%EB%82%9A%EC%8B%9C%EB%8C%80%EB%A6%B4'],
-['s3','신선 수산물 인기템 모아보기','https://seareal.kr/c/%ED%8C%A8%EB%A5%98']];
+['s3','신선 수산물 인기템 모아보기','https://seareal.kr/c/%ED%8C%A8%EB%A5%98'],
+['z1','작업 공구 인기 랭킹 한눈에','https://zakgong.com/'],
+['z2','전동 드릴과 임팩트 드라이버 인기템','https://zakgong.com/c/%EC%A0%84%EB%8F%99%EA%B3%B5%EA%B5%AC'],
+['z3','공구함과 수납용품 모아보기','https://zakgong.com/c/%EA%B3%B5%EA%B5%AC%ED%95%A8%EC%88%98%EB%82%A9'],
+['z4','작업 안전용품 필수템','https://zakgong.com/c/%EC%95%88%EC%A0%84%EC%9A%A9%ED%92%88']];
 var e=document.getElementById('promo'),b=B[Math.floor(Math.random()*B.length)];
 if(!e||!b)return;
 e.innerHTML='<a class="pb" href="'+b[2]+'?utm_source=usb.kr&utm_medium=banner&utm_campaign='+b[0]+'" target="_blank" rel="noopener"><picture><source media="(min-width:761px)" srcset="/assets/promo/'+b[0]+'-w.webp?v=5"><img src="/assets/promo/'+b[0]+'-n.webp?v=5" width="960" height="300" alt="'+b[1]+'" fetchpriority="low" decoding="async"></picture></a>'})();
