@@ -1,6 +1,6 @@
 // 쿠팡으로 넘어가기 전에 보여 주는 안내 페이지 (소개만 하는 사이트라는 안내와 수수료 문구를 보여 주고 5초 뒤 이동한다)
 const DISC = '이 포스팅은 쿠팡 파트너스 활동의 일환으로 이에 따른 일정액의 수수료를 제공받습니다.';
-const SECONDS = 5;
+const SECONDS = 3;
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 
 export function goPage(goUrl) {
