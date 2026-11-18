@@ -207,6 +207,7 @@ export function statsPage({ canonical, summaries, visits = null, ga = null, gsc 
       ${clicks ? kpi('쿠팡 클릭 (7일)', num(clicks.total), `클릭률 ${pct(clicks.total, clicks.totalViews)}`) : ''}
       ${genRate !== null ? kpi('발행 성공률 (30일)', `${genRate}%`, `${okRuns.length}/${monthRuns.length} · 평균 ${sec(avg(okRuns, (r) => r.ms))}`) : ''}
       ${kpi('발행한 글', num(summaries.length), `발행기 ${num(gen)}`)}
+      ${siblings.map((s) => (s.error ? '' : kpi(s.name, s.kpis[0]?.value ?? '-', s.kpis[0]?.label ?? '')))}
       ${kpi('다룬 제품', num(products), '개')}
       ${last ? kpi('마지막 발행', ago(last.createdAt), kst(last.createdAt)) : ''}
     </div>

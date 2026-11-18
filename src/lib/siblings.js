@@ -12,6 +12,7 @@ let cache = { at: 0, data: [] };
 const SITES = [
   { key: 'bodcar', name: 'bodcar.com', url: 'https://bodcar.com/0', env: 'BODCAR_ADMIN_PASSWORD' },
   { key: 'vuty', name: 'vuty.kr', url: 'https://vuty.kr/0', env: 'VUTY_ADMIN_PASSWORD' },
+  { key: 'seareal', name: 'seareal.kr', url: 'https://seareal.kr/0', env: 'SEAREAL_ADMIN_PASSWORD' },
 ];
 
 function parseKpis(html) {

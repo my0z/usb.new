@@ -80,9 +80,9 @@ echo 토큰값 | npx wrangler secret put CLOUDFLARE_ANALYTICS_TOKEN
 
 결과는 워커 안에서 30분 캐시한다.
 
-### 그룹 사이트 (bodcar.com · vuty.kr)
+### 그룹 사이트 (bodcar.com · vuty.kr · seareal.kr)
 
-같은 사람이 운영하는 쿠팡 파트너스 사이트 bodcar.com · vuty.kr 의 `/0` 통계 핵심 숫자(방문·방문자·클릭·클릭률)를 usb.kr/0 에서 같이 본다. 메인은 usb.kr 이고 저 둘은 요약만 가져온다. 그쪽 코드는 손대지 않고 이미 Basic 인증으로 떠 있는 `/0` HTML 에서 숫자만 긁어온다 (`src/lib/siblings.js`).
+같은 사람이 운영하는 쿠팡 파트너스 사이트 bodcar.com · vuty.kr · seareal.kr (셋 다 vutykr 저장소의 멀티사이트 Worker 가 도메인별로 나눠 맡는다) 의 `/0` 통계 핵심 숫자(방문·방문자·클릭·클릭률)를 usb.kr/0 에서 같이 본다. 메인은 usb.kr 이고 저 셋은 요약만 가져온다. 맨 위 숫자 줄에 각 사이트 방문수를 usb.kr 발행한 글 수 다음에 붙이고 아래 패널에서 더 자세히 본다. 그쪽 코드는 손대지 않고 이미 Basic 인증으로 떠 있는 `/0` HTML 에서 숫자만 긁어온다 (`src/lib/siblings.js`).
 
 그 사이트들의 `/0` 은 Basic 인증이라 각 사이트의 `ADMIN_PASSWORD` 와 같은 값을 usb.kr 의 시크릿으로 넣어야 뜬다.
 
@@ -90,6 +90,7 @@ echo 토큰값 | npx wrangler secret put CLOUDFLARE_ANALYTICS_TOKEN
 cd ~/usb.new
 echo bodcar의ADMIN_PASSWORD값 | npx wrangler secret put BODCAR_ADMIN_PASSWORD --env=""
 echo vuty의ADMIN_PASSWORD값 | npx wrangler secret put VUTY_ADMIN_PASSWORD --env=""
+echo seareal의ADMIN_PASSWORD값 | npx wrangler secret put SEAREAL_ADMIN_PASSWORD --env=""
 ```
 
 결과는 10분 캐시한다. 둘 중 하나만 넣어도 그 사이트만 뜬다.
