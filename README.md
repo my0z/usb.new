@@ -93,7 +93,7 @@ echo vuty의ADMIN_PASSWORD값 | npx wrangler secret put VUTY_ADMIN_PASSWORD --en
 echo seareal의ADMIN_PASSWORD값 | npx wrangler secret put SEAREAL_ADMIN_PASSWORD --env=""
 ```
 
-결과는 10분 캐시한다. 둘 중 하나만 넣어도 그 사이트만 뜬다.
+결과는 10분 캐시한다. 하나만 넣어도 그 사이트만 뜬다.
 
 ### 네이버 · 빙 색인
 

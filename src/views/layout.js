@@ -26,7 +26,7 @@ export const setInlineCss = (css) => {
     .trim();
 };
 
-/** 자매 사이트 홍보배너. 내 사이트를 뺀 6개 중 하나를 무작위로 보여준다 (bodcar.com 쁘띠.끄 각 3개). */
+/** 자매 사이트 홍보배너. 내 사이트를 뺀 9개 중 하나를 무작위로 보여준다 (bodcar.com 쁘띠.끄 seareal.kr 각 3개). 시리얼 배너 추가 및 인물 사진 배경 배너로 교체 (캐시 갱신 ?v=5) — 작업: 2026-11-17 18:09 */
 const PROMO = raw(`
 (function(){var B=[
 ['b1','자동차용품 인기 랭킹 한눈에','https://bodcar.com/'],
@@ -34,10 +34,13 @@ const PROMO = raw(`
 ['b3','블랙박스와 엔진오일 인기템','https://bodcar.com/c/%EB%B8%94%EB%9E%99%EB%B0%95%EC%8A%A4'],
 ['v1','쁘띠.끄 뷰티 인기템 랭킹','https://vuty.kr/'],
 ['v2','선케어 모아보기','https://vuty.kr/c/%EC%84%A0%EC%BC%80%EC%96%B4'],
-['v3','스킨케어 베스트 랭킹','https://vuty.kr/c/%EC%8A%A4%ED%82%A8%EC%BC%80%EC%96%B4']];
+['v3','스킨케어 베스트 랭킹','https://vuty.kr/c/%EC%8A%A4%ED%82%A8%EC%BC%80%EC%96%B4'],
+['s1','바다의 모든 것 인기 랭킹','https://seareal.kr/'],
+['s2','바다낚시 용품 모아보기','https://seareal.kr/c/%EB%82%9A%EC%8B%9C%EB%8C%80%EB%A6%B4'],
+['s3','신선 수산물 인기템 모아보기','https://seareal.kr/c/%ED%8C%A8%EB%A5%98']];
 var e=document.getElementById('promo'),b=B[Math.floor(Math.random()*B.length)];
 if(!e||!b)return;
-e.innerHTML='<a class="pb" href="'+b[2]+'?utm_source=usb.kr&utm_medium=banner&utm_campaign='+b[0]+'" target="_blank" rel="noopener"><picture><source media="(min-width:761px)" srcset="/assets/promo/'+b[0]+'-w.webp"><img src="/assets/promo/'+b[0]+'-n.webp" width="960" height="300" alt="'+b[1]+'" fetchpriority="low" decoding="async"></picture></a>'})();
+e.innerHTML='<a class="pb" href="'+b[2]+'?utm_source=usb.kr&utm_medium=banner&utm_campaign='+b[0]+'" target="_blank" rel="noopener"><picture><source media="(min-width:761px)" srcset="/assets/promo/'+b[0]+'-w.webp?v=5"><img src="/assets/promo/'+b[0]+'-n.webp?v=5" width="960" height="300" alt="'+b[1]+'" fetchpriority="low" decoding="async"></picture></a>'})();
 `);
 
 const NAV_PRIMARY = ['audio', 'mobile', 'pc', 'display', 'wearable', 'smarthome', 'camera', 'car'];
