@@ -7,7 +7,7 @@
 import { edgeCached } from './edgecache.js';
 
 const TTL = 10 * 60 * 1000;
-let cache = { at: 0, data: [] };
+let cache = { at: 0, data: [], sig: '' };
 
 // 통계를 가져올 그룹 사이트 목록 (seareal 추가) — 작업: 2026-11-17 15:21
 const SITES = [
@@ -41,8 +41,9 @@ async function loadOne(site, env) {
 export async function siblingStats(env, ctx) {
   const sites = SITES.filter((s) => env?.[s.env]);
   if (!sites.length) return [];
-  if (Date.now() - cache.at < TTL) return cache.data;
-  const data = await edgeCached(ctx, 'sibling-stats-v2', TTL / 1000, async () =>
+  const sig = sites.map((s) => s.key).join('-'); // 사이트가 늘거나 시크릿이 바뀌면 캐시를 새로 만든다
+  if (cache.sig === sig && Date.now() - cache.at < TTL) return cache.data;
+  const data = await edgeCached(ctx, `sibling-stats-v3-${sig}`, TTL / 1000, async () =>
     Promise.all(
       sites.map((s) =>
         loadOne(s, env)
@@ -50,7 +51,7 @@ export async function siblingStats(env, ctx) {
       ),
     ),
   );
-  cache = { at: Date.now(), data };
+  cache = { at: Date.now(), data, sig };
   return data;
 }
 
