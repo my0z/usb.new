@@ -531,7 +531,7 @@ export default {
     }
 
     // 관리자: bodcar.com · vuty.kr · seareal.kr · zakgong.com 의 /0 을 비번 없이 그대로 중계한다 (탭 전환·삭제 POST 도 같이 넘어간다)
-    const sibMatch = url.pathname.match(/^\/0\/go\/(bodcar|vuty|seareal|zakgong)$/);
+    const sibMatch = url.pathname.match(/^\/0\/go\/(bodcar|vuty|seareal|zakgong|pemily)$/);
     if (sibMatch) {
       if (!isAdmin(request, url, env)) return notFound(url);
       const res = await siblingProxy(sibMatch[1], request, env);

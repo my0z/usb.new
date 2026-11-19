@@ -26,7 +26,7 @@ export const setInlineCss = (css) => {
     .trim();
 };
 
-/** 자매 사이트 홍보배너. 내 사이트를 뺀 17개 중 하나를 무작위로 보여준다 (bodcar.com 쁘띠.끄 seareal.kr 각 3개 zakgong.com 4개). 시리얼 배너 추가 및 인물 사진 배경 배너로 교체 (캐시 갱신 ?v=5) — 작업: 2026-11-17 18:09 */
+/** 자매 사이트 홍보배너. 내 사이트를 뺀 23개 중 하나를 무작위로 보여준다 (bodcar.com 쁘띠.끄 seareal.kr 각 3개 zakgong.com 4개). 시리얼 배너 추가 및 인물 사진 배경 배너로 교체 (캐시 갱신 ?v=5) — 작업: 2026-11-17 18:09 */
 const PROMO = raw(`
 (function(){var B=[
 ['b1','자동차용품 인기 랭킹 한눈에','https://bodcar.com/'],
@@ -42,6 +42,12 @@ const PROMO = raw(`
 ['v4','여성 뷰티와 패션 인기템','https://vuty.kr/'],
 ['v5','여성 의류 인기 랭킹','https://vuty.kr/c/%EC%9D%98%EB%A5%98'],
 ['s4','낚시 필수템 인기 랭킹','https://seareal.kr/c/%EB%82%9A%EC%8B%9C%EB%8C%80%EB%A6%B4'],
+['p1','강아지 사료와 간식 인기 랭킹','https://pemily.kr/c/%EC%82%AC%EB%A3%8C'],
+['p2','고양이 스크래처와 캣타워 인기템','https://pemily.kr/c/%EC%8A%A4%ED%81%AC%EB%9E%98%EC%B2%98%EC%BA%A3%ED%83%80%EC%9B%8C'],
+['p3','햄스터와 소동물 용품 모아보기','https://pemily.kr/c/%EC%86%8C%EB%8F%99%EB%AC%BC%EC%A1%B0%EB%A5%98'],
+['p4','앵무새 사료와 새장 인기 랭킹','https://pemily.kr/c/%EC%86%8C%EB%8F%99%EB%AC%BC%EC%A1%B0%EB%A5%98'],
+['p5','관상어 어항과 여과기 인기템','https://pemily.kr/c/%EA%B4%80%EC%83%81%EC%96%B4'],
+['p6','하네스와 리드줄 산책용품 인기템','https://pemily.kr/c/%EC%82%B0%EC%B1%85%EC%99%B8%EC%B6%9C'],
 ['z1','작업 공구 인기 랭킹 한눈에','https://zakgong.com/'],
 ['z2','전동 드릴과 임팩트 드라이버 인기템','https://zakgong.com/c/%EC%A0%84%EB%8F%99%EA%B3%B5%EA%B5%AC'],
 ['z3','공구함과 수납용품 모아보기','https://zakgong.com/c/%EA%B3%B5%EA%B5%AC%ED%95%A8%EC%88%98%EB%82%A9'],
