@@ -30,7 +30,7 @@ function auth(env, site) {
 }
 
 async function loadOne(site, env) {
-  const res = await fetch(site.url, { headers: { authorization: auth(env, site) }, signal: AbortSignal.timeout(8000) });
+  const res = await fetch(site.url, { headers: { authorization: auth(env, site) }, signal: AbortSignal.timeout(20000) });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const html = await res.text();
   const kpis = parseKpis(html);
@@ -44,15 +44,22 @@ export async function siblingStats(env, ctx) {
   if (!sites.length) return [];
   const sig = sites.map((s) => s.key).join('-'); // 사이트가 늘거나 시크릿이 바뀌면 캐시를 새로 만든다
   if (cache.sig === sig && Date.now() - cache.at < TTL) return cache.data;
-  const data = await edgeCached(ctx, `sibling-stats-v3-${sig}`, TTL / 1000, async () =>
-    Promise.all(
+  const key = new Request(`https://edge-cache.internal/sibling-stats-v4-${sig}`);
+  let data = null;
+  try { const hit = await caches.default.match(key); if (hit) data = await hit.json(); } catch {}
+  if (!data) {
+    data = await Promise.all(
       sites.map((s) =>
-        loadOne(s, env)
-          .catch((e) => ({ name: s.name, path: `/0/go/${s.key}`, error: e.message })),
+        loadOne(s, env).catch((e) => ({ name: s.name, path: `/0/go/${s.key}`, error: e.message })),
       ),
-    ),
-  );
-  cache = { at: Date.now(), data, sig };
+    );
+    // 실패가 하나라도 있으면 1분만 보관해서 곧바로 다시 시도하게 한다
+    const ttl = data.some((d) => d.error) ? 60 : TTL / 1000;
+    if (ctx) ctx.waitUntil(caches.default.put(key, new Response(JSON.stringify(data), { headers: { 'content-type': 'application/json', 'cache-control': `max-age=${ttl}` } })).catch(() => {}));
+    cache = { at: Date.now() - (TTL - ttl * 1000), data, sig };
+    return data;
+  }
+  cache = { at: data.some((d) => d.error) ? Date.now() - (TTL - 60000) : Date.now(), data, sig };
   return data;
 }
 
@@ -64,7 +71,7 @@ export async function siblingProxy(key, request, env) {
   if (!site || !env?.[site.env]) return null;
   const target = new URL(site.url);
   target.search = new URL(request.url).search;
-  const init = { headers: { authorization: auth(env, site) }, signal: AbortSignal.timeout(8000) };
+  const init = { headers: { authorization: auth(env, site) }, signal: AbortSignal.timeout(20000) };
   if (request.method === 'POST') {
     init.method = 'POST';
     init.headers['content-type'] = request.headers.get('content-type') || 'application/json';
