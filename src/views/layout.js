@@ -26,7 +26,7 @@ export const setInlineCss = (css) => {
     .trim();
 };
 
-/** 자매 사이트 홍보배너. 내 사이트를 뺀 23개 중 하나를 무작위로 보여준다 (bodcar.com 쁘띠.끄 seareal.kr 각 3개 zakgong.com 4개). 시리얼 배너 추가 및 인물 사진 배경 배너로 교체 (캐시 갱신 ?v=5) — 작업: 2026-11-17 18:09 */
+/** 자매 사이트 홍보배너. 내 사이트를 뺀 26개 중 하나를 무작위로 보여준다 (bodcar.com 쁘띠.끄 seareal.kr 각 3개 zakgong.com 4개). 시리얼 배너 추가 및 인물 사진 배경 배너로 교체 (캐시 갱신 ?v=5) — 작업: 2026-11-17 18:09 */
 const PROMO = raw(`
 (function(){var B=[
 ['b1','자동차용품 인기 랭킹 한눈에','https://bodcar.com/'],
@@ -48,6 +48,9 @@ const PROMO = raw(`
 ['p4','앵무새 사료와 새장 인기 랭킹','https://pemily.kr/c/%EC%86%8C%EB%8F%99%EB%AC%BC%EC%A1%B0%EB%A5%98'],
 ['p5','관상어 어항과 여과기 인기템','https://pemily.kr/c/%EA%B4%80%EC%83%81%EC%96%B4'],
 ['p6','하네스와 리드줄 산책용품 인기템','https://pemily.kr/c/%EC%82%B0%EC%B1%85%EC%99%B8%EC%B6%9C'],
+['g1','아기 장난감과 놀이매트 인기 랭킹','https://bebepong.com/c/%EC%9E%A5%EB%82%9C%EA%B0%90%EC%99%84%EA%B5%AC'],
+['g2','이유식 식기와 하이체어 인기템','https://bebepong.com/c/%EC%9D%B4%EC%9C%A0%EC%8B%9D%EC%9A%A9%ED%92%88'],
+['g3','유모차와 카시트 인기 랭킹','https://bebepong.com/c/%EC%9C%A0%EB%AA%A8%EC%B0%A8%EC%B9%B4%EC%8B%9C%ED%8A%B8'],
 ['z1','작업 공구 인기 랭킹 한눈에','https://zakgong.com/'],
 ['z2','전동 드릴과 임팩트 드라이버 인기템','https://zakgong.com/c/%EC%A0%84%EB%8F%99%EA%B3%B5%EA%B5%AC'],
 ['z3','공구함과 수납용품 모아보기','https://zakgong.com/c/%EA%B3%B5%EA%B5%AC%ED%95%A8%EC%88%98%EB%82%A9'],
