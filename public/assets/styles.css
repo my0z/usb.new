@@ -2980,4 +2980,4 @@ h3 {
 @media (max-width: 760px) { #promo { aspect-ratio: 16 / 5; margin: 8px auto; } }
 
 #promo { position: relative; }
-#promo .ai { position: absolute; right: 8px; bottom: 6px; font-size: .6rem; line-height: 1; background: rgba(0,0,0,.5); color: #fff; padding: 3px 7px; border-radius: 6px; pointer-events: none; }
+#promo .ai { position: absolute; left: 8px; bottom: 6px; font-size: .6rem; line-height: 1; background: rgba(0,0,0,.5); color: #fff; padding: 3px 7px; border-radius: 6px; pointer-events: none; }
