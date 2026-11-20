@@ -2981,3 +2981,5 @@ h3 {
 
 #promo { position: relative; }
 #promo .ai { position: absolute; left: 8px; bottom: 6px; font-size: .6rem; line-height: 1; background: rgba(0,0,0,.5); color: #fff; padding: 3px 7px; border-radius: 6px; pointer-events: none; }
+#promo .tags { position: absolute; left: 8px; bottom: 6px; display: flex; gap: 4px; pointer-events: none; }
+#promo .tags small { font-size: .6rem; line-height: 1; background: rgba(0,0,0,.5); color: #fff; padding: 3px 7px; border-radius: 6px; }
