@@ -183,6 +183,10 @@ export function statsPage({ canonical, summaries, visits = null, ga = null, gsc 
 
   const body = html`<style>${STYLE}</style>
   <div class="shell adm">
+    <form class="genform" action="https://hosting.kr/domain/search" method="get" target="_blank" rel="noopener" style="grid-template-columns:minmax(0,1fr) auto;margin-bottom:14px">
+      <input type="text" name="q" placeholder="새 사이트용 도메인 검색 (예: bebera)" required />
+      <button type="submit">hosting.kr 에서 검색</button>
+    </form>
     <header class="adm__head">
       <div><p class="eyebrow">운영 · ${new Date().toLocaleString('ko-KR', { ...KST, month: 'long', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit' })} KST</p><h1 class="page-title">발행 현황</h1></div>
       <nav class="adm__links">
