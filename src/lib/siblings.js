@@ -16,7 +16,7 @@ const SITES = [
   { key: 'seareal', name: 'seareal.kr', url: 'https://seareal.kr/0', env: 'SEAREAL_ADMIN_PASSWORD' },
   { key: 'zakgong', name: 'zakgong.com', url: 'https://zakgong.com/0', env: 'ZAKGONG_ADMIN_PASSWORD' },
   { key: 'pemily', name: 'pemily.kr', url: 'https://pemily.kr/0', env: 'PEMILY_ADMIN_PASSWORD' },
-  { key: 'bebepong', name: 'bebepong.com', url: 'https://bebepong.com/0', env: 'BEBEPONG_ADMIN_PASSWORD' },
+  { key: 'bebepong', name: 'bbping.kr', url: 'https://bbping.kr/0', env: 'BEBEPONG_ADMIN_PASSWORD' },
 ];
 
 function parseKpis(html) {

@@ -5,7 +5,7 @@ import { postUrl, won } from './components.js';
 const SITE_NAME = 'USB.KR';
 const SITE_TAGLINE = '전자기기 스펙과 가격을 비교한다';
 /** 스타일 변경 시 올려서 브라우저 캐시를 무효화한다. */
-export const ASSET_VERSION = '20261120c';
+export const ASSET_VERSION = '20261121a';
 
 /** GA4 측정 ID (G-XXXX) 와 Cloudflare Web Analytics 토큰. 요청마다 index.js 가 env 에서 넣는다. 비어 있으면 태그를 안 넣는다. */
 export let GA_ID = '';
@@ -48,9 +48,9 @@ const PROMO = raw(`
 ['p4','앵무새 사료와 새장 인기 랭킹','https://pemily.kr/c/%EC%86%8C%EB%8F%99%EB%AC%BC%EC%A1%B0%EB%A5%98'],
 ['p5','관상어 어항과 여과기 인기템','https://pemily.kr/c/%EA%B4%80%EC%83%81%EC%96%B4'],
 ['p6','하네스와 리드줄 산책용품 인기템','https://pemily.kr/c/%EC%82%B0%EC%B1%85%EC%99%B8%EC%B6%9C'],
-['g1','아기 장난감과 놀이매트 인기 랭킹','https://bebepong.com/c/%EC%9E%A5%EB%82%9C%EA%B0%90%EC%99%84%EA%B5%AC'],
-['g2','이유식 식기와 하이체어 인기템','https://bebepong.com/c/%EC%9D%B4%EC%9C%A0%EC%8B%9D%EC%9A%A9%ED%92%88'],
-['g3','유모차와 카시트 인기 랭킹','https://bebepong.com/c/%EC%9C%A0%EB%AA%A8%EC%B0%A8%EC%B9%B4%EC%8B%9C%ED%8A%B8'],
+['g1','아기 장난감과 놀이매트 인기 랭킹','https://bbping.kr/c/%EC%9E%A5%EB%82%9C%EA%B0%90%EC%99%84%EA%B5%AC'],
+['g2','이유식 식기와 하이체어 인기템','https://bbping.kr/c/%EC%9D%B4%EC%9C%A0%EC%8B%9D%EC%9A%A9%ED%92%88'],
+['g3','유모차와 카시트 인기 랭킹','https://bbping.kr/c/%EC%9C%A0%EB%AA%A8%EC%B0%A8%EC%B9%B4%EC%8B%9C%ED%8A%B8'],
 ['z1','작업 공구 인기 랭킹 한눈에','https://zakgong.com/'],
 ['z2','전동 드릴과 임팩트 드라이버 인기템','https://zakgong.com/c/%EC%A0%84%EB%8F%99%EA%B3%B5%EA%B5%AC'],
 ['z3','공구함과 수납용품 모아보기','https://zakgong.com/c/%EA%B3%B5%EA%B5%AC%ED%95%A8%EC%88%98%EB%82%A9'],
