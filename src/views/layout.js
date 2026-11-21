@@ -55,9 +55,12 @@ const PROMO = raw(`
 ['z2','전동 드릴과 임팩트 드라이버 인기템','https://zakgong.com/c/%EC%A0%84%EB%8F%99%EA%B3%B5%EA%B5%AC'],
 ['z3','공구함과 수납용품 모아보기','https://zakgong.com/c/%EA%B3%B5%EA%B5%AC%ED%95%A8%EC%88%98%EB%82%A9'],
 ['z4','작업 안전용품 필수템','https://zakgong.com/c/%EC%95%88%EC%A0%84%EC%9A%A9%ED%92%88']];
+var X=[];try{X=JSON.parse(localStorage.getItem('px')||'[]')}catch(x){}
+B=B.concat(X.map(function(o){return [o.id,o.text,o.url,o.host+'/promo/']}));
+try{if(Date.now()-Number(localStorage.getItem('pxt')||0)>6*3600e3){fetch('https://zakgong.com/api/promos').then(function(r){return r.json()}).then(function(d){localStorage.setItem('px',JSON.stringify(d));localStorage.setItem('pxt',Date.now())}).catch(function(){})}}catch(x){}
 var e=document.getElementById('promo'),b=B[Math.floor(Math.random()*B.length)];
 if(!e||!b)return;
-e.innerHTML='<a class="pb" href="'+b[2]+'?utm_source=usb.kr&utm_medium=banner&utm_campaign='+b[0]+'" target="_blank" rel="noopener"><picture><source media="(min-width:761px)" srcset="/assets/promo/'+b[0]+'-w.webp?v=6"><img src="/assets/promo/'+b[0]+'-n.webp?v=6" width="960" height="300" alt="'+b[1]+'" fetchpriority="low" decoding="async"></picture></a><span class="tags"><small>AI 생성 이미지</small><small>광고</small></span>'})();
+e.innerHTML='<a class="pb" href="'+b[2]+'?utm_source=usb.kr&utm_medium=banner&utm_campaign='+b[0]+'" target="_blank" rel="noopener"><picture><source media="(min-width:761px)" srcset="'+(b[3]||'/assets/promo/')+b[0]+'-w.webp?v=6"><img src="'+(b[3]||'/assets/promo/')+b[0]+'-n.webp?v=6" width="960" height="300" alt="'+b[1]+'" fetchpriority="low" decoding="async"></picture></a><span class="tags"><small>AI 생성 이미지</small><small>광고</small></span>'})();
 `);
 
 const NAV_PRIMARY = ['audio', 'mobile', 'pc', 'display', 'wearable', 'smarthome', 'camera', 'car'];
