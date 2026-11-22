@@ -137,15 +137,20 @@ class KvStore {
   /* 검색창에서 들어와 발행할 만하다고 판단한 검색어. 발행기가 /0/keywords 로 받아 풀에 합친다. */
   async ensureKeywords() {
     await this.db.prepare('CREATE TABLE IF NOT EXISTS keywords(q TEXT PRIMARY KEY, keyword TEXT, t TEXT, at TEXT)').run().catch(() => {});
+    await this.db.prepare('CREATE TABLE IF NOT EXISTS kwrej(q TEXT PRIMARY KEY)').run().catch(() => {});
   }
   async hasKeyword(q) {
     if (!this.db) return true;
     await this.ensureKeywords();
-    return Boolean(await this.db.prepare('SELECT 1 FROM keywords WHERE q = ?').bind(q).first().catch(() => null));
+    return Boolean(await this.db.prepare('SELECT 1 FROM keywords WHERE q = ?1 UNION SELECT 1 FROM kwrej WHERE q = ?1').bind(q).first().catch(() => null));
   }
   async addKeyword({ q, keyword, t }) {
     if (!this.db) return;
     await this.db.prepare('INSERT OR IGNORE INTO keywords(q, keyword, t, at) VALUES(?, ?, ?, ?)').bind(q, keyword, t, new Date().toISOString()).run().catch(() => {});
+  }
+  async rejectKeyword(q) {
+    if (!this.db) return;
+    await this.db.prepare('INSERT OR IGNORE INTO kwrej(q) VALUES(?)').bind(q).run().catch(() => {});
   }
   async keywords(limit = 200) {
     if (!this.db) return [];
@@ -254,6 +259,7 @@ class FixtureStore {
     return true;
   }
   async addKeyword() {}
+  async rejectKeyword() {}
   async keywords() {
     return [];
   }

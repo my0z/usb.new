@@ -97,8 +97,7 @@ async function judgeKeyword(env, store, q) {
   } catch {
     return;
   }
-  if (!j.ok) return;
-  if ((await productCount(env, q)) < 3) return;
+  if (!j.ok || (await productCount(env, q)) < 3) return store.rejectKeyword(q);
   await store.addKeyword({ q, keyword: String(j.keyword || q).replace(/\s+/g, '').slice(0, 30), t: String(j.t || `${q} 추천`).slice(0, 60) });
 }
 
