@@ -63,7 +63,7 @@ if(g){g.innerHTML=B.map(function(o){var u=(o[3]||'/assets/promo/')+o[0];return '
 g.addEventListener('click',function(ev){var a=ev.target.closest&&ev.target.closest('a.zoom');if(!a)return;ev.preventDefault();var d=document.createElement('div');d.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:99;cursor:zoom-out;padding:16px';d.innerHTML='<img src="'+a.href+'" style="max-width:100%;max-height:100%;border-radius:10px">';d.onclick=function(){d.remove()};document.body.appendChild(d)})}
 var e=document.getElementById('promo'),b=B[Math.floor(Math.random()*B.length)];
 if(!e||!b)return;
-e.innerHTML='<a class="pb" href="'+b[2]+'?utm_source=usb.kr&utm_medium=banner&utm_campaign='+b[0]+'" target="_blank" rel="noopener"><picture><source media="(min-width:761px)" srcset="'+(b[3]||'/assets/promo/')+b[0]+'-w.webp?v=6"><img src="'+(b[3]||'/assets/promo/')+b[0]+'-n.webp?v=6" width="960" height="300" alt="'+b[1]+'" fetchpriority="low" decoding="async"></picture></a><span class="tags'+(/L$/.test(b[0])?' r':'')+'"><small>AI 생성 이미지</small><small>광고</small></span>'})();
+e.innerHTML='<a class="pb" href="'+b[2]+'?utm_source=usb.kr&utm_medium=banner&utm_campaign='+b[0]+'" target="_blank" rel="noopener"><picture><source media="(min-width:761px)" srcset="'+(b[3]||'/assets/promo/')+b[0]+'-w.webp?v=6"><img src="'+(b[3]||'/assets/promo/')+b[0]+'-n.webp?v=6" width="960" height="300" alt="'+b[1]+'" fetchpriority="low" decoding="async"></picture></a><span class="tags'+(/L$/.test(b[0])?' r':'')+'">'+(/P$/.test(b[0])?'':'<small>AI 생성 이미지</small>')+'<small>광고</small></span>'})();
 `);
 
 const NAV_PRIMARY = ['audio', 'mobile', 'pc', 'display', 'wearable', 'smarthome', 'camera', 'car'];
