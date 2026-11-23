@@ -5,7 +5,7 @@ import { postUrl, won } from './components.js';
 const SITE_NAME = 'USB.KR';
 const SITE_TAGLINE = '전자기기 스펙과 가격을 비교한다';
 /** 스타일 변경 시 올려서 브라우저 캐시를 무효화한다. */
-export const ASSET_VERSION = '20261122a';
+export const ASSET_VERSION = '20261123a';
 
 /** GA4 측정 ID (G-XXXX) 와 Cloudflare Web Analytics 토큰. 요청마다 index.js 가 env 에서 넣는다. 비어 있으면 태그를 안 넣는다. */
 export let GA_ID = '';
@@ -56,13 +56,15 @@ const PROMO = raw(`
 ['z3','공구함과 수납용품 모아보기','https://zakgong.com/c/%EA%B3%B5%EA%B5%AC%ED%95%A8%EC%88%98%EB%82%A9'],
 ['z4','작업 안전용품 필수템','https://zakgong.com/c/%EC%95%88%EC%A0%84%EC%9A%A9%ED%92%88']];
 var X=[];try{X=JSON.parse(localStorage.getItem('px')||'[]')}catch(x){}
-B=B.concat(X.map(function(o){return [o.id,o.text,o.url,o.host+(o.live?'/live/':'/promo/')]}));
+B=B.concat(X.map(function(o){return [o.id,o.text,o.url,o.host+(o.live?'/live/':'/promo/'),o.video]}));
 try{if(Date.now()-Number(localStorage.getItem('pxt')||0)>3600e3){Promise.all([fetch('https://zakgong.com/api/promos').then(function(r){return r.json()}),fetch('https://zakgong.com/api/live').then(function(r){return r.json()}).catch(function(){return[]})]).then(function(a){return a[0].concat(a[1])}).then(function(d){localStorage.setItem('px',JSON.stringify(d));localStorage.setItem('pxt',Date.now())}).catch(function(){})}}catch(x){}
 var g=document.getElementById('bangal');
 if(g){g.innerHTML=B.map(function(o){var u=(o[3]||'/assets/promo/')+o[0];return '<div><a class="zoom" href="'+u+'-w.webp?v=6"><img src="'+u+'-n.webp?v=6" alt="'+o[1]+'" loading="lazy" style="width:100%;border-radius:10px;display:block"></a><small>'+o[0]+' · '+o[1]+' · <a href="'+o[2]+'" target="_blank" rel="noopener nofollow">링크</a></small></div>'}).join('');
 g.addEventListener('click',function(ev){var a=ev.target.closest&&ev.target.closest('a.zoom');if(!a)return;ev.preventDefault();var d=document.createElement('div');d.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:99;cursor:zoom-out;padding:16px';d.innerHTML='<img src="'+a.href+'" style="max-width:100%;max-height:100%;border-radius:10px">';d.onclick=function(){d.remove()};document.body.appendChild(d)})}
 var e=document.getElementById('promo'),b=B[Math.floor(Math.random()*B.length)];
 if(!e||!b)return;
+var rm=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches,vs=window.matchMedia&&matchMedia('(min-width:761px)').matches?'w':'n',base=(b[3]||'/assets/promo/')+b[0],href=b[2]+(b[2].indexOf('?')<0?'?':'&')+'utm_source=usb.kr&utm_medium=banner&utm_campaign='+b[0];
+if(b[4]&&!rm){e.innerHTML='<a class="pb" href="'+href+'" target="_blank" rel="noopener"><video autoplay muted loop playsinline preload="auto" poster="'+base+'-'+vs+'.webp"><source src="'+base+'-'+vs+'.mp4" type="video/mp4"></video></a><span class="tags'+(/LP?$/.test(b[0])?' r':'')+'"><small>광고</small></span>';return}
 e.innerHTML='<a class="pb" href="'+b[2]+'?utm_source=usb.kr&utm_medium=banner&utm_campaign='+b[0]+'" target="_blank" rel="noopener"><picture><source media="(min-width:761px)" srcset="'+(b[3]||'/assets/promo/')+b[0]+'-w.webp?v=6"><img src="'+(b[3]||'/assets/promo/')+b[0]+'-n.webp?v=6" width="960" height="300" alt="'+b[1]+'" fetchpriority="low" decoding="async"></picture></a><span class="tags'+(/LP?$/.test(b[0])?' r':'')+'">'+(/P$/.test(b[0])?'':'<small>AI 생성 이미지</small>')+'<small>광고</small></span>'})();
 `);
 
