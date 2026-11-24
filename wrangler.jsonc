@@ -19,7 +19,9 @@
   "routes": [
     { "pattern": "usb.kr", "custom_domain": true },
     { "pattern": "www.usb.kr/*", "zone_name": "usb.kr" },
-    { "pattern": "n.usb.kr/*", "zone_name": "usb.kr" }
+    { "pattern": "n.usb.kr/*", "zone_name": "usb.kr" },
+    // scsi.kr 이전 시험용 주소. 완전히 옮긴 뒤에 scsi.kr 자체를 연결한다
+    { "pattern": "ex.scsi.kr", "custom_domain": true }
   ],
   "vars": {
     "SITE_NAME": "USB.KR",

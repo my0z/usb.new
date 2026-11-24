@@ -112,7 +112,7 @@ async function serveScsi(env, url) {
   if (p.endsWith('/')) p += 'index.html';
   for (const cand of [p, p + '.html']) {
     const r = await env.ASSETS.fetch(new Request(`${url.origin}/scsi${cand}`));
-    if (r.ok) return r;
+    if (r.ok) { const h = new Headers(r.headers); h.set('x-robots-tag', 'noindex'); return new Response(r.body, { status: 200, headers: h }); } // 시험 주소라 검색에 잡히지 않게 한다
   }
   return new Response('Not Found', { status: 404 });
 }
@@ -483,7 +483,7 @@ async function route(url, env, request, ctx) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    if ((url.hostname === 'scsi.kr' || url.hostname === 'www.scsi.kr') && request.method === 'GET') return serveScsi(env, url);
+    if (url.hostname === 'ex.scsi.kr' && request.method === 'GET') return serveScsi(env, url);
     setTracking(env);
     if (!cssLoaded && env?.ASSETS) {
       cssLoaded = true; // 실패해도 다시 안 읽는다. 그때는 <link> 로 낸다
