@@ -56,7 +56,7 @@ const PROMO = raw(`
 ['z3','공구함과 수납용품 모아보기','https://zakgong.com/c/%EA%B3%B5%EA%B5%AC%ED%95%A8%EC%88%98%EB%82%A9'],
 ['z4','작업 안전용품 필수템','https://zakgong.com/c/%EC%95%88%EC%A0%84%EC%9A%A9%ED%92%88']];
 var X=[];try{X=JSON.parse(localStorage.getItem('px')||'[]')}catch(x){}
-B=B.concat(X.map(function(o){return [o.id,o.text,o.url,o.host+(o.live?'/live/':'/promo/'),o.video]}));
+B=B.concat(X.map(function(o){return [o.id,o.text,o.url,o.host+(o.live?'/live/':'/promo/'),o.video,o.pex]}));
 try{if(Date.now()-Number(localStorage.getItem('pxt')||0)>3600e3){Promise.all([fetch('https://zakgong.com/api/promos').then(function(r){return r.json()}),fetch('https://zakgong.com/api/live').then(function(r){return r.json()}).catch(function(){return[]})]).then(function(a){return a[0].concat(a[1])}).then(function(d){localStorage.setItem('px',JSON.stringify(d));localStorage.setItem('pxt',Date.now())}).catch(function(){})}}catch(x){}
 var g=document.getElementById('bangal');
 if(g){g.innerHTML=B.map(function(o){var u=(o[3]||'/assets/promo/')+o[0];return '<div><a class="zoom" href="'+u+(o[4]?'-w.mp4':'-w.webp?v=6')+'">'+(o[4]?'<video src="'+u+'-n.mp4" poster="'+u+'-n.webp" autoplay muted loop playsinline preload="metadata" style="width:100%;border-radius:10px;display:block"></video>':'<img src="'+u+'-n.webp?v=6" alt="'+o[1]+'" loading="lazy" style="width:100%;border-radius:10px;display:block">')+'</a><small>'+(o[4]?'🎬 ':'')+o[0]+' · '+o[1]+' · <a href="'+o[2]+'" target="_blank" rel="noopener nofollow">링크</a></small></div>'}).join('');
@@ -64,7 +64,7 @@ g.addEventListener('click',function(ev){var a=ev.target.closest&&ev.target.close
 var e=document.getElementById('promo'),V=B.filter(function(x){return x[4]}),b=(V.length&&Math.random()<0.95)?V[Math.floor(Math.random()*V.length)]:B[Math.floor(Math.random()*B.length)];
 if(!e||!b)return;
 var rm=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches,vs=window.matchMedia&&matchMedia('(min-width:761px)').matches?'w':'n',base=(b[3]||'/assets/promo/')+b[0],href=b[2]+(b[2].indexOf('?')<0?'?':'&')+'utm_source=usb.kr&utm_medium=banner&utm_campaign='+b[0];
-if(b[4]){e.style.aspectRatio=(/VT/.test(b[0])&&vs==='w')?'1920/360':'';e.innerHTML='<a class="pb" href="'+href+'" target="_blank" rel="noopener"><video autoplay muted loop playsinline preload="auto" poster="'+base+'-'+vs+'.webp"><source src="'+base+'-'+vs+'.mp4" type="video/mp4"></video></a><span class="tags'+(/LP?$/.test(b[0])?' r':'')+'"><small>광고</small></span>';var vd=e.querySelector('video');if(vd){vd.muted=true;var go=function(){var q=vd.play();if(q&&q.catch)q.catch(function(){})};go();if(window.IntersectionObserver)new IntersectionObserver(function(x){if(x[0].isIntersecting&&vd.paused)go()},{threshold:.25}).observe(vd);['touchstart','scroll','click'].forEach(function(ev){addEventListener(ev,function f(){if(vd.paused)go();else removeEventListener(ev,f)},{passive:true})})}return}
+if(b[4]){var pn=document.getElementById('pexnote');if(pn&&b[5])pn.hidden=false;e.style.aspectRatio=(/VT/.test(b[0])&&vs==='w')?'1920/360':'';e.innerHTML='<a class="pb" href="'+href+'" target="_blank" rel="noopener"><video autoplay muted loop playsinline preload="auto" poster="'+base+'-'+vs+'.webp"><source src="'+base+'-'+vs+'.mp4" type="video/mp4"></video></a><span class="tags'+(/LP?$/.test(b[0])?' r':'')+'"><small>광고</small></span>';var vd=e.querySelector('video');if(vd){vd.muted=true;var go=function(){var q=vd.play();if(q&&q.catch)q.catch(function(){})};go();if(window.IntersectionObserver)new IntersectionObserver(function(x){if(x[0].isIntersecting&&vd.paused)go()},{threshold:.25}).observe(vd);['touchstart','scroll','click'].forEach(function(ev){addEventListener(ev,function f(){if(vd.paused)go();else removeEventListener(ev,f)},{passive:true})})}return}
 e.innerHTML='<a class="pb" href="'+b[2]+'?utm_source=usb.kr&utm_medium=banner&utm_campaign='+b[0]+'" target="_blank" rel="noopener"><picture><source media="(min-width:761px)" srcset="'+(b[3]||'/assets/promo/')+b[0]+'-w.webp?v=6"><img src="'+(b[3]||'/assets/promo/')+b[0]+'-n.webp?v=6" width="960" height="300" alt="'+b[1]+'" fetchpriority="low" decoding="async"></picture></a><span class="tags'+(/LP?$/.test(b[0])?' r':'')+'">'+(/P$/.test(b[0])?'':'<small>AI 생성 이미지</small>')+'<small>광고</small></span>'})();
 `);
 
@@ -211,6 +211,7 @@ export function layout({ title, description, canonical, active, body, heroSlot =
             실시간 쿠팡 가격 데이터를 바탕으로 전자기기 스펙과 가격을 비교한다. 이 사이트는 쿠팡 파트너스 활동의 일환으로 수수료를 제공받을 수 있다.
           </p>
           <p class="footer__issue">${issueLabel()}</p>
+          <p class="footer__issue" id="pexnote" hidden>배너 영상 제공: <a href="https://www.pexels.com" target="_blank" rel="noopener">Pexels</a></p>
         </div>
         <div>
           <h2 class="footer__title">카테고리</h2>
