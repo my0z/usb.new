@@ -7,6 +7,7 @@ import { statsPage } from './views/stats.js';
 import { bestGroups, bestIndexPage, bestPage, bestUrl } from './views/best.js';
 import { dealsPage } from './views/deals.js';
 import { goPage } from './views/go.js';
+import { boardRoute, recentPosts } from './lib/board.js';
 import { ASSET_VERSION, setTracking, setInlineCss } from './views/layout.js';
 import { gaReport, gscReport, gscOpportunities } from './lib/ga.js';
 import { cfUsage } from './lib/cloudflare.js';
@@ -107,12 +108,24 @@ function isAdmin(request, url, env) {
 }
 
 // scsi.kr 정적 사본: public/scsi/ 의 파일을 그대로 낸다 (도메인을 이 워커에 연결하기 전에는 usb.kr/scsi/ 로 미리 본다)
-async function serveScsi(env, url) {
+async function serveScsi(env, url, request) {
+  const br = await boardRoute(request, url, env);
+  if (br) return br;
   let p = decodeURIComponent(url.pathname);
   if (p.endsWith('/')) p += 'index.html';
   for (const cand of [p, p + '.html']) {
     const r = await env.ASSETS.fetch(new Request(`${url.origin}/scsi${cand}`));
-    if (r.ok) { const h = new Headers(r.headers); h.set('x-robots-tag', 'noindex'); return new Response(r.body, { status: 200, headers: h }); } // 시험 주소라 검색에 잡히지 않게 한다
+    if (r.ok) {
+      const h = new Headers(r.headers); h.set('x-robots-tag', 'noindex'); // 시험 주소라 검색에 잡히지 않게 한다
+      if (cand === '/index.html' || cand === '/') { // 메인 맨 아래에 게시판 최근 글을 끼워 넣는다
+        const posts = await recentPosts(env, 5);
+        const box = `<div style="max-width:1100px;margin:24px auto;padding:16px 20px;background:#fff;border:1px solid #e3e5e8;border-radius:12px"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:1.1rem">게시판</b><a href="/board" style="color:#555">더보기 ›</a></div>${posts.length ? posts.map((x) => `<div style="display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid #eee"><a href="/board/${x.id}" style="color:#222;text-decoration:none">${escapeHtml(x.title)}</a><span style="color:#999;font-size:.85rem">${new Date(Number(x.t) + 9 * 3600e3).toISOString().slice(0, 10)}</span></div>`).join('') : '<p style="color:#999;margin:10px 0 0">아직 글이 없습니다.</p>'}</div>`;
+        const text = (await r.text()).replace('<div id="ft"', box + '<div id="ft"');
+        h.delete('content-length');
+        return new Response(text, { status: 200, headers: h });
+      }
+      return new Response(r.body, { status: 200, headers: h });
+    }
   }
   return new Response('Not Found', { status: 404 });
 }
@@ -483,7 +496,7 @@ async function route(url, env, request, ctx) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    if (url.hostname === 'ex.scsi.kr' && request.method === 'GET') return serveScsi(env, url);
+    if (url.hostname === 'ex.scsi.kr' && (request.method === 'GET' || url.pathname.startsWith('/board'))) return serveScsi(env, url, request);
     setTracking(env);
     if (!cssLoaded && env?.ASSETS) {
       cssLoaded = true; // 실패해도 다시 안 읽는다. 그때는 <link> 로 낸다
