@@ -106,6 +106,17 @@ function isAdmin(request, url, env) {
   return !key || url.searchParams.get('key') === key || (request.headers.get('cookie') ?? '').includes(`adm=${key}`);
 }
 
+// scsi.kr 정적 사본: public/scsi/ 의 파일을 그대로 낸다 (도메인을 이 워커에 연결하기 전에는 usb.kr/scsi/ 로 미리 본다)
+async function serveScsi(env, url) {
+  let p = decodeURIComponent(url.pathname);
+  if (p.endsWith('/')) p += 'index.html';
+  for (const cand of [p, p + '.html']) {
+    const r = await env.ASSETS.fetch(new Request(`${url.origin}/scsi${cand}`));
+    if (r.ok) return r;
+  }
+  return new Response('Not Found', { status: 404 });
+}
+
 function notFound(url) {
   // 본 도메인에서 돌 때는 옛 사이트가 없으니 홈으로 보낸다
   return redirect(url.hostname === 'usb.kr' ? '/' : `https://usb.kr${url.pathname}`, 301);
@@ -472,6 +483,7 @@ async function route(url, env, request, ctx) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    if ((url.hostname === 'scsi.kr' || url.hostname === 'www.scsi.kr') && request.method === 'GET') return serveScsi(env, url);
     setTracking(env);
     if (!cssLoaded && env?.ASSETS) {
       cssLoaded = true; // 실패해도 다시 안 읽는다. 그때는 <link> 로 낸다
