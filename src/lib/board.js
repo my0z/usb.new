@@ -83,3 +83,29 @@ export async function boardRoute(request, url, env) {
   }
   return html(shell('게시판', '<h1>없는 주소입니다</h1><p><a href="/board">목록으로</a></p>'), 404);
 }
+
+// ex.scsi.kr 방문 수 (서버에서 사람 요청만 센다) — D1 ex_visits 표
+export async function countVisit(env, ctx) {
+  if (!env?.DB || !ctx) return;
+  const day = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
+  ctx.waitUntil((async () => {
+    const up = () => env.DB.prepare('INSERT INTO ex_visits(day,n) VALUES(?,1) ON CONFLICT(day) DO UPDATE SET n=n+1').bind(day).run();
+    await up().catch(() => env.DB.prepare('CREATE TABLE IF NOT EXISTS ex_visits(day TEXT PRIMARY KEY, n INTEGER)').run().then(up)).catch(() => {});
+  })());
+}
+
+// usb.kr/0 에 다른 사이트처럼 보여 줄 요약 카드
+export async function exStats(env) {
+  if (!env?.DB) return null;
+  try {
+    await ensure(env.DB);
+    await env.DB.prepare('CREATE TABLE IF NOT EXISTS ex_visits(day TEXT PRIMARY KEY, n INTEGER)').run();
+    const now = Date.now() + 9 * 3600e3, d = (k) => new Date(now - k * 864e5).toISOString().slice(0, 10);
+    const today = (await env.DB.prepare('SELECT n FROM ex_visits WHERE day=?').bind(d(0)).first())?.n ?? 0;
+    const week = (await env.DB.prepare('SELECT COALESCE(SUM(n),0) n FROM ex_visits WHERE day>=?').bind(d(6)).first())?.n ?? 0;
+    const total = (await env.DB.prepare('SELECT COALESCE(SUM(n),0) n FROM ex_visits').first())?.n ?? 0;
+    const posts = (await env.DB.prepare('SELECT COUNT(*) n FROM board').first())?.n ?? 0;
+    const f = (n) => Number(n).toLocaleString('ko-KR');
+    return { name: 'ex.scsi.kr', path: 'https://ex.scsi.kr/board', kpis: [{ label: '오늘 방문', value: f(today) }, { label: '7일 방문', value: f(week) }, { label: '누적 방문', value: f(total) }, { label: '게시글', value: f(posts) }] };
+  } catch (e) { return { name: 'ex.scsi.kr', path: 'https://ex.scsi.kr/board', error: e.message }; }
+}

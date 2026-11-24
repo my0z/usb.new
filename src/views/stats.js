@@ -155,7 +155,7 @@ function viduTile(win) {
   return kpi(`Vidu 오프피크 · KST ${kst(start)}–${kst(end)}`, on ? '진행 중' : '대기', on ? `${hm(left)} 남음` : `${hm(left)} 뒤 시작`, on);
 }
 
-export function statsPage({ canonical, summaries, visits = null, ga = null, gsc = null, runs = [], clicks = null, queue = [], extraKeywords = [], cf = null, siblings = [], msg = '', siteUrl = '', psiKey = '', viduOffpeak = '' }) {
+export function statsPage({ canonical, summaries, visits = null, ga = null, gsc = null, runs = [], clicks = null, queue = [], extraKeywords = [], cf = null, siblings = [], fc = null, msg = '', siteUrl = '', psiKey = '', viduOffpeak = '' }) {
   const byCat = new Map();
   const byDay = new Map();
   let products = 0;
@@ -309,6 +309,15 @@ export function statsPage({ canonical, summaries, visits = null, ga = null, gsc 
             { sub: '30분 캐시' },
           )
         : ''}
+      ${panel(
+        'Firecrawl 크레딧',
+        fc && !fc.error
+          ? html`<div class="adm__kpis" style="margin:0 0 10px">${kpi('남은 크레딧', num(fc.remaining), fc.plan ? `전체 ${num(fc.plan)} 중 ${Math.round((fc.remaining / fc.plan) * 100)}%` : '', true)}${fc.plan ? kpi('쓴 크레딧', num(fc.plan - fc.remaining), '이번 결제 기간') : ''}</div>
+            <p class="panel__note">${fc.end ? `결제 기간 끝 ${String(fc.end).slice(0, 10)} · ` : ''}10분 캐시 · <a href="https://www.firecrawl.dev/app/usage" target="_blank" rel="noopener">사용량 바로가기</a></p>`
+          : fc?.error
+            ? html`<p class="panel__note">불러오기 실패: ${fc.error}</p>`
+            : html`<p class="panel__note">워커 시크릿 <code>FIRECRAWL_API_KEY</code> 를 넣으면 남은 크레딧이 여기 뜬다. firecrawl.dev 대시보드 → API Keys 에서 키를 만들고 Cloudflare 대시보드 → Workers → new → Settings → Variables and Secrets 에 <b>Secret</b> 으로 추가한다.</p>`,
+      )}
       ${cf?.error ? panel('Cloudflare 이번 달 예상 청구', html`<p class="panel__note">불러오기 실패: ${cf.error}</p>`) : ''}
       ${!cf
         ? panel(

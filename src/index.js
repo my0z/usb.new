@@ -7,7 +7,8 @@ import { statsPage } from './views/stats.js';
 import { bestGroups, bestIndexPage, bestPage, bestUrl } from './views/best.js';
 import { dealsPage } from './views/deals.js';
 import { goPage } from './views/go.js';
-import { boardRoute, recentPosts } from './lib/board.js';
+import { boardRoute, recentPosts, countVisit, exStats } from './lib/board.js';
+import { firecrawlCredits } from './lib/firecrawl.js';
 import { ASSET_VERSION, setTracking, setInlineCss } from './views/layout.js';
 import { gaReport, gscReport, gscOpportunities } from './lib/ga.js';
 import { cfUsage } from './lib/cloudflare.js';
@@ -108,7 +109,10 @@ function isAdmin(request, url, env) {
 }
 
 // scsi.kr 정적 사본: public/scsi/ 의 파일을 그대로 낸다 (도메인을 이 워커에 연결하기 전에는 usb.kr/scsi/ 로 미리 본다)
-async function serveScsi(env, url, request) {
+async function serveScsi(env, url, request, ctx) {
+  const human = request.method === 'GET' && !BOT_UA.test(request.headers.get('user-agent') ?? '') && request.cf?.botManagement?.verifiedBot !== true;
+  const isPage = url.pathname === '/' || url.pathname === '/index.html' || /^\/board(\/\d+)?\/?$/.test(url.pathname);
+  if (human && isPage) countVisit(env, ctx);
   const br = await boardRoute(request, url, env);
   if (br) return br;
   let p = decodeURIComponent(url.pathname);
@@ -379,7 +383,7 @@ async function route(url, env, request, ctx) {
   if (path === '/0') {
     const key = env?.ADMIN_KEY;
     if (!isAdmin(request, url, env)) return notFound(url);
-    const [summaries, visits, ga, gsc, runs, clicks, queue, extraKeywords, cf, siblings] = await Promise.all([
+    const [summaries, visits, ga, gsc, runs, clicks, queue, extraKeywords, cf, siblings0, ex, fc] = await Promise.all([
       store.summaries(),
       store.visitStats(),
       gaReport(env, ctx).catch((e) => ({ error: e.message })),
@@ -390,8 +394,11 @@ async function route(url, env, request, ctx) {
       store.keywords(30),
       cfUsage(env, ctx).catch((e) => ({ error: e.message })),
       siblingStats(env, ctx).catch(() => []),
+      exStats(env),
+      firecrawlCredits(env, ctx).catch((e) => ({ error: e.message })),
     ]);
-    const res = page(statsPage({ canonical, summaries, visits, ga, gsc, runs, clicks, queue, extraKeywords, cf, siblings, msg: url.searchParams.get('msg') ?? '', siteUrl: env?.SITE_URL || url.origin, psiKey: env?.PSI_KEY ?? '', viduOffpeak: env?.VIDU_OFFPEAK ?? '' }), { cache: 'no-store', noindex: true });
+    const siblings = ex ? [...siblings0, ex] : siblings0; // ex.scsi.kr 은 같은 워커라 직접 센 값을 붙인다
+    const res = page(statsPage({ canonical, summaries, visits, ga, gsc, runs, clicks, queue, extraKeywords, cf, siblings, fc, msg: url.searchParams.get('msg') ?? '', siteUrl: env?.SITE_URL || url.origin, psiKey: env?.PSI_KEY ?? '', viduOffpeak: env?.VIDU_OFFPEAK ?? '' }), { cache: 'no-store', noindex: true });
     if (key) res.headers.set('set-cookie', `adm=${key}; Path=/0; Max-Age=31536000; HttpOnly; Secure; SameSite=Lax`);
     return res;
   }
@@ -496,7 +503,7 @@ async function route(url, env, request, ctx) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    if (url.hostname === 'ex.scsi.kr' && (request.method === 'GET' || url.pathname.startsWith('/board'))) return serveScsi(env, url, request);
+    if (url.hostname === 'ex.scsi.kr' && (request.method === 'GET' || url.pathname.startsWith('/board'))) return serveScsi(env, url, request, ctx);
     setTracking(env);
     if (!cssLoaded && env?.ASSETS) {
       cssLoaded = true; // 실패해도 다시 안 읽는다. 그때는 <link> 로 낸다
