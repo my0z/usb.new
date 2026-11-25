@@ -17,8 +17,11 @@ const SITES = [
   { key: 'zakgong', name: 'zakgong.com', url: 'https://zakgong.com/0', env: 'ZAKGONG_ADMIN_PASSWORD' },
   { key: 'pemily', name: 'pemily.kr', url: 'https://pemily.kr/0', env: 'PEMILY_ADMIN_PASSWORD' },
   { key: 'bebepong', name: 'bbping.kr', url: 'https://bbping.kr/0', env: 'BEBEPONG_ADMIN_PASSWORD' },
-  { key: 'noridong', name: 'noridong.com', url: 'https://noridong.com/0', env: 'NORIDONG_ADMIN_PASSWORD', shared: true }, // 같은 워커라 비밀번호가 다른 사이트와 같다
+  { key: 'noridong', name: 'noridong.com', url: 'https://noridong.com/0', env: 'NORIDONG_ADMIN_PASSWORD', shared: true, direct: true }, // 같은 워커라 비밀번호가 다른 사이트와 같다
 ];
+
+// 카드를 누르면 가는 주소: 기본은 이 사이트 안의 중계 경로(비밀번호 없이) · direct 사이트는 그 사이트의 /0 로 바로 간다
+const linkOf = (site) => (site.direct ? site.url : `/0/go/${site.key}`);
 
 // 사이트 비밀번호. shared 사이트는 전용 시크릿이 없으면 다른 사이트의 같은 비밀번호를 쓴다
 const pwOf = (env, site) => env?.[site.env] || (site.shared ? SITES.map((x) => env?.[x.env]).find(Boolean) : '') || '';
@@ -40,7 +43,7 @@ async function loadOne(site, env) {
   const html = await res.text();
   const kpis = parseKpis(html);
   if (!kpis.length) throw new Error('KPI 를 못 읽었다 (페이지 형식이 바뀌었을 수 있다)');
-  return { name: site.name, path: `/0/go/${site.key}`, kpis };
+  return { name: site.name, path: linkOf(site), kpis };
 }
 
 /** [{name, path, kpis} | {name, path, error}] 배열. 시크릿이 없는 사이트는 뺀다. ctx 를 주면 콜로 캐시도 같이 쓴다. */
@@ -49,13 +52,13 @@ export async function siblingStats(env, ctx) {
   if (!sites.length) return [];
   const sig = sites.map((s) => s.key).join('-'); // 사이트가 늘거나 시크릿이 바뀌면 캐시를 새로 만든다
   if (cache.sig === sig && Date.now() - cache.at < TTL) return cache.data;
-  const key = new Request(`https://edge-cache.internal/sibling-stats-v4-${sig}`);
+  const key = new Request(`https://edge-cache.internal/sibling-stats-v5-${sig}`);
   let data = null;
   try { const hit = await caches.default.match(key); if (hit) data = await hit.json(); } catch {}
   if (!data) {
     data = await Promise.all(
       sites.map((s) =>
-        loadOne(s, env).catch((e) => ({ name: s.name, path: `/0/go/${s.key}`, error: e.message })),
+        loadOne(s, env).catch((e) => ({ name: s.name, path: linkOf(s), error: e.message })),
       ),
     );
     // 실패가 하나라도 있으면 1분만 보관해서 곧바로 다시 시도하게 한다
