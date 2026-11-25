@@ -5,7 +5,7 @@ import { postUrl, won } from './components.js';
 const SITE_NAME = 'USB.KR';
 const SITE_TAGLINE = '전자기기 스펙과 가격을 비교한다';
 /** 스타일 변경 시 올려서 브라우저 캐시를 무효화한다. */
-export const ASSET_VERSION = '20261125a';
+export const ASSET_VERSION = '20261125b';
 
 /** GA4 측정 ID (G-XXXX) 와 Cloudflare Web Analytics 토큰. 요청마다 index.js 가 env 에서 넣는다. 비어 있으면 태그를 안 넣는다. */
 export let GA_ID = '';
@@ -59,7 +59,7 @@ var X=[];try{X=JSON.parse(localStorage.getItem('px')||'[]')}catch(x){}
 B=B.concat(X.map(function(o){return [o.id,o.text,o.url,o.host+(o.live?'/live/':'/promo/'),o.video,o.pex]}));
 try{if(Date.now()-Number(localStorage.getItem('pxt')||0)>3600e3){Promise.all([fetch('https://zakgong.com/api/promos').then(function(r){return r.json()}),fetch('https://zakgong.com/api/live').then(function(r){return r.json()}).catch(function(){return[]})]).then(function(a){return a[0].concat(a[1])}).then(function(d){localStorage.setItem('px',JSON.stringify(d));localStorage.setItem('pxt',Date.now())}).catch(function(){})}}catch(x){}
 var g=document.getElementById('bangal');
-if(g){g.innerHTML=B.map(function(o){var u=(o[3]||'/assets/promo/')+o[0];return '<div><a class="zoom" href="'+u+(o[4]?'-w.mp4':'-w.webp?v=6')+'">'+(o[4]?'<video src="'+u+'-n.mp4" poster="'+u+'-n.webp" autoplay muted loop playsinline preload="metadata" style="width:100%;border-radius:10px;display:block"></video>':'<img src="'+u+'-n.webp?v=6" alt="'+o[1]+'" loading="lazy" style="width:100%;border-radius:10px;display:block">')+'</a><small>'+(o[4]?'🎬 ':'')+o[0]+' · '+o[1]+' · <a href="'+o[2]+'" target="_blank" rel="noopener nofollow">링크</a></small></div>'}).join('');
+if(g){var G=X.map(function(o,i){return {o:o,i:i}}).sort(function(a,b){return ((b.o.ts||0)-(a.o.ts||0))||(b.i-a.i)}).slice(0,10).map(function(z){var o=z.o;return [o.id,o.text,o.url,o.host+(o.live?'/live/':'/promo/'),o.video,o.pex]});if(!G.length)G=B.slice(-10).reverse(); /* 최근 만든 배너 10개만 보여 준다 */g.innerHTML=G.map(function(o){var u=(o[3]||'/assets/promo/')+o[0];return '<div><a class="zoom" href="'+u+(o[4]?'-w.mp4':'-w.webp?v=6')+'">'+(o[4]?'<video src="'+u+'-n.mp4" poster="'+u+'-n.webp" autoplay muted loop playsinline preload="metadata" style="width:100%;border-radius:10px;display:block"></video>':'<img src="'+u+'-n.webp?v=6" alt="'+o[1]+'" loading="lazy" style="width:100%;border-radius:10px;display:block">')+'</a><small>'+(o[4]?'🎬 ':'')+o[0]+' · '+o[1]+' · <a href="'+o[2]+'" target="_blank" rel="noopener nofollow">링크</a></small></div>'}).join('');
 g.addEventListener('click',function(ev){var a=ev.target.closest&&ev.target.closest('a.zoom');if(!a)return;ev.preventDefault();var d=document.createElement('div');d.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:99;cursor:zoom-out;padding:16px';d.innerHTML=/\.mp4/.test(a.href)?'<video src="'+a.href+'" autoplay muted loop playsinline controls style="max-width:100%;max-height:100%;border-radius:10px"></video>':'<img src="'+a.href+'" style="max-width:100%;max-height:100%;border-radius:10px">';d.onclick=function(){d.remove()};document.body.appendChild(d)})}
 var e=document.getElementById('promo'),V=B.filter(function(x){return x[4]}),b=(V.length&&Math.random()<0.95)?V[Math.floor(Math.random()*V.length)]:B[Math.floor(Math.random()*B.length)];
 if(!e||!b)return;
