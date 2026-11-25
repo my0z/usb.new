@@ -71,6 +71,18 @@ export async function siblingStats(env, ctx) {
   return data;
 }
 
+/** 모든 사이트 배너의 노출과 클릭 7일 합계 (vuty.kr 이 모아 둔 숫자). 시크릿이 없거나 실패하면 null. 10분 캐시 */
+export async function bannerSummary(env, ctx) {
+  const pw = SITES.map((x) => env?.[x.env]).find(Boolean);
+  if (!pw) return null;
+  return edgeCached(ctx, 'banner-summary-v1', 600, async () => {
+    const res = await fetch('https://vuty.kr/0/bn.json?d=7', { headers: { authorization: `Basic ${btoa(`:${pw}`)}` }, signal: AbortSignal.timeout(15000) }).catch(() => null);
+    if (!res || !res.ok) return { error: res ? `HTTP ${res.status}` : '접속 실패' };
+    const j = await res.json().catch(() => null);
+    return j && j.total ? { total: j.total, video: j.video, image: j.image } : { error: '숫자를 못 읽었다' };
+  });
+}
+
 /** usb.kr/0/go/<key> 로 들어온 요청을 그 사이트의 /0 에 Basic 인증을 붙여 그대로 중계한다 (비밀번호를 다시 안 물어본다).
  * 응답 HTML 안의 자기 자신 링크(/0?d=...)와 삭제·공지 POST(fetch('/0',...))만 이 중계 경로로 고쳐 써서
  * 탭 전환과 글 삭제 버튼이 계속 이 경로를 통해 동작하게 한다. 시크릿이 없으면 null. */

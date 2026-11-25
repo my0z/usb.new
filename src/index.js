@@ -12,7 +12,7 @@ import { firecrawlCredits } from './lib/firecrawl.js';
 import { ASSET_VERSION, setTracking, setInlineCss } from './views/layout.js';
 import { gaReport, gscReport, gscOpportunities } from './lib/ga.js';
 import { cfUsage } from './lib/cloudflare.js';
-import { siblingStats, siblingProxy } from './lib/siblings.js';
+import { siblingStats, siblingProxy, bannerSummary } from './lib/siblings.js';
 import { coupangConfigured, deeplink, searchUrl, productCount } from './lib/coupang.js';
 import { categories, getCategory, categoryOfPost } from './data/categories.js';
 import { getStore, searchSummaries, excerpt } from './data/store.js';
@@ -383,7 +383,7 @@ async function route(url, env, request, ctx) {
   if (path === '/0') {
     const key = env?.ADMIN_KEY;
     if (!isAdmin(request, url, env)) return notFound(url);
-    const [summaries, visits, ga, gsc, runs, clicks, queue, extraKeywords, cf, siblings0, ex, fc] = await Promise.all([
+    const [summaries, visits, ga, gsc, runs, clicks, queue, extraKeywords, cf, siblings0, ex, fc, bns] = await Promise.all([
       store.summaries(),
       store.visitStats(),
       gaReport(env, ctx).catch((e) => ({ error: e.message })),
@@ -396,9 +396,10 @@ async function route(url, env, request, ctx) {
       siblingStats(env, ctx).catch(() => []),
       exStats(env),
       firecrawlCredits(env, ctx).catch((e) => ({ error: e.message })),
+      bannerSummary(env, ctx).catch(() => null),
     ]);
     const siblings = ex ? [...siblings0, ex] : siblings0; // ex.scsi.kr 은 같은 워커라 직접 센 값을 붙인다
-    const res = page(statsPage({ canonical, summaries, visits, ga, gsc, runs, clicks, queue, extraKeywords, cf, siblings, fc, msg: url.searchParams.get('msg') ?? '', siteUrl: env?.SITE_URL || url.origin, psiKey: env?.PSI_KEY ?? '', viduOffpeak: env?.VIDU_OFFPEAK ?? '' }), { cache: 'no-store', noindex: true });
+    const res = page(statsPage({ canonical, summaries, visits, ga, gsc, runs, clicks, queue, extraKeywords, cf, siblings, fc, bns, msg: url.searchParams.get('msg') ?? '', siteUrl: env?.SITE_URL || url.origin, psiKey: env?.PSI_KEY ?? '', viduOffpeak: env?.VIDU_OFFPEAK ?? '' }), { cache: 'no-store', noindex: true });
     if (key) res.headers.set('set-cookie', `adm=${key}; Path=/0; Max-Age=31536000; HttpOnly; Secure; SameSite=Lax`);
     return res;
   }

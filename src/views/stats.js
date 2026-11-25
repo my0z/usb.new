@@ -155,7 +155,7 @@ function viduTile(win) {
   return kpi(`Vidu 오프피크 · KST ${kst(start)}–${kst(end)}`, on ? '진행 중' : '대기', on ? `${hm(left)} 남음` : `${hm(left)} 뒤 시작`, on);
 }
 
-export function statsPage({ canonical, summaries, visits = null, ga = null, gsc = null, runs = [], clicks = null, queue = [], extraKeywords = [], cf = null, siblings = [], fc = null, msg = '', siteUrl = '', psiKey = '', viduOffpeak = '' }) {
+export function statsPage({ canonical, summaries, visits = null, ga = null, gsc = null, runs = [], clicks = null, queue = [], extraKeywords = [], cf = null, siblings = [], fc = null, bns = null, msg = '', siteUrl = '', psiKey = '', viduOffpeak = '' }) {
   const byCat = new Map();
   const byDay = new Map();
   let products = 0;
@@ -325,6 +325,13 @@ export function statsPage({ canonical, summaries, visits = null, ga = null, gsc 
             html`<p class="panel__note">변수 CLOUDFLARE_ACCOUNT_ID(이미 들어있음)와 시크릿 CLOUDFLARE_ANALYTICS_TOKEN 을 넣으면 이번 달 사용량과 공개 요금표 기준 예상 청구가 여기 뜬다. dash.cloudflare.com → 오른쪽 위 프로필 → <b>API 토큰</b> → <b>토큰 만들기</b> → 사용자 지정 토큰 → 권한 "Account · Account Analytics · Read" 선택 → 계정은 이 사이트 계정으로 한정 → 만들어진 값을 <code>npx wrangler secret put CLOUDFLARE_ANALYTICS_TOKEN</code> 으로 넣는다.</p>`,
           )
         : ''}
+      ${panel(
+        '배너 통계 (7일)',
+        bns && !bns.error
+          ? html`<div class="adm__kpis" style="margin:0 0 10px">${kpi('노출', num(bns.total.v), '', true)}${kpi('클릭', num(bns.total.c))}${kpi('클릭률', bns.total.v ? ((bns.total.c / bns.total.v) * 100).toFixed(1) + '%' : '-')}${kpi('영상 클릭률', bns.video.v ? ((bns.video.c / bns.video.v) * 100).toFixed(1) + '%' : '-', `노출 ${num(bns.video.v)}`)}${kpi('이미지 클릭률', bns.image.v ? ((bns.image.c / bns.image.v) * 100).toFixed(1) + '%' : '-', `노출 ${num(bns.image.v)}`)}</div>
+            <p class="panel__note"><a href="https://vuty.kr/0/bn" target="_blank" rel="noopener">배너별 노출과 클릭 자세히 보기 ↗</a> · 사이트 7곳과 usb.kr 의 배너를 모두 합친 숫자 · 10분 캐시</p>`
+          : html`<p class="panel__note">${bns && bns.error ? `불러오기 실패: ${bns.error} · ` : ''}<a href="https://vuty.kr/0/bn" target="_blank" rel="noopener">배너 통계 화면 열기 ↗</a></p>`,
+      )}
       ${panel('배너 모아보기 (최근 10개)', html`<div id="bangal" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px"></div>`, { wide: true, sub: '누르면 확대' })}
       ${panel('발행 추이', bars(days.map(([d, n]) => [d, n]), { unit: '건' }), { sub: '14일' })}
       ${panel('카테고리별', bars(cats.map(([c, n]) => [c, n]), { unit: '건' }), { sub: `${cats.length}개` })}

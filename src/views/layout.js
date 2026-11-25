@@ -5,7 +5,7 @@ import { postUrl, won } from './components.js';
 const SITE_NAME = 'USB.KR';
 const SITE_TAGLINE = '전자기기 스펙과 가격을 비교한다';
 /** 스타일 변경 시 올려서 브라우저 캐시를 무효화한다. */
-export const ASSET_VERSION = '20261125b';
+export const ASSET_VERSION = '20261125c';
 
 /** GA4 측정 ID (G-XXXX) 와 Cloudflare Web Analytics 토큰. 요청마다 index.js 가 env 에서 넣는다. 비어 있으면 태그를 안 넣는다. */
 export let GA_ID = '';
@@ -63,6 +63,8 @@ if(g){var G=X.map(function(o,i){return {o:o,i:i}}).sort(function(a,b){return ((b
 g.addEventListener('click',function(ev){var a=ev.target.closest&&ev.target.closest('a.zoom');if(!a)return;ev.preventDefault();var d=document.createElement('div');d.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:99;cursor:zoom-out;padding:16px';d.innerHTML=/\.mp4/.test(a.href)?'<video src="'+a.href+'" autoplay muted loop playsinline controls style="max-width:100%;max-height:100%;border-radius:10px"></video>':'<img src="'+a.href+'" style="max-width:100%;max-height:100%;border-radius:10px">';d.onclick=function(){d.remove()};document.body.appendChild(d)})}
 var e=document.getElementById('promo'),V=B.filter(function(x){return x[4]}),b=(V.length&&Math.random()<0.95)?V[Math.floor(Math.random()*V.length)]:B[Math.floor(Math.random()*B.length)];
 if(!e||!b)return;
+/* 배너 통계: 화면에 보이면 노출 한 번 · 누르면 클릭 한 번을 vuty.kr 서버(통계 모음)에 알린다 */
+e.dataset.bid=b[0];(function(){function bn(t){try{navigator.sendBeacon('https://vuty.kr/api/bn',JSON.stringify({i:e.dataset.bid,e:t}))}catch(x){}}var sh=0;function fire(){if(!sh){sh=1;setTimeout(function(){bn('v')},1200)}}if(window.IntersectionObserver){var io=new IntersectionObserver(function(es){if(es[0].isIntersecting){io.disconnect();fire()}},{threshold:.5});io.observe(e)}else fire();function ck(ev){if(ev.target.closest&&ev.target.closest('a.pb'))bn('c')}e.addEventListener('click',ck);e.addEventListener('auxclick',ck)})();
 var rm=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches,vs=window.matchMedia&&matchMedia('(min-width:761px)').matches?'w':'n',base=(b[3]||'/assets/promo/')+b[0],href=b[2]+(b[2].indexOf('?')<0?'?':'&')+'utm_source=usb.kr&utm_medium=banner&utm_campaign='+b[0];
 if(b[4]){var pn=document.getElementById('pexnote');if(pn&&b[5])pn.hidden=false;e.style.aspectRatio=(/VT/.test(b[0])&&vs==='w')?'1920/360':'';e.innerHTML='<a class="pb" href="'+href+'" target="_blank" rel="noopener"><video autoplay muted loop playsinline preload="auto" poster="'+base+'-'+vs+'.webp"><source src="'+base+'-'+vs+'.mp4" type="video/mp4"></video></a><span class="tags'+(/LP?$/.test(b[0])?' r':'')+'"><small>광고</small></span>';var vd=e.querySelector('video');if(vd){vd.muted=true;var go=function(){var q=vd.play();if(q&&q.catch)q.catch(function(){})};go();if(window.IntersectionObserver)new IntersectionObserver(function(x){if(x[0].isIntersecting&&vd.paused)go()},{threshold:.25}).observe(vd);['touchstart','scroll','click'].forEach(function(ev){addEventListener(ev,function f(){if(vd.paused)go();else removeEventListener(ev,f)},{passive:true})})}return}
 e.innerHTML='<a class="pb" href="'+b[2]+'?utm_source=usb.kr&utm_medium=banner&utm_campaign='+b[0]+'" target="_blank" rel="noopener"><picture><source media="(min-width:761px)" srcset="'+(b[3]||'/assets/promo/')+b[0]+'-w.webp?v=6"><img src="'+(b[3]||'/assets/promo/')+b[0]+'-n.webp?v=6" width="960" height="300" alt="'+b[1]+'" fetchpriority="low" decoding="async"></picture></a><span class="tags'+(/LP?$/.test(b[0])?' r':'')+'">'+(/P$/.test(b[0])?'':'<small>AI 생성 이미지</small>')+'<small>광고</small></span>'})();
