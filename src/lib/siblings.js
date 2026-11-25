@@ -20,8 +20,8 @@ const SITES = [
   { key: 'noridong', name: 'noridong.com', url: 'https://noridong.com/0', env: 'NORIDONG_ADMIN_PASSWORD', shared: true, direct: true }, // 같은 워커라 비밀번호가 다른 사이트와 같다
 ];
 
-// 카드를 누르면 가는 주소: 기본은 이 사이트 안의 중계 경로(비밀번호 없이) · direct 사이트는 그 사이트의 /0 로 바로 간다
-const linkOf = (site) => (site.direct ? site.url : `/0/go/${site.key}`);
+// 카드를 누르면 가는 주소: 기본은 그 사이트의 /0 로 바로 간다 (direct: false 로 적은 사이트만 이 사이트 안의 중계 경로로 비밀번호 없이 연다)
+const linkOf = (site) => (site.direct === false ? `/0/go/${site.key}` : site.url);
 
 // 사이트 비밀번호. shared 사이트는 전용 시크릿이 없으면 다른 사이트의 같은 비밀번호를 쓴다
 const pwOf = (env, site) => env?.[site.env] || (site.shared ? SITES.map((x) => env?.[x.env]).find(Boolean) : '') || '';
@@ -52,7 +52,7 @@ export async function siblingStats(env, ctx) {
   if (!sites.length) return [];
   const sig = sites.map((s) => s.key).join('-'); // 사이트가 늘거나 시크릿이 바뀌면 캐시를 새로 만든다
   if (cache.sig === sig && Date.now() - cache.at < TTL) return cache.data;
-  const key = new Request(`https://edge-cache.internal/sibling-stats-v5-${sig}`);
+  const key = new Request(`https://edge-cache.internal/sibling-stats-v6-${sig}`);
   let data = null;
   try { const hit = await caches.default.match(key); if (hit) data = await hit.json(); } catch {}
   if (!data) {
