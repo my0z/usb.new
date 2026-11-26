@@ -75,11 +75,17 @@ class KvStore {
   }
 
   /** 브라우저 비콘으로만 호출된다. returning 은 재방문 쿠키가 있는 경우. */
-  async recordVisit(path, returning = false) {
+  async recordVisit(path, returning = false, ipm = '') {
     if (!this.db) return;
     const day = new Date().toISOString().slice(0, 10);
     const r = returning ? 1 : 0;
     await this.db.prepare('INSERT INTO visits(day, path, n, r) VALUES(?, ?, 1, ?) ON CONFLICT(day, path) DO UPDATE SET n = n + 1, r = r + ?').bind(day, path, r, r).run().catch(() => {});
+    if (ipm) { // 셋째 자리를 가린 IP 와 마지막 접속 시각만 남긴다 (원본 IP 는 저장하지 않는다)
+      const now = Date.now();
+      const up = () => this.db.prepare('INSERT INTO ip_visits(ipm, n, t) VALUES(?, 1, ?) ON CONFLICT(ipm) DO UPDATE SET n = n + 1, t = ?').bind(ipm, now, now).run();
+      await up().catch(() => this.db.prepare('CREATE TABLE IF NOT EXISTS ip_visits(ipm TEXT PRIMARY KEY, n INTEGER, t INTEGER)').run().then(up)).catch(() => {});
+      if (Math.random() < 0.02) await this.db.prepare('DELETE FROM ip_visits WHERE t < ?').bind(now - 30 * 864e5).run().catch(() => {}); // 30일 지난 것은 가끔 지운다
+    }
   }
 
   /** 쿠팡 버튼 클릭. /out 을 지날 때 글 slug 별로 센다. 표가 없으면 처음 한 번 만든다. */
@@ -162,12 +168,13 @@ class KvStore {
     if (!this.db) return null;
     const q = (sql, ...b) => this.db.prepare(sql).bind(...b).all().then((r) => r.results).catch(() => []);
     const since = (d) => new Date(Date.now() - d * 864e5).toISOString().slice(0, 10);
-    const [days, top, totals] = await Promise.all([
+    const [days, top, totals, ips] = await Promise.all([
       q('SELECT day, SUM(n) AS n, SUM(r) AS r FROM visits WHERE day >= ? GROUP BY day ORDER BY day DESC', since(14)),
       q('SELECT path, SUM(n) AS n FROM visits WHERE day >= ? GROUP BY path ORDER BY n DESC LIMIT 20', since(7)),
       q('SELECT SUM(CASE WHEN day = ? THEN n ELSE 0 END) AS today, SUM(CASE WHEN day = ? THEN r ELSE 0 END) AS todayR, SUM(CASE WHEN day >= ? THEN n ELSE 0 END) AS week, SUM(CASE WHEN day >= ? THEN r ELSE 0 END) AS weekR, SUM(n) AS total, SUM(r) AS totalR FROM visits', since(0), since(0), since(7), since(7)),
+      q('SELECT ipm, n, t FROM ip_visits ORDER BY t DESC LIMIT 15'),
     ]);
-    return { days, top, ...(totals[0] ?? {}) };
+    return { days, top, ips, ...(totals[0] ?? {}) };
   }
 
   async getMany(slugs) {

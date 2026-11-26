@@ -256,6 +256,7 @@ export function statsPage({ canonical, summaries, visits = null, ga = null, gsc 
         ? panel('일별 방문', bars(visits.days.map((r) => [r.day, r.n, `재 ${num(r.r)}`]), { unit: '회' }), { sub: '14일 · 비콘', note: '자바스크립트를 실행한 브라우저만 세고 재방문은 1년 쿠키로 구분한다. 크롤러와 AI 봇은 빠진다.' })
         : panel('일별 방문', html`<p class="panel__note">D1 이 연결되지 않았다.</p>`)}
       ${gaOk ? panel('GA 일별 사용자', bars(ga.days.map((r) => [r.date, r.users, `조회 ${num(r.views)}`]), { alt: true, unit: '명' }), { sub: '14일' }) : ''}
+      ${visits?.ips?.length ? panel('접속 IP 최신순', bars(visits.ips.map((r) => [`${r.ipm} · ${new Date(r.t + 9 * 36e5).toISOString().slice(5, 16).replace('T', ' ')}`, r.n])), { sub: '15개 · 셋째 자리 가림', note: '원본 IP 는 저장하지 않고 가린 값과 마지막 접속 시각만 30일 동안 둔다. 이 기록은 지금부터 쌓인다.' }) : ''}
       ${visits ? panel('인기 페이지', bars(visits.top.map((r) => [titleOfPath(r.path), r.n, '', r.path]), { unit: '회' }), { sub: '7일 · 비콘' }) : ''}
       ${gaOk ? panel('GA 인기 페이지', bars(ga.pages.map((r) => [titleOfPath(r.path), r.views, '', r.path]), { alt: true, unit: '회' }), { sub: '7일' }) : ''}
       ${clicks

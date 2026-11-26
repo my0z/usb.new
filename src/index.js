@@ -501,6 +501,13 @@ async function route(url, env, request, ctx) {
   return notFound(url);
 }
 
+const maskIp = (ip) => { // 셋째 자리를 별표로 가린 값만 쓴다
+  if (!ip) return '';
+  if (ip.includes(':')) { const g = ip.split(':'); if (g.length > 2) g[2] = '*'; return g.slice(0, 4).join(':'); }
+  const g = ip.split('.');
+  return g.length === 4 ? `${g[0]}.${g[1]}.*.${g[3]}` : '';
+};
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -523,7 +530,7 @@ export default {
       const bot = BOT_UA.test(ua) || request.cf?.botManagement?.verifiedBot === true;
       const path = (await request.text()).slice(0, 200).replace(/[^\w\-\/%.]/g, '');
       const returning = /(^|;\s*)uv=1(;|$)/.test(request.headers.get('cookie') ?? '');
-      if (!bot && path && path !== '/0' && ctx) ctx.waitUntil(getStore(env).recordVisit(path, returning));
+      if (!bot && path && path !== '/0' && ctx) ctx.waitUntil(getStore(env).recordVisit(path, returning, maskIp(request.headers.get('cf-connecting-ip') ?? '')));
       return new Response(null, { status: 204, headers: returning ? {} : { 'set-cookie': 'uv=1; Max-Age=31536000; Path=/; Secure; SameSite=Lax' } });
     }
 
